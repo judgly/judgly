@@ -1,0 +1,37 @@
+judgly
+Copyright 2026 Timo Lassmann
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+------------------------------------------------------------------------------
+Models
+------------------------------------------------------------------------------
+
+judgly is designed to run on Google's Gemma 4 models (the default is Gemma 4
+12B). Gemma is provided by Google under the Apache License, Version 2.0; see
+https://ai.google.dev/gemma/docs/gemma_4_license. The model weights are not
+included in this package: they are downloaded from their publisher on first
+use, and their own licence and notices apply to them. "Gemma" is a trademark
+of Google LLC; its use here only describes the model judgly runs on and does
+not imply endorsement by Google.
+
+------------------------------------------------------------------------------
+Third-party software
+------------------------------------------------------------------------------
+
+This version (0.0.1) contains no third-party code. Later versions will
+include the following, each under the licence shown, with the full licence
+texts in the LICENSES/ directory of the distribution:
+
+  llama.cpp and ggml   MIT License   Copyright (c) 2023-2026 The ggml authors
+                                     https://github.com/ggml-org/llama.cpp
+  yyjson               MIT License   Copyright (c) 2020 YaoYuan
+                                     https://github.com/ibireme/yyjson
+
+------------------------------------------------------------------------------
+Data
+------------------------------------------------------------------------------
+
+This version contains no trained parameters. Calibration heads shipped in
+later versions will list the datasets they were fitted on, with each
+dataset's licence, in their model card.
