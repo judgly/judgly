@@ -1,0 +1,999 @@
+# Data registry: every source judgly's heads are fitted or evaluated on.
+#
+# Read by scripts/prep_tiers.py (builds the tiers), scripts/fetch_raw.py (downloads the `raw`
+# files), scripts/verify_licences.py (checks every licence against the dataset card at the
+# pinned revision, and every recorded licence decision against its quoted source) and
+# scripts/calibration_record.py (credits the sources in each calibration record).
+# docs/methods.md explains the design, docs/licences.md the licence evidence and the excluded
+# candidates, and docs/reproduce.md gives the commands.
+#
+# LICENCE POLICY
+#   - A head is FITTED only on sources whose dataset card, at the pinned revision, names a
+#     permissive licence (policy.permissive), and on judgly's own generated tasks.
+#   - The stance head may also be fitted on share-alike sources (policy.share_alike). The
+#     stance head is then released under CC-BY-SA-4.0, separately from the Apache-2.0 code.
+#   - Everything else (non-commercial, custom, "other", "unknown", or no licence on the card)
+#     is used for EVALUATION only, never for fitting.
+#   - Model-written data: text written by a model (with or without human revision) may be
+#     fitted on when its labels are human judgments and the dataset's licence is allowed;
+#     labels written by a model (a model's rating, preference, verdict or soft distribution)
+#     are never fitted on, whatever the licence. WANLI (GPT-3 text, crowdworker labels) is
+#     fitted; UltraFeedback and Prometheus (GPT-4 labels) are not used, and typed-decisions (a
+#     teacher model's gold) and JevBench's model-written items are evaluation only.
+#   - `licence` is copied from the card's `license` field; `licence_text` quotes the card's
+#     licensing section where the field alone is not enough to decide. Where the card is wrong
+#     or incomplete, `licence_decision` records how the source is treated (`treat_as`), why,
+#     and the primary evidence (`source`, a URL, and `quote`, text found there). A source
+#     whose licence cannot be confirmed goes to evaluation or is not used.
+#   - No dataset text is committed or redistributed: the tiers are rebuilt from the pinned
+#     sources, and only their SHA-256 (data/tiers.sha256) is committed.
+#
+# TIERS (per format; a family belongs to exactly one tier)
+#   fit         fitting data: split 70/15/15 into train, validation (lambda and early stopping)
+#               and test (in-distribution check), grouped so that items sharing a passage (or a
+#               recorded group: an evidence page, a prompt) stay in one split
+#   dev         held-out families, scored during development (the stance stop rule)
+#   final       fresh held-out families, never used in any experiment before this tier was
+#               frozen; read once, after the heads are fitted, for the reported numbers
+#   final-flagged  fresh held-out families like final, read with it, but each with a recorded
+#               `caveat` (a relative of a fit family, or a label that the text states); reported
+#               beside the final numbers, never pooled into them, and judging no bar
+#   final-seen  an earlier held-out tier; its families were read during development, so
+#               they are reported separately, as a secondary evaluation of previously seen
+#               families, never as the final result
+#   bench       external benchmarks (general format), evaluation only, scored as they define
+#   reserved    in no tier; kept unseen for later work (every tier is checked against it)
+#   none        not used (the reason is given)
+#
+# Build order (overlap is removed against every earlier tier): reserved, final-seen, dev,
+# final, final-flagged, bench, fit. final-seen and dev are therefore built from their sources alone;
+# final drops anything matching reserved, final-seen or dev (exact, shared
+# sentence, shared passage or near duplicate), final-flagged also anything matching final;
+# bench is kept whole; fit drops anything matching any evaluation tier.
+#
+# Revisions are Hugging Face commit hashes or, for `raw` files, a commit of the source
+# repository plus the file's SHA-256 (checked 2026-09-27). `pool` caps the items a source
+# contributes to its tier (default: the tier size in scripts/prep_tiers.py). `use: false`
+# marks a source the policy excludes: its family is a fit family and its licence is not
+# permissive.
+
+schema: 1
+checked: "2026-09-27"
+
+policy:
+  permissive: [cc0-1.0, cc-by-3.0, cc-by-4.0, mit, apache-2.0, bsd-2-clause, bsd-3-clause]
+  share_alike: [cc-by-sa-3.0, cc-by-sa-4.0]
+  share_alike_formats: [stance]
+  head_licence:
+    general: Apache-2.0
+    stance: CC-BY-SA-4.0
+
+raw:
+  multivers:
+    url: https://scifact.s3.us-west-2.amazonaws.com/longchecker/latest/data.tar.gz
+    sha256: 0ce25066f18572af3307438a08d0d318a734d97d1d8c27ca43b51e81ae3d683c
+    size: 3610222
+    what: HealthVer, COVID-Fact and SciFact with full abstracts, as released by the MultiVerS authors
+    citation: "Wadden et al. 2022, MultiVerS: Improving scientific claim verification with weak supervision and full-document context. Findings of NAACL."
+    homepage: https://github.com/dwadden/multivers
+
+  check_covid:
+    what: Check-COVID claims (with labels and the CORD-19 id of their abstract) and the abstracts
+    commit: 3ae70f8cac4df13a3ce56878e20d8e76790e422d
+    files:
+      Check-COVID_all.json:
+        url: https://raw.githubusercontent.com/posuer/Check-COVID/3ae70f8cac4df13a3ce56878e20d8e76790e422d/Check-COVID/Check-COVID_all.json
+        sha256: 008b930570d374530528efa9edc6b2a029189a6d21b844ce1857324039d9e697
+        size: 447025
+      corpus.json:
+        url: https://raw.githubusercontent.com/posuer/Check-COVID/3ae70f8cac4df13a3ce56878e20d8e76790e422d/Check-COVID/corpus.json
+        sha256: 2a56084b933f28ec02781a9e501082683ca4b9c4c1c6c8530190d6fb0002ce42
+        size: 635536
+    homepage: https://github.com/posuer/Check-COVID
+  healthfc:
+    what: HealthFC claims, expert verdicts and the evidence sentences, English and German
+    commit: 9f31d765e5d4a99bd9fff667e82de503bc5684f5
+    files:
+      Datensatz.csv:
+        url: https://raw.githubusercontent.com/jvladika/HealthFC/9f31d765e5d4a99bd9fff667e82de503bc5684f5/Datensatz.csv
+        sha256: 6b832bd2a73af47f7a8d9dcd3c307defa962cff3746c26b33866170a406721c8
+        size: 1463876
+    homepage: https://github.com/jvladika/HealthFC
+  jevbench:
+    what: JevBench public decisions (original, easy and hard tiers), tag v1.4.2
+    commit: 1df665e3956d7aab7fa0208ff6c4f2d8557f9f90
+    files:
+      original.jsonl:
+        url: https://raw.githubusercontent.com/fstandhartinger/jevbench/1df665e3956d7aab7fa0208ff6c4f2d8557f9f90/datasets/public/original.jsonl
+        sha256: 5c2414edb3006b8bfcb70fda433f0f9ca015759433849f8d3104328a1f7c4180
+        size: 57237
+      easy.jsonl:
+        url: https://raw.githubusercontent.com/fstandhartinger/jevbench/1df665e3956d7aab7fa0208ff6c4f2d8557f9f90/datasets/public/easy.jsonl
+        sha256: 231df3c2c8e88a1a8c137ebe85de96ba70fabd330849098ac7b3c52c70b7172b
+        size: 37220
+      hard.jsonl:
+        url: https://raw.githubusercontent.com/fstandhartinger/jevbench/1df665e3956d7aab7fa0208ff6c4f2d8557f9f90/datasets/public/hard.jsonl
+        sha256: 89e9e6becb33ed88c1de7d42dcc87531b2fb64cfaef4e1986faf7c37b3f80ebb
+        size: 651848
+    homepage: https://github.com/fstandhartinger/jevbench
+
+formats:
+  general:
+    families:
+      knowledge: fit
+      reading: fit
+      moderation: fit
+      preference: fit
+      emotion: fit
+      intent: fit
+      generated: fit
+      helpfulness: fit
+      contracts: fit
+      sentiment: dev
+      inference: dev
+      similarity: dev
+      paraphrase: dev
+      word_sense: dev
+      commonsense: dev
+      social_bias: final
+      grammar: final
+      figurative: final
+      pragmatics: final
+      ethics: final
+      tables: final
+      relevance: final
+      difficulty: final
+      politeness: final-flagged  # a relative of the fit family moderation (civility ratings)
+      topic: final-seen
+      biomedical: final-seen
+      legal: final-seen          # a relative of the fit family contracts (LEDGAR) since v2
+      math: final-seen
+      finance: final-seen
+      truthfulness: final-seen
+      knowledge_pro: final-seen
+      rating: final-seen         # a relative of the fit family helpfulness (HelpSteer2) since v2
+      yesno: final-seen
+      bench_typed_decisions: bench
+      bench_jevbench: bench
+  stance:
+    families:
+      fit_nli: fit
+      fit_claims: fit
+      fit_scientific: fit
+      dev_nli: dev
+      dev_claims: dev
+      dev_scientific: dev
+      final_covid_claims: final
+      final_health_claims: final-flagged
+      final_scientific: final-seen
+      reserved_scientific: reserved
+      reserved_climate: reserved
+      unused: none
+
+sources:
+  # ---------------------------------------------------------------- general: fit
+  mmlu:
+    format: general
+    family: knowledge
+    type: choice
+    hub: cais/mmlu
+    config: all
+    splits: [test, validation, dev]
+    revision: c30699e8356da336a370243923dbaf21066bb9fe
+    licence: [mit]
+    citation: "Hendrycks et al. 2021, Measuring Massive Multitask Language Understanding. ICLR."
+  commonsense_qa:
+    format: general
+    family: knowledge
+    type: choice
+    hub: tau/commonsense_qa
+    splits: [train, validation]
+    revision: 94630fe30dad47192a8546eb75f094926d47e155
+    licence: [mit]
+    citation: "Talmor et al. 2019, CommonsenseQA: A Question Answering Challenge Targeting Commonsense Knowledge. NAACL."
+  qasc:
+    format: general
+    family: knowledge
+    type: choice
+    hub: allenai/qasc
+    splits: [train, validation]
+    revision: a34ba204eb9a33b919c10cc08f4f1c8dae5ec070
+    licence: [cc-by-4.0]
+    citation: "Khot et al. 2020, QASC: A Dataset for Question Answering via Sentence Composition. AAAI."
+  strategyqa:
+    format: general
+    family: knowledge
+    type: bool
+    hub: ChilleD/StrategyQA
+    splits: [train, test]
+    revision: 705562638fe1d8ca6bb98c66fc8f94d45fda8c83
+    licence: [mit]
+    note: A re-upload of StrategyQA (Allen AI, MIT); the card names MIT.
+    citation: "Geva et al. 2021, Did Aristotle Use a Laptop? A Question Answering Benchmark with Implicit Reasoning Strategies. TACL."
+  cosmos_qa:
+    format: general
+    family: reading
+    type: choice
+    hub: allenai/cosmos_qa
+    splits: [train, validation]
+    revision: ed50fe83db62b355759053b1cd5eef344ee371e0
+    revision_branch: refs/convert/parquet
+    licence: [cc-by-4.0]
+    licence_revision: 28d9d5e2aae025e73e11177891a88dba51190013
+    citation: "Huang et al. 2019, Cosmos QA: Machine Reading Comprehension with Contextual Commonsense Reasoning. EMNLP."
+  civil_comments:
+    format: general
+    family: moderation
+    type: bool
+    hub: google/civil_comments
+    splits: [train]
+    revision: f2970eb3a55777454c94069077cc8d9b5866312d
+    licence: [cc0-1.0]
+    citation: "Borkan et al. 2019, Nuanced Metrics for Measuring Unintended Bias with Real Data for Text Classification. WWW Companion."
+  civil_comments_score:
+    format: general
+    family: moderation
+    type: score
+    hub: google/civil_comments
+    splits: [validation, test]
+    revision: f2970eb3a55777454c94069077cc8d9b5866312d
+    licence: [cc0-1.0]
+    note: Toxicity fraction in five bands, sampled evenly per band. Other splits than the bool task, so no comment is in both.
+    citation: "Borkan et al. 2019 (as civil_comments)."
+  hh_rlhf:
+    format: general
+    family: preference
+    type: choice
+    hub: Anthropic/hh-rlhf
+    splits: [train]
+    revision: 09be8c5bbc57cb3887f3a9732ad6aa7ec602a1fa
+    licence: [mit]
+    citation: "Bai et al. 2022, Training a Helpful and Harmless Assistant with Reinforcement Learning from Human Feedback. arXiv:2204.05862."
+  go_emotions:
+    format: general
+    family: emotion
+    type: choice
+    hub: google-research-datasets/go_emotions
+    config: simplified
+    splits: [train, validation]
+    revision: add492243ff905527e67aeb8b80c082af02207c3
+    licence: [apache-2.0]
+    citation: "Demszky et al. 2020, GoEmotions: A Dataset of Fine-Grained Emotions. ACL."
+  banking77:
+    format: general
+    family: intent
+    type: choice
+    hub: legacy-datasets/banking77
+    splits: [train]
+    revision: f54121560de48f2852f90be299010d1d6dc612ec
+    licence: [cc-by-4.0]
+    citation: "Casanueva et al. 2020, Efficient Intent Detection with Dual Sentence Encoders. NLP4ConvAI workshop."
+  generated:
+    format: general
+    family: generated
+    type: mixed
+    hub: null
+    licence: [apache-2.0]
+    note: judgly's own tasks (arithmetic, dates, units, counting, ordering, parity, date order, checklists, temperature bands), generated deterministically by scripts/prep_tiers.py.
+    citation: "judgly (this repository)."
+  helpsteer2:
+    format: general
+    family: helpfulness
+    type: score
+    hub: nvidia/HelpSteer2
+    files: {train: train.jsonl.gz, validation: validation.jsonl.gz}
+    revision: 990b2711a36180dd19d9c94b8627844866f8982a
+    licence: [cc-by-4.0]
+    licence_evidence: 'card: "HelpSteer2 is an open-source Helpfulness Dataset (CC-BY-4.0)"; responses from Nemotron and Mixtral models and humans, labels by human annotators (Wang et al. 2024, arXiv:2406.08673)'
+    note: Helpfulness 0-4 as levels 1-5, sampled evenly per level; responses sharing a prompt stay in one fit split. Items longer than the general limit are left out.
+    citation: "Wang et al. 2024, HelpSteer2: Open-source dataset for training top-performing reward models. arXiv:2406.08673."
+  ledgar:
+    format: general
+    family: contracts
+    type: choice
+    hub: coastalcph/lex_glue
+    files: {train: ledgar/train-00000-of-00001.parquet}
+    revision: c23fdff1a6bf74e0e1a71cb86f1e781d37da888c
+    licence: [cc-by-4.0]
+    licence_evidence: 'LexGLUE release on Zenodo (zenodo.org/records/5532997), licence CC-BY-4.0 (read in the data review of 2026-09-27, not checked by script); the card at c23fdff1 names cc-by-4.0; LexGLUE paper (Chalkidis et al. 2022), Licensing: the datasets "are available for re-use and re-share with appropriate attribution". FLAG: the provisions are third-party contract text from SEC EDGAR filings, and their release licence comes from LexGLUE, not the text''s authors; the MIT licence of dtuggener/LEDGAR_provision_classification covers that repository''s code, not the corpus'
+    note: Provision type, the right one and three others of the 100 types. Makes the final-seen family legal (CaseHOLD) a relative of a fit family.
+    citation: "Tuggener et al. 2020, LEDGAR: A Large-Scale Multi-label Corpus for Text Classification of Legal Provisions in Contracts. LREC; Chalkidis et al. 2022, LexGLUE. ACL."
+  # ------------------------------------------ general: excluded (fit family, licence not permissive)
+  dair_emotion:
+    format: general
+    family: emotion
+    use: false
+    hub: dair-ai/emotion
+    revision: cab853a1dbdf4c42c2b3ef2173804746df8825fe
+    licence: [other]
+    note: Emotion is a fit family and the card licence is "other".
+    citation: "Saravia et al. 2018, CARER: Contextualized Affect Representations for Emotion Recognition. EMNLP."
+  arc:
+    format: general
+    family: knowledge
+    use: false
+    hub: allenai/ai2_arc
+    revision: 210d026faf9955653af8916fad021475a3f00453
+    licence: [cc-by-sa-4.0]
+    note: Knowledge is a fit family and share-alike is not used for the general head.
+    citation: "Clark et al. 2018, Think you have Solved Question Answering? Try ARC. arXiv:1803.05457."
+  openbookqa:
+    format: general
+    family: knowledge
+    use: false
+    hub: allenai/openbookqa
+    revision: 388097ea7776314e93a529163e0fea805b8a6454
+    licence: [unknown]
+    note: Knowledge is a fit family and the card licence is "unknown".
+    citation: "Mihaylov et al. 2018, Can a Suit of Armor Conduct Electricity? EMNLP."
+  sciq:
+    format: general
+    family: knowledge
+    use: false
+    hub: allenai/sciq
+    revision: 2c94ad3e1aafab77146f384e23536f97a4849815
+    licence: [cc-by-nc-3.0]
+    note: Knowledge is a fit family and the licence is non-commercial.
+    citation: "Welbl et al. 2017, Crowdsourcing Multiple Choice Science Questions. W-NUT."
+  race:
+    format: general
+    family: reading
+    use: false
+    hub: ehovy/race
+    revision: 2fec9fd81f1dc971569a9b729c43f2f0e6436637
+    licence: [other]
+    note: Reading is a fit family and the card licence is "other".
+    citation: "Lai et al. 2017, RACE: Large-scale ReAding Comprehension Dataset From Examinations. EMNLP."
+
+  # ---------------------------------------------------------------- general: dev
+  sst2:
+    format: general
+    family: sentiment
+    type: choice
+    hub: stanfordnlp/sst2
+    splits: [train, validation]
+    revision: 8d51e7e4887a4caaa95b3fbebbf53c0490b58bbb
+    licence: [unknown]
+    citation: "Socher et al. 2013, Recursive Deep Models for Semantic Compositionality Over a Sentiment Treebank. EMNLP."
+  imdb:
+    format: general
+    family: sentiment
+    type: choice
+    hub: stanfordnlp/imdb
+    splits: [test]
+    revision: e6281661ce1c48d982bc483cf8a173c1bbeb5d31
+    licence: [other]
+    citation: "Maas et al. 2011, Learning Word Vectors for Sentiment Analysis. ACL."
+  rotten_tomatoes:
+    format: general
+    family: sentiment
+    type: choice
+    hub: cornell-movie-review-data/rotten_tomatoes
+    splits: [validation, test]
+    revision: aa13bc287fa6fcab6daf52f0dfb9994269ffea28
+    licence: [unknown]
+    citation: "Pang and Lee 2005, Seeing Stars: Exploiting Class Relationships for Sentiment Categorization. ACL."
+  tweet_sentiment:
+    format: general
+    family: sentiment
+    type: choice
+    hub: cardiffnlp/tweet_eval
+    config: sentiment
+    splits: [validation, test]
+    revision: b3a375baf0f409c77e6bc7aa35102b7b3534f8be
+    licence: [unknown]
+    citation: "Barbieri et al. 2020, TweetEval: Unified Benchmark and Comparative Evaluation for Tweet Classification. Findings of EMNLP."
+  tweet_irony:
+    format: general
+    family: sentiment
+    type: bool
+    hub: cardiffnlp/tweet_eval
+    config: irony
+    splits: [train, validation, test]
+    revision: b3a375baf0f409c77e6bc7aa35102b7b3534f8be
+    licence: [unknown]
+    citation: "Barbieri et al. 2020 (as tweet_sentiment); Van Hee et al. 2018, SemEval-2018 Task 3."
+  rte:
+    format: general
+    family: inference
+    type: choice
+    hub: nyu-mll/glue
+    config: rte
+    splits: [train, validation]
+    revision: bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c
+    licence: [other]
+    citation: "Wang et al. 2019, GLUE: A Multi-Task Benchmark and Analysis Platform for Natural Language Understanding. ICLR; RTE: Dagan et al. 2006 and successors."
+  cb:
+    format: general
+    family: inference
+    type: choice
+    hub: aps/super_glue
+    config: cb
+    splits: [train, validation]
+    revision: 3de24cf8022e94f4ee4b9d55a6f539891524d646
+    licence: [other]
+    citation: "Wang et al. 2019, SuperGLUE. NeurIPS; de Marneffe et al. 2019, The CommitmentBank. Sinn und Bedeutung."
+  anli_general:
+    format: general
+    family: inference
+    type: choice
+    hub: facebook/anli
+    splits: [test_r1, test_r2, test_r3]
+    revision: 8e4813d81f46d313dac7892e1c28076917cfcdf9
+    licence: [cc-by-nc-4.0]
+    citation: "Nie et al. 2020, Adversarial NLI: A New Benchmark for Natural Language Understanding. ACL."
+  stsb:
+    format: general
+    family: similarity
+    type: score
+    hub: sentence-transformers/stsb
+    splits: [train, validation, test]
+    revision: ab7a5ac0e35aa22088bdcf23e7fd99b220e53308
+    licence: [none on card]
+    citation: "Cer et al. 2017, SemEval-2017 Task 1: Semantic Textual Similarity. SemEval."
+  mrpc:
+    format: general
+    family: paraphrase
+    type: bool
+    hub: SetFit/mrpc
+    splits: [train, validation, test]
+    revision: 2e2058c90792fb6dc86125943e4d2f96a5155a6b
+    licence: [none on card]
+    citation: "Dolan and Brockett 2005, Automatically Constructing a Corpus of Sentential Paraphrases. IWP."
+  qqp:
+    format: general
+    family: paraphrase
+    type: bool
+    hub: nyu-mll/glue
+    config: qqp
+    splits: [validation]
+    revision: bcdcba79d07bc864c1c254ccfcedcce55bcc9a8c
+    licence: [other]
+    citation: "Quora Question Pairs (Iyer et al. 2017), via GLUE (Wang et al. 2019)."
+  wic:
+    format: general
+    family: word_sense
+    type: bool
+    hub: aps/super_glue
+    config: wic
+    splits: [train, validation]
+    revision: 3de24cf8022e94f4ee4b9d55a6f539891524d646
+    licence: [other]
+    citation: "Pilehvar and Camacho-Collados 2019, WiC: the Word-in-Context Dataset. NAACL."
+  winogrande:
+    format: general
+    family: commonsense
+    type: choice
+    hub: allenai/winogrande
+    config: winogrande_debiased
+    splits: [train, validation]
+    revision: 01e74176c63542e6b0bcb004dcdea22d94fb67b5
+    licence: [none on card]
+    citation: "Sakaguchi et al. 2020, WinoGrande: An Adversarial Winograd Schema Challenge at Scale. AAAI."
+  piqa:
+    format: general
+    family: commonsense
+    type: choice
+    hub: ybisk/piqa
+    config: default
+    splits: [train, validation]
+    revision: 142c51238b3ca2bc61e9a075913871b8b600e8e1
+    revision_branch: refs/convert/parquet
+    licence_revision: 2e8ac2dffd59bac8c3c6714948f4c551a0848bb0
+    licence: [unknown]
+    citation: "Bisk et al. 2020, PIQA: Reasoning about Physical Commonsense in Natural Language. AAAI."
+  siqa:
+    format: general
+    family: commonsense
+    type: choice
+    hub: allenai/social_i_qa
+    config: default
+    splits: [train, validation]
+    revision: 537a2ec8ec565adc0b70b70752893e59e024df26
+    revision_branch: refs/convert/parquet
+    licence_revision: 8835ceb9141d7896d9d968634a9b21ae440e3ec5
+    licence: [none on card]
+    citation: "Sap et al. 2019, Social IQa: Commonsense Reasoning about Social Interactions. EMNLP."
+  copa:
+    format: general
+    family: commonsense
+    type: choice
+    hub: aps/super_glue
+    config: copa
+    splits: [train, validation]
+    revision: 3de24cf8022e94f4ee4b9d55a6f539891524d646
+    licence: [other]
+    citation: "Roemmele et al. 2011, Choice of Plausible Alternatives. AAAI Spring Symposium."
+  swag:
+    format: general
+    family: commonsense
+    type: choice
+    hub: allenai/swag
+    config: regular
+    splits: [validation]
+    revision: dc48148372b3853a9c7bae7bb06c161b46d8364a
+    licence: [unknown]
+    citation: "Zellers et al. 2018, SWAG: A Large-Scale Adversarial Dataset for Grounded Commonsense Inference. EMNLP."
+  hellaswag:
+    format: general
+    family: commonsense
+    type: choice
+    hub: Rowan/hellaswag
+    splits: [validation]
+    revision: 218ec52e09a7e7462a5400043bb9a69a41d06b76
+    licence: [none on card]
+    citation: "Zellers et al. 2019, HellaSwag: Can a Machine Really Finish Your Sentence? ACL."
+
+  # ---------------------------------------------------------------- general: final (fresh)
+  bbq:
+    format: general
+    family: social_bias
+    type: choice
+    hub: heegyu/bbq
+    files: {age: data/Age.jsonl, disability: data/Disability_status.jsonl, gender: data/Gender_identity.jsonl,
+            nationality: data/Nationality.jsonl, appearance: data/Physical_appearance.jsonl,
+            race: data/Race_ethnicity.jsonl, race_ses: data/Race_x_SES.jsonl, race_gender: data/Race_x_gender.jsonl,
+            religion: data/Religion.jsonl, ses: data/SES.jsonl, orientation: data/Sexual_orientation.jsonl}
+    revision: 5d6faae52070aa5eb71b46d1c0723d3ba7930209
+    licence: [cc-by-4.0]
+    pool: 1000
+    note: Stratified by category and context (ambiguous or disambiguated), one item per template, polarity and context.
+    citation: "Parrish et al. 2022, BBQ: A Hand-Built Bias Benchmark for Question Answering. Findings of ACL."
+  blimp:
+    format: general
+    family: grammar
+    type: choice
+    hub: nyu-mll/blimp
+    file_pattern: "{config}/train-00000-of-00001.parquet"
+    configs: [adjunct_island, anaphor_gender_agreement, anaphor_number_agreement, animate_subject_passive,
+              animate_subject_trans, causative, complex_NP_island, coordinate_structure_constraint_complex_left_branch,
+              coordinate_structure_constraint_object_extraction, determiner_noun_agreement_1, determiner_noun_agreement_2,
+              determiner_noun_agreement_irregular_1, determiner_noun_agreement_irregular_2,
+              determiner_noun_agreement_with_adj_2, determiner_noun_agreement_with_adj_irregular_1,
+              determiner_noun_agreement_with_adj_irregular_2, determiner_noun_agreement_with_adjective_1,
+              distractor_agreement_relational_noun, distractor_agreement_relative_clause, drop_argument, ellipsis_n_bar_1,
+              ellipsis_n_bar_2, existential_there_object_raising, existential_there_quantifiers_1,
+              existential_there_quantifiers_2, existential_there_subject_raising, expletive_it_object_raising, inchoative,
+              intransitive, irregular_past_participle_adjectives, irregular_past_participle_verbs,
+              irregular_plural_subject_verb_agreement_1, irregular_plural_subject_verb_agreement_2,
+              left_branch_island_echo_question, left_branch_island_simple_question, matrix_question_npi_licensor_present,
+              npi_present_1, npi_present_2, only_npi_licensor_present, only_npi_scope, passive_1, passive_2,
+              principle_A_c_command, principle_A_case_1, principle_A_case_2, principle_A_domain_1, principle_A_domain_2,
+              principle_A_domain_3, principle_A_reconstruction, regular_plural_subject_verb_agreement_1,
+              regular_plural_subject_verb_agreement_2, sentential_negation_npi_licensor_present,
+              sentential_negation_npi_scope, sentential_subject_island, superlative_quantifiers_1,
+              superlative_quantifiers_2, tough_vs_raising_1, tough_vs_raising_2, transitive, wh_island,
+              wh_questions_object_gap, wh_questions_subject_gap, wh_questions_subject_gap_long_distance, wh_vs_that_no_gap,
+              wh_vs_that_no_gap_long_distance, wh_vs_that_with_gap, wh_vs_that_with_gap_long_distance]
+    revision: 877fba0801ffb7cbd8c39c1ff314a46f053f6036
+    licence: [cc-by-4.0]
+    pool: 1005
+    note: 15 minimal pairs per paradigm (67 paradigms); which of two sentences is acceptable.
+    citation: "Warstadt et al. 2020, BLiMP: The Benchmark of Linguistic Minimal Pairs for English. TACL."
+  fig_qa:
+    format: general
+    family: figurative
+    type: choice
+    hub: nightingal3/fig-qa
+    files: {dev: dev.csv}
+    revision: b29ec2faf6ef73d634db9757f8741dee68f6c874
+    licence: [mit]
+    pool: 1000
+    note: The dev split (the test labels are hidden); which of two endings interprets the metaphor.
+    citation: "Liu et al. 2022, Testing the Ability of Language Models to Interpret Figurative Language. NAACL."
+  circa:
+    format: general
+    family: pragmatics
+    type: choice
+    hub: google-research-datasets/circa
+    files: {train: data/train-00000-of-00001.parquet}
+    revision: faa1b5a78dd926a899bcd4da289c2e3abe8061a9
+    licence: [cc-by-4.0]
+    pool: 1000
+    note: goldstandard2 without Other and N/A (four readings of an indirect answer), sampled evenly per reading.
+    citation: "Louis, Roth and Radlinski 2020, \"I'd rather just go to bed\": Understanding Indirect Answers. EMNLP."
+  ethics_deontology:
+    format: general
+    family: ethics
+    type: bool
+    hub: hendrycks/ethics
+    files: {test_hard: data/deontology/test_hard.csv}
+    revision: b8b47c589f8bee77175b8648e5497278b68da48a
+    licence: [mit]
+    pool: 500
+    note: Is the excuse reasonable? The commonsense subset is left out (the closest relative of moderation).
+    citation: "Hendrycks et al. 2021, Aligning AI With Shared Human Values. ICLR."
+  ethics_justice:
+    format: general
+    family: ethics
+    type: bool
+    hub: hendrycks/ethics
+    files: {test_hard: data/justice/test_hard.csv}
+    revision: b8b47c589f8bee77175b8648e5497278b68da48a
+    licence: [mit]
+    pool: 500
+    citation: "Hendrycks et al. 2021 (as ethics_deontology)."
+  tabfact:
+    format: general
+    family: tables
+    type: bool
+    hub: wenhu/tab_fact
+    files: {test: tab_fact/test/0000.parquet}
+    revision: cecfbe87432b0e7fdcac4578f8ac6fc87d08db76
+    revision_branch: refs/convert/parquet
+    licence_revision: e9ee727feeeb20d3a005f9c677abf5311323f1b6
+    licence: [cc-by-4.0]
+    pool: 1000
+    note: Is the statement supported by the table? Tables longer than the general limit are left out.
+    citation: "Chen et al. 2020, TabFact: A Large-scale Dataset for Table-based Fact Verification. ICLR."
+  esci:
+    format: general
+    family: relevance
+    type: score
+    hub: tasksource/esci
+    files: {test0: data/test-00000-of-00004-d48474212b95f33b.parquet}
+    columns: [query, query_id, product_locale, esci_label, product_title, product_bullet_point]
+    revision: 8113b17a5d4099e20243282c926f1bc1a08a4d13
+    licence: [apache-2.0]
+    licence_evidence: 'upstream amazon-science/esci-data LICENSE: Apache-2.0'
+    pool: 1000
+    note: US locale, first test shard; levels 1 irrelevant, 2 complement, 3 substitute, 4 exact (the dataset's own gain order), 250 per level, one product per query.
+    citation: "Reddy et al. 2022, Shopping Queries Dataset: A Large-Scale ESCI Benchmark for Improving Product Search. arXiv:2206.06588."
+  cefr_sp:
+    format: general
+    family: difficulty
+    type: score
+    hub: UniversalCEFR/cefr_sp_en
+    files: {all: cefr-sp.json}
+    revision: b78901348bda9f5a823cd3da1f3fcb2dcc6c5725
+    licence: [cc-by-nc-sa-4.0]
+    pool: 874
+    note: Sentence CEFR level A1-C2 as levels 1-6, sampled evenly per level (all 124 A1 sentences). Evaluation only.
+    citation: "Arase, Uchida and Kajiwara 2022, CEFR-Based Sentence Difficulty Annotation and Assessment. EMNLP."
+  politeness:
+    format: general
+    family: politeness
+    type: score
+    hub: Cleanlab/stanford-politeness
+    files: {train: fine-tuning/train.csv, test: fine-tuning/test.csv}
+    revision: 9fdefb9b4206e12647be56a5ceb48ca898c958a2
+    licence: [mit]
+    pool: 1000
+    note: Requests binned by Cleanlab into impolite, neutral and polite (levels 1-3), sampled evenly per level.
+    caveat: A relative of the fit family moderation (civil_comments_score rates online-discussion comments for toxicity on a 1-to-5 scale; this rates Wikipedia talk-page and StackExchange requests for politeness on a 1-to-3 scale), so it is not an unrelated family.
+    citation: "Danescu-Niculescu-Mizil et al. 2013, A computational approach to politeness with application to social factors. ACL."
+
+  # ---------------------------------------------------------------- general: bench (evaluation only)
+  typed_decisions:
+    format: general
+    family: bench_typed_decisions
+    type: mixed
+    hub: LocalLLaMA/typed-decisions
+    files: {test: {path: all/test-00000-of-00001.parquet,
+                   sha256: 4f294f218ea1da27f3efef936359389c62ea4d3973a41457732990f1d31b647c}}
+    revision: f7a2487edd7a043a5441a5e9ccc7fe5ddbd9ebe8
+    licence: [apache-2.0]
+    note: The 400 test cases (2,000 decisions) as published, with the per-option descriptions written into the instructions; the gold is a teacher model's soft distribution. The train split is never used. Evaluation only.
+    citation: "LocalLLaMA/typed-decisions on Hugging Face (dataset card, no paper)."
+
+  # ---------------------------------------------------------------- general: final-seen (an earlier held-out tier)
+  ag_news:
+    format: general
+    family: topic
+    type: choice
+    hub: fancyzhx/ag_news
+    splits: [test]
+    revision: eb185aade064a813bc0b7f42de02595523103ca4
+    licence: [unknown]
+    citation: "Zhang, Zhao and LeCun 2015, Character-level Convolutional Networks for Text Classification. NeurIPS."
+  trec:
+    format: general
+    family: topic
+    type: choice
+    hub: CogComp/trec
+    splits: [train, test]
+    revision: 65752bf53af25bc935a0dce92fb5b6c930728450
+    revision_branch: refs/convert/parquet
+    licence_revision: eb1e45c1ba990fecca7cf84b67ce845edbcf49bf
+    licence: [unknown]
+    citation: "Li and Roth 2002, Learning Question Classifiers. COLING."
+  newsgroups:
+    format: general
+    family: topic
+    type: choice
+    hub: SetFit/20_newsgroups
+    splits: [test]
+    revision: f1b91292074e7cfb69be58b642d583ec262f30ed
+    licence: [none on card]
+    citation: "Lang 1995, NewsWeeder: Learning to Filter Netnews. ICML."
+  dbpedia:
+    format: general
+    family: topic
+    type: choice
+    hub: fancyzhx/dbpedia_14
+    splits: [test]
+    revision: 9abd46cf7fc8b4c64290f26993c540b92aa145ac
+    licence: [cc-by-sa-3.0]
+    citation: "Zhang, Zhao and LeCun 2015 (as ag_news); Lehmann et al. 2015, DBpedia. Semantic Web."
+  yahoo:
+    format: general
+    family: topic
+    type: choice
+    hub: community-datasets/yahoo_answers_topics
+    splits: [test]
+    revision: 6652a1e7c94f7260a0bfd0c9092dd48e2d536ea1
+    licence: [unknown]
+    citation: "Zhang, Zhao and LeCun 2015 (as ag_news)."
+  pubmedqa:
+    format: general
+    family: biomedical
+    type: choice
+    hub: qiaojin/PubMedQA
+    config: pqa_labeled
+    splits: [train]
+    revision: 9001f2853fb87cab8d220904e0de81ac6973b318
+    licence: [mit]
+    citation: "Jin et al. 2019, PubMedQA: A Dataset for Biomedical Research Question Answering. EMNLP."
+  medmcqa:
+    format: general
+    family: biomedical
+    type: choice
+    hub: openlifescienceai/medmcqa
+    splits: [validation]
+    revision: 91c6572c454088bf71b679ad90aa8dffcd0d5868
+    licence: [apache-2.0]
+    citation: "Pal et al. 2022, MedMCQA: A Large-scale Multi-Subject Multi-Choice Dataset for Medical domain Question Answering. CHIL."
+  med_qa:
+    format: general
+    family: biomedical
+    type: choice
+    hub: bigbio/med_qa
+    config: med_qa_en_4options_bigbio_qa
+    splits: [validation, test]
+    revision: 484a6c066fe8e75c83edea0c88b5169316714fcd
+    licence: [unknown]
+    citation: "Jin et al. 2021, What Disease Does This Patient Have? A Large-Scale Open Domain Question Answering Dataset from Medical Exams. Applied Sciences."
+  casehold:
+    format: general
+    family: legal
+    type: choice
+    hub: casehold/casehold
+    config: default
+    splits: [validation, test]
+    revision: 8a4dbd58704b80b9433264ce9c66421fc5bf6c19
+    revision_branch: refs/convert/parquet
+    licence_revision: acc4532a67e0966e9ed7ec4ca543e8532f983b0c
+    licence: [none on card]
+    citation: "Zheng et al. 2021, When Does Pretraining Help? Assessing Self-Supervised Learning for Law and the CaseHOLD Dataset. ICAIL."
+  aqua_rat:
+    format: general
+    family: math
+    type: choice
+    hub: deepmind/aqua_rat
+    config: raw
+    splits: [validation, test]
+    revision: 33301c6a050c96af81f63cad5562cb5363e88971
+    licence: [apache-2.0]
+    citation: "Ling et al. 2017, Program Induction by Rationale Generation: Learning to Solve and Explain Algebraic Word Problems. ACL."
+  fin_tweets:
+    format: general
+    family: finance
+    type: choice
+    hub: zeroshot/twitter-financial-news-sentiment
+    splits: [validation]
+    revision: ccbe24de388e287beb92dd393a335c376b350ac3
+    licence: [mit]
+    citation: "Twitter Financial News Sentiment, zeroshot on Hugging Face (no paper)."
+  truthful_qa:
+    format: general
+    family: truthfulness
+    type: choice
+    hub: truthfulqa/truthful_qa
+    config: multiple_choice
+    splits: [validation]
+    revision: 741b8276f2d1982aa3d5b832d3ee81ed3b896490
+    licence: [apache-2.0]
+    citation: "Lin, Hilton and Evans 2022, TruthfulQA: Measuring How Models Mimic Human Falsehoods. ACL."
+  mmlu_pro:
+    format: general
+    family: knowledge_pro
+    type: choice
+    hub: TIGER-Lab/MMLU-Pro
+    splits: [test]
+    revision: b189ec765aa7ed75c8acfea42df31fdae71f97be
+    licence: [mit]
+    note: Many MMLU-Pro questions come from MMLU (a fit source); fit items sharing a question with MMLU-Pro are dropped.
+    citation: "Wang et al. 2024, MMLU-Pro: A More Robust and Challenging Multi-Task Language Understanding Benchmark. NeurIPS Datasets and Benchmarks."
+  yelp:
+    format: general
+    family: rating
+    type: score
+    hub: Yelp/yelp_review_full
+    splits: [test]
+    revision: c1f9ee939b7d05667af864ee1cb066393154bf85
+    licence: [other]
+    citation: "Zhang, Zhao and LeCun 2015 (as ag_news); Yelp Dataset Challenge."
+  boolq:
+    format: general
+    family: yesno
+    type: bool
+    hub: google/boolq
+    splits: [validation]
+    revision: 35b264d03638db9f4ce671b711558bf7ff0f80d5
+    licence: [cc-by-sa-3.0]
+    citation: "Clark et al. 2019, BoolQ: Exploring the Surprising Difficulty of Natural Yes/No Questions. NAACL."
+
+  jevbench:
+    format: general
+    family: bench_jevbench
+    type: mixed
+    raw: jevbench
+    licence: [mit]
+    note: The public decisions of JevBench v1.4.2 (original 72, easy 48, hard 111) (all 231). The official score also needs held-out and sealed items that are not published, so this is not comparable with the JevBench leaderboard. Evaluation only.
+    citation: "Standhartinger 2026, JevBench (github.com/fstandhartinger/jevbench), v1.4.2."
+
+  # ---------------------------------------------------------------- stance
+  mnli:
+    format: stance
+    family: fit_nli
+    type: choice
+    hub: nyu-mll/multi_nli
+    splits: [train]
+    revision: da70db2af9d09693783c3320c4249840212ee221
+    licence: [cc-by-3.0, cc-by-sa-3.0, mit, other]
+    licence_text: >-
+      The majority of the corpus is released under the OANC's license, which allows all
+      content to be freely used, modified, and shared under permissive terms. The data in the
+      FICTION section falls under several permissive licenses; Seven Swords is available under
+      a Creative Commons Share-Alike 3.0 Unported License, and [...] Living History and
+      Password Incorrect are available under Creative Commons Attribution 3.0 Unported
+      Licenses; the remaining works of fiction are in the public domain in the United States
+      (but may be licensed differently elsewhere).
+    licence_decision:
+      treat_as: cc-by-sa-3.0
+      reason: the card's "other" is the OANC licence, which the card calls permissive; the source is used as share-alike
+    citation: "Williams, Nangia and Bowman 2018, A Broad-Coverage Challenge Corpus for Sentence Understanding through Inference. NAACL."
+  vitaminc:
+    format: stance
+    family: fit_claims
+    type: choice
+    hub: tals/vitaminc
+    splits: [train]
+    revision: be6febb761b0b2807687e61e0b5282e459df2fa0
+    licence: [cc-by-sa-3.0]
+    citation: "Schuster, Fisch and Barzilay 2021, Get Your Vitamin C! Robust Fact Verification with Contrastive Evidence. NAACL."
+  fever:
+    format: stance
+    family: fit_claims
+    type: choice
+    hub: copenlu/fever_gold_evidence
+    files: {train: train.jsonl}
+    revision: a6b8d891d393e97a4efac791afffb2d7de5e57c6
+    licence: [cc-by-sa-3.0, gpl-3.0]
+    licence_decision:
+      treat_as: cc-by-sa-3.0
+      reason: the items used are FEVER claims with FEVER's gold (annotated) Wikipedia evidence sentences, CC-BY-SA-3.0 per the FEVER licence; the card's gpl-3.0 is taken to be the licence of the code repository copenlu/fever-adversarial-attacks (an inference, not stated by the authors), and the retrieved evidence of NOT ENOUGH INFO claims, the one part the release adds, is not used
+      source: https://fever.ai/download/fever/license.html
+      quote: These annotations are made available under the license terms described on the applicable Wikipedia article pages, or, where Wikipedia license terms are unavailable, under the Creative Commons Attribution-ShareAlike License (version 3.0)
+    pool: 4000
+    note: SUPPORTS and REFUTES claims only, with their gold evidence sentences, prefixed by the Wikipedia page title (NOT ENOUGH INFO claims are left out; their evidence was retrieved by a system, not annotated). Claims whose evidence page is also an evidence article of Climate-FEVER (dev) are left out; items sharing an evidence page stay in one fit split (with VitaminC, built from FEVER).
+    citation: "Thorne et al. 2018, FEVER: a Large-scale Dataset for Fact Extraction and VERification. NAACL; evidence release: Atanasova, Wright and Augenstein 2020, Generating Label Cohesive and Well-Formed Adversarial Claims. EMNLP."
+  snli:
+    format: stance
+    family: fit_nli
+    type: choice
+    hub: stanfordnlp/snli
+    files: {train: plain_text/train-00000-of-00001.parquet}
+    revision: cdb5c3d5eed6ead6e5a341c8e56e669bb666725b
+    licence: [cc-by-sa-4.0]
+    pool: 3000
+    citation: "Bowman et al. 2015, A large annotated corpus for learning natural language inference. EMNLP."
+  wanli:
+    format: stance
+    family: fit_nli
+    type: choice
+    hub: alisawuffles/WANLI
+    files: {train: train.jsonl}
+    revision: 61c95318fd71c55b6ba355d76253254615f387ec
+    licence: [cc-by-4.0]
+    pool: 3000
+    note: Examples written by GPT-3 from MNLI patterns, revised and labelled by crowdworkers; the labels are human, so the model-written data rule (header) allows fitting.
+    citation: "Liu et al. 2022, WANLI: Worker and AI Collaboration for Natural Language Inference Dataset Creation. Findings of EMNLP."
+  scinli:
+    format: stance
+    family: fit_scientific
+    type: choice
+    hub: tasksource/scinli
+    files: {dev: dev.jsonl, test: test.jsonl}
+    revision: 61419d7f2cec9ca67324f28f6a077582643a037c
+    licence: [apache-2.0]
+    licence_decision:
+      treat_as: cc-by-sa-4.0
+      reason: the card says Apache-2.0 but the authors release SciNLI under CC-BY-SA-4.0; the dev and test sentences come from 2020 ACL Anthology papers (CC-BY-4.0)
+      source: https://raw.githubusercontent.com/msadat3/SciNLI/853493b527d60677145200cb138bdc0c12334525/README.md
+      quote: SciNLI is licensed with Attribution-ShareAlike 4.0 International
+    pool: 2000
+    note: The human-annotated dev and test splits only (the train split is distantly labelled and includes pre-2016 NC-SA text); the classes entailment and neutral only (contrasting and reasoning are discourse relations, not contradiction).
+    citation: "Sadat and Caragea 2022, SciNLI: A Corpus for Natural Language Inference on Scientific Text. ACL."
+  fever_nli:
+    format: stance
+    family: unused
+    hub: pietrolesci/nli_fever
+    revision: 1eddac63112eee1fdf1966e0bca27a5ff248c772
+    licence: [none on card]
+    note: FEVER itself is CC-BY-SA-3.0, but this card names no licence, so it is not used.
+    citation: "Thorne et al. 2018, FEVER. NAACL; Nie, Chen and Bansal 2019, Combining Fact Extraction and Verification with Neural Semantic Matching Networks. AAAI."
+  anli:
+    format: stance
+    family: dev_nli
+    type: choice
+    hub: facebook/anli
+    splits: [test_r1, test_r2, test_r3]
+    revision: 8e4813d81f46d313dac7892e1c28076917cfcdf9
+    licence: [cc-by-nc-4.0]
+    citation: "Nie et al. 2020 (as anli_general)."
+  climate_fever:
+    format: stance
+    family: dev_claims
+    type: choice
+    hub: tdiggelm/climate_fever
+    splits: [test]
+    revision: ae61ccb9320a78109a246414139ff3a2bd677b8b
+    licence: [unknown]
+    citation: "Diggelmann et al. 2020, CLIMATE-FEVER: A Dataset for Verification of Real-World Climate Claims. arXiv:2012.00614."
+  covidfact:
+    format: stance
+    family: dev_scientific
+    type: choice
+    raw: multivers
+    splits: [train, test]
+    licence: [unconfirmed]
+    note: From the MultiVerS release; evaluation only.
+    citation: "Saakyan, Chakrabarty and Muresan 2021, COVID-Fact: Fact Extraction and Verification of Real-World Claims on COVID-19 Pandemic. ACL."
+  healthver:
+    format: stance
+    family: final_scientific
+    type: choice
+    raw: multivers
+    splits: [train, dev, test]
+    licence: [unconfirmed]
+    note: From the MultiVerS release; evaluation only (final-seen).
+    citation: "Sarrouti et al. 2021, Evidence-based Fact-Checking of Health-related Claims. Findings of EMNLP."
+  check_covid:
+    format: stance
+    family: final_covid_claims
+    type: choice
+    raw: check_covid
+    licence: [mit]
+    licence_evidence: 'github.com/posuer/Check-COVID LICENSE: MIT'
+    note: News claims about COVID-19, each with the sentences of a CORD-19 abstract marked as its evidence (not the whole abstract, since a not-enough-info item repeats a supported or refuted claim with another sentence of the same abstract). Items sharing a sentence with HealthVer or COVID-Fact, or near duplicates of their claims, are left out.
+    citation: "Wang et al. 2023, Check-COVID: Fact-Checking COVID-19 News Claims with Scientific Evidence. Findings of ACL."
+  healthfc:
+    format: stance
+    family: final_health_claims
+    type: choice
+    raw: healthfc
+    licence: [cc-by-nc-nd-4.0]
+    licence_evidence: 'github.com/jvladika/HealthFC LICENSE-CC-BY-NC-ND: "Creative Commons Attribution-NonCommercial-NoDerivs 4.0 International License"'
+    note: Health questions answered by medical experts (Medizin-Transparent); the English question verbatim as the claim, the English evidence sentences (en_top_sentences) as evidence, never the explanation field. Evaluation only.
+    caveat: The evidence sentences are the fact-checkers' own summary and often state the verdict ("we could not find any meaningful scientific evidence", verdict headings such as "Not checked"), so the no-bearing label (the verdict "insufficient evidence") can often be read off the wording, the flaw that excluded PubHealth; and 740 of the 749 claims are yes/no questions, not claims.
+    citation: "Vladika, Schneider and Matthes 2024, HealthFC: Verifying Health Claims with Evidence-Based Medical Fact-Checking. LREC-COLING."
+  scifact:
+    format: stance
+    family: reserved_scientific
+    type: choice
+    raw: multivers
+    splits: [train, dev, test]
+    licence: [unconfirmed]
+    note: Reserved; in no tier. CC-BY-NC-2.0 has been reported for the MultiVerS release but is not confirmed. Every tier is checked against its claims and abstracts.
+    citation: "Wadden et al. 2020, Fact or Fiction: Verifying Scientific Claims. EMNLP."
+  climatecheck:
+    format: stance
+    family: reserved_climate
+    type: choice
+    hub: rabuahmad/climatecheck
+    files: {train: data/train-00000-of-00001.parquet, test: data/test-00000-of-00001.parquet}
+    revision: 93d0dc5007e9f86a3fc4cfe2d7998514a94f5c88
+    licence: [mit]
+    note: Reserved as the next untouched stance final tier (test gold published June 2026); in no tier. Every tier is checked against its claims and abstracts. Some ClimateCheck abstracts quote passages that Climate-FEVER (stance dev, already read) also holds (make check reports the dev items that share a sentence or a passage with the reserved texts); remove the ClimateCheck items that overlap Climate-FEVER before promoting it to a final tier.
+    citation: "ClimateCheck shared task, SDP 2025 workshop (rabuahmad/climatecheck on Hugging Face)."

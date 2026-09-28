@@ -1,0 +1,69 @@
+Licence of the files in this pack (gemma4-12b-q8)
+==================================================
+
+pack.json, template.tpl
+    Part of judgly, Apache License 2.0 (see LICENSE at the top of the judgly
+    source tree or in the wheel's .dist-info/licenses/).
+
+heads/h2.bin (the general head, "*"), when present
+    Apache License 2.0. It is a small calibration head (a few hundred thousand numbers)
+    fitted on the model's answer-letter logits for items from the datasets
+    below, all under permissive licences. The head contains no dataset text.
+    Where a fitted head counts as an adaptation of the data, these works are
+    used under their licences and are credited here:
+
+      MMLU (Hendrycks et al. 2021)                  MIT
+      CommonsenseQA (Talmor et al. 2019)            MIT
+      StrategyQA (Geva et al. 2021)                 MIT
+      HH-RLHF (Bai et al. 2022, Anthropic)          MIT
+      QASC (Khot et al. 2020, AI2)                  CC BY 4.0
+      Cosmos QA (Huang et al. 2019)                 CC BY 4.0
+      BANKING77 (Casanueva et al. 2020, PolyAI)     CC BY 4.0
+      Civil Comments (Borkan et al. 2019, Jigsaw)   CC0 1.0
+      GoEmotions (Demszky et al. 2020, Google)      Apache 2.0
+      HelpSteer2 (Wang et al. 2024, NVIDIA)         CC BY 4.0
+      LEDGAR (Tuggener et al. 2020), as released    CC BY 4.0
+        in LexGLUE (Chalkidis et al. 2022)
+      judgly's own generated tasks                  Apache 2.0
+
+    Changes: items were reformatted into multiple-choice, yes/no or score
+    questions and only the model's logits on them were used; no text is
+    redistributed. CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+    Evidence for each licence: docs/licences.md in the judgly repository.
+
+heads/h2-stance.bin (the stance head, "stance"), when present
+    Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0),
+    NOT Apache 2.0. Full text: LICENSES/CC-BY-SA-4.0.txt, and
+    https://creativecommons.org/licenses/by-sa/4.0/legalcode
+    It is fitted on items from share-alike data, so it is released under a
+    share-alike licence as the conservative reading of those licences:
+
+      MultiNLI (Williams, Nangia and Bowman 2018)   OANC licence, with parts
+                                                    under CC BY-SA 3.0 and
+                                                    CC BY 3.0 (see the card)
+      VitaminC (Schuster, Fisch and Barzilay 2021)  CC BY-SA 3.0; contains
+                                                    material derived from
+                                                    Wikipedia (Wikipedia
+                                                    contributors, CC BY-SA
+                                                    3.0 / 4.0)
+      FEVER (Thorne et al. 2018), gold evidence     CC BY-SA 3.0; evidence
+        as released by Atanasova, Wright and        sentences from Wikipedia
+        Augenstein (2020)                           (Wikipedia contributors)
+      SNLI (Bowman et al. 2015, Stanford NLP)       CC BY-SA 4.0; includes
+                                                    Flickr30k captions (Young
+                                                    et al. 2014, CC BY-SA)
+      WANLI (Liu et al. 2022)                       CC BY 4.0
+      SciNLI (Sadat and Caragea 2022)               CC BY-SA 4.0
+
+    CC BY-SA 3.0 section 4(b) allows adaptations to be licensed under a later
+    version with the same licence elements, which is why 4.0 is used.
+    Changes: items were reformatted into supports / refutes / not enough
+    information questions and only the model's logits on them were used; no
+    text is redistributed. Copyright of the head: Timo Lassmann, 2026.
+
+The model weights are NOT part of this pack. They are downloaded from
+https://huggingface.co/ggml-org/gemma-4-12B-it-GGUF (GGUF conversion by
+ggml-org of google/gemma-4-12B-it by Google DeepMind), under the Apache
+License 2.0 (https://ai.google.dev/gemma/docs/gemma_4_license). "Gemma" is a
+trademark of Google LLC and is used here only to name the model; no
+endorsement by Google is implied.

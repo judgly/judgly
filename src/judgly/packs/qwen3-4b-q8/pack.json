@@ -1,0 +1,48 @@
+{
+ "schema": 1,
+ "name": "qwen3-4b-q8",
+ "description": "Qwen3-4B-Instruct-2507, 8-bit GGUF. Small and fast.",
+ "model": {
+  "repo_id": "unsloth/Qwen3-4B-Instruct-2507-GGUF",
+  "revision": "a06e946bb6b655725eafa393f4a9745d460374c9",
+  "filename": "Qwen3-4B-Instruct-2507-Q8_0.gguf",
+  "sha256": "391c1e410fd9f4cf2de2b510273b56a84c19ce18f4fa3bfb3774031dac4ef068",
+  "size": 4280405600,
+  "base_model": "Qwen/Qwen3-4B-Instruct-2507",
+  "licence": "Apache-2.0 (Qwen team, Alibaba Cloud); GGUF conversion by Unsloth"
+ },
+ "template": "template.tpl",
+ "template_source": "judgly",
+ "engine": {
+  "rotations": true,
+  "content_free": false,
+  "max_rotations": 4
+ },
+ "heads": {
+  "*": {
+   "file": "heads/h2.bin",
+   "status": "available",
+   "sha256": "9da59ab5a64c7f3782853bee054a2be43173d519217e20e8b284bfe30a6c2828",
+   "licence": "Apache-2.0",
+   "calibration": "calibration/general.json",
+   "final_tier": {
+    "accuracy": 0.6389135677,
+    "log_loss": 0.7968442504,
+    "ece": 0.02953342193
+   }
+  },
+  "stance": {
+   "file": "heads/h2-stance.bin",
+   "status": "available",
+   "sha256": "f85c4fe3e9e0bf78af143a55b460cb220d1293168d23c9501bdee8f471b99c0c",
+   "licence": "CC-BY-SA-4.0",
+   "calibration": "calibration/stance.json",
+   "final_tier": {
+    "accuracy": 0.7728965004,
+    "log_loss": 0.594462171,
+    "ece": 0.05236553538
+   }
+  }
+ },
+ "licence_notes": "The model weights are not part of judgly; they are downloaded from Hugging Face under their own licence. The template is judgly's own text around the model's chat markers."
+}

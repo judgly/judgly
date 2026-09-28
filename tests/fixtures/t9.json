@@ -1,0 +1,27 @@
+{"state": "Ticket category: billing. Customer language: German. Priority: high. Satisfaction score: 2 out of 5.",
+ "questions": {
+  "category": {"type": "choice", "instructions": "Which category does the text give for the ticket?",
+               "options": {"shipping": "Shipping", "billing": "Billing", "login": "Login", "other": "Other"}},
+  "language": {"type": "choice", "instructions": "Which customer language does the text give?",
+               "options": {"en": "English", "fr": "French", "de": "German"}},
+  "high":     {"type": "bool", "instructions": "The text says the priority is high."},
+  "score":    {"type": "score", "instructions": "Which satisfaction score does the text give?", "levels": 5}},
+ "expect": {"category": "billing", "language": "de", "high": "true", "score": "2"}}
+{"state": "Order 7731 was paid by bank transfer. It was shipped to Norway. The parcel was not damaged. The customer rated the delivery 4 out of 5.",
+ "questions": {
+  "payment": {"type": "choice", "instructions": "How was the order paid, according to the text?",
+              "options": {"card": "Credit card", "cash": "Cash", "transfer": "Bank transfer", "voucher": "Voucher", "crypto": "Cryptocurrency"}},
+  "country": {"type": "choice", "instructions": "To which country was the order shipped, according to the text?",
+              "options": {"no": "Norway", "se": "Sweden"}},
+  "damaged": {"type": "bool", "instructions": "The text says the parcel was damaged."},
+  "rating":  {"type": "score", "instructions": "Which delivery rating does the text give?", "levels": 5}},
+ "expect": {"payment": "transfer", "country": "no", "damaged": "false", "rating": "4"}}
+{"state": "The sample is labelled group C. The measurement was taken on a Tuesday. The instrument was calibrated before the run. Quality grade: 1 out of 3.",
+ "questions": {
+  "group": {"type": "choice", "instructions": "Which group is the sample labelled with in the text?",
+            "options": {"a": "Group A", "b": "Group B", "c": "Group C", "d": "Group D", "e": "Group E", "f": "Group F"}},
+  "day":   {"type": "choice", "instructions": "On which day was the measurement taken, according to the text?",
+            "options": {"mon": "Monday", "tue": "Tuesday", "wed": "Wednesday"}},
+  "calibrated": {"type": "bool", "instructions": "The text says the instrument was calibrated before the run."},
+  "grade": {"type": "score", "instructions": "Which quality grade does the text give?", "levels": 3}},
+ "expect": {"group": "c", "day": "tue", "calibrated": "true", "grade": "1"}}

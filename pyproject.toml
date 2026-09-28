@@ -1,27 +1,104 @@
 [project]
 name = "judgly"
-version = "0.0.1"
-description = "Calibrated, deterministic judgments from open language models (early development)"
+version = "0.1.0"
+description = "Calibrated probabilities for typed questions from two open language models via llama.cpp (hobby project; early release)"
 readme = "README.md"
-license = "Apache-2.0"
-license-files = ["LICENSE", "NOTICE"]
+license = "Apache-2.0 AND MIT AND CC-BY-SA-4.0"
+license-files = ["LICENSE", "NOTICE", "LICENSES/*"]
 authors = [
     { name = "Timo Lassmann" }
 ]
 requires-python = ">=3.10"
-dependencies = []
-keywords = ["calibration", "language-models", "classification", "decision", "gemma", "llama.cpp"]
+dependencies = [
+    "pydantic>=2.6",
+    "huggingface_hub>=0.23",
+]
+keywords = ["calibration", "language-models", "classification", "decision", "gemma", "qwen", "llama.cpp", "llm", "probability"]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
+    "Environment :: GPU",
+    "Operating System :: MacOS",
+    "Programming Language :: C",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
 [project.urls]
-Repository = "https://github.com/TimoLassmann/judgly"
+Homepage = "https://github.com/judgly/judgly"
+Documentation = "https://github.com/judgly/judgly/tree/v0.1.0/docs"
+Repository = "https://github.com/judgly/judgly"
+Changelog = "https://github.com/judgly/judgly/blob/main/CHANGELOG.md"
+Issues = "https://github.com/judgly/judgly/issues"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "numpy>=1.26",
+    "cmake>=3.20",   # editable installs rebuild libjudgly on import with these
+    "ninja>=1.11",
+]
+# The results figures (make figures, scripts/make_figures.py); not needed to use judgly.
+figures = [
+    "matplotlib>=3.8",
+    "numpy>=1.26",
+]
+# The data and head pipeline (Makefile, scripts/); not needed to use judgly.
+pipeline = [
+    "datasets>=3.0",
+    "numpy>=1.26",
+    "pyyaml>=6.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "model: needs a local GGUF model file (skipped when it is absent)",
+]
+asyncio_mode = "auto"
 
 [build-system]
-requires = ["uv_build>=0.12.19,<0.13.0"]
-build-backend = "uv_build"
+requires = ["scikit-build-core>=0.10"]
+build-backend = "scikit_build_core.build"
+
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+build-dir = "build/{wheel_tag}"
+cmake.version = ">=3.20"
+cmake.build-type = "Release"
+build.targets = ["judgly"]
+wheel.py-api = "py3"   # the native library is loaded with ctypes, not a CPython extension
+install.components = []
+wheel.packages = ["src/judgly"]
+editable.rebuild = true   # uv run rebuilds libjudgly after a change to the C sources
+# The sdist carries the llama.cpp sources needed to build libjudgly, not its models, docs,
+# tests, examples or tools.
+sdist.exclude = [
+    "build/", "dist/", ".venv/",
+    "third_party/llama.cpp/models/", "third_party/llama.cpp/docs/",
+    "third_party/llama.cpp/tests/", "third_party/llama.cpp/examples/",
+    "third_party/llama.cpp/tools/", "third_party/llama.cpp/media/",
+    "third_party/llama.cpp/.github/", "third_party/llama.cpp/.devops/",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+extend-exclude = ["third_party", "build", "results", "results-quick", "data"]
+
+[tool.ruff.lint]
+# ruff's default rules (pyflakes and the pycodestyle error subset): CI checks for real
+# mistakes, not style.
+select = ["E4", "E7", "E9", "F"]
+
+[tool.ruff.lint.per-file-ignores]
+# Known findings, silenced here until the code is tidied.
+"scripts/prep_tiers.py" = ["E731", "F401"]
+"tests/test_engine.py" = ["F401"]

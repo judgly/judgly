@@ -8,30 +8,73 @@ Models
 ------------------------------------------------------------------------------
 
 judgly is designed to run on Google's Gemma 4 models (the default is Gemma 4
-12B). Gemma is provided by Google under the Apache License, Version 2.0; see
-https://ai.google.dev/gemma/docs/gemma_4_license. The model weights are not
-included in this package: they are downloaded from their publisher on first
-use, and their own licence and notices apply to them. "Gemma" is a trademark
-of Google LLC; its use here only describes the model judgly runs on and does
-not imply endorsement by Google.
+12B, downloaded from https://huggingface.co/ggml-org/gemma-4-12B-it-GGUF).
+Gemma is provided by Google under the Apache License, Version 2.0; see
+https://ai.google.dev/gemma/docs/gemma_4_license. The smaller pack
+uses Qwen3-4B-Instruct-2507 by the Qwen team, Alibaba Cloud, under the Apache
+License, Version 2.0 (downloaded from
+https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF). The model weights
+are not included in this package: they are downloaded from their publisher on
+first use, and their own licence and notices apply to them. "Gemma" is a
+trademark of Google LLC and "Qwen" names Alibaba Cloud's models; both are used
+here only to describe the model judgly runs on and do not imply endorsement.
+Use of Gemma is also subject to Google's Gemma Prohibited Use Policy
+(https://ai.google.dev/gemma/prohibited_use_policy).
 
 ------------------------------------------------------------------------------
 Third-party software
 ------------------------------------------------------------------------------
 
-This version (0.0.1) contains no third-party code. Later versions will
-include the following, each under the licence shown, with the full licence
-texts in the LICENSES/ directory of the distribution:
+The native library libjudgly and the command-line tools are built from the
+following third-party code, each under the licence shown. The full licence
+texts are in the LICENSES/ directory of the source tree, the sdist and the
+wheel.
 
   llama.cpp and ggml   MIT License   Copyright (c) 2023-2026 The ggml authors
                                      https://github.com/ggml-org/llama.cpp
+                                     LICENSES/llama.cpp-ggml-MIT.txt
+  llamafile sgemm      MIT License   Copyright 2024 Mozilla Foundation
+    (inside ggml)                    LICENSES/llamafile-sgemm-MIT.txt
+  YaRN RoPE            MIT License   Copyright (c) 2023 Jeffrey Quesnelle and
+    (inside ggml)                    Bowen Peng; LICENSES/yarn-rope-MIT.txt
   yyjson               MIT License   Copyright (c) 2020 YaoYuan
                                      https://github.com/ibireme/yyjson
+                                     LICENSES/yyjson-MIT.txt
+  ggllm.cpp tokenizer  MIT License   Copyright (c) 2023 https://github.com/cmp-nct
+    (inside llama.cpp)               LICENSES/ggllm-cpp-MIT.txt
+
+llama.cpp's BPE tokenizer (src/llama-vocab.cpp) is marked as adapted from
+ggllm.cpp (https://github.com/cmp-nct/ggllm.cpp); its licence is in
+LICENSES/ggllm-cpp-MIT.txt. llama.cpp is pinned at
+commit 6f41ac59e0a49a00483a316a22ada6b04edd2950. Other code vendored in the
+llama.cpp tree (for example nlohmann/json, cpp-httplib, stb, miniaudio and the
+hash functions under vendor/) is not compiled into libjudgly or the tools.
+
+The C engine in csrc/ and tools/ is written by the author of judgly and is
+under this package's licence.
 
 ------------------------------------------------------------------------------
 Data
 ------------------------------------------------------------------------------
 
-This version contains no trained parameters. Calibration heads shipped in
-later versions will list the datasets they were fitted on, with each
-dataset's licence, in their model card.
+This version ships calibration heads inside the packs
+(src/judgly/packs/<name>/heads/), licensed as stated in the LICENSE file next
+to them:
+
+  general head ("*")   Apache License 2.0. Fitted on MMLU, CommonsenseQA,
+                       StrategyQA, HH-RLHF (MIT); QASC, Cosmos QA, BANKING77,
+                       HelpSteer2, LEDGAR as released in LexGLUE (CC BY 4.0);
+                       Civil Comments (CC0 1.0); GoEmotions (Apache 2.0); and
+                       judgly's own generated tasks.
+  stance head          CC BY-SA 4.0 (LICENSES/CC-BY-SA-4.0.txt). Fitted on
+                       MultiNLI (OANC licence, parts CC BY-SA 3.0 / CC BY 3.0);
+                       VitaminC and FEVER (CC BY-SA 3.0), which contain
+                       material derived from Wikipedia (Wikipedia contributors,
+                       CC BY-SA 3.0 / 4.0); SNLI (CC BY-SA 4.0), which includes
+                       Flickr30k captions; WANLI (CC BY 4.0); and SciNLI
+                       (CC BY-SA 4.0).
+
+Heads contain no dataset text. Datasets used only for evaluation are not
+redistributed; they are downloaded by scripts/prep_tiers.py from their
+publishers. Every dataset, its pinned revision, licence and citation is listed
+in data/registry.yaml, and the licence evidence is in docs/licences.md.

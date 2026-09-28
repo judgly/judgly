@@ -1,0 +1,63 @@
+# Continuous integration: build, lint, licence check and the tests that need no model file.
+# The model-dependent tests (marked `model`) skip here because no GGUF file is available.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    # Apple silicon: the only platform judgly builds for so far (Metal backend).
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "14.0"
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          submodules: recursive
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          enable-cache: true
+
+      - name: Check the llama.cpp pin
+        run: git submodule status --recursive
+
+      - name: Lint (ruff)
+        run: uvx ruff@0.16.9 check .
+
+      - name: Licences and notices
+        run: uv run --no-project python scripts/check_licenses.py
+
+      - name: Build sdist and wheel (the wheel is built from the sdist)
+        run: uv build
+
+      - name: Import the wheel in a clean environment
+        run: |
+          wheel="$(find dist -name '*.whl')"
+          uv run --isolated --no-project --with "$wheel" python -c \
+            "import json, judgly; print(json.dumps(json.loads(judgly.native_version()), indent=2))"
+
+      - name: Contamination checker unit tests
+        run: uv run --group pipeline pytest -q -rs tests/test_pipeline.py
+
+      - name: Test suite (model tests skip)
+        run: uv run --group pipeline pytest -q -rs
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7

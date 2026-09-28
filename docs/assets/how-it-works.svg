@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="340" viewBox="0 0 960 340" role="img" aria-labelledby="t d">
+  <title id="t">How judgly answers a request</title>
+  <desc id="d">The state is read once by a frozen language model and cached. Each question branches from the cached state on its own. At the answer position the probabilities of the option letters are read, averaged over option orders, and a small fitted head turns them into calibrated probabilities.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#57606a"/>
+    </marker>
+  </defs>
+  <rect width="960" height="340" fill="#ffffff"/>
+  <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="14" fill="#1f2328">
+    <!-- state -->
+    <rect x="20" y="120" width="150" height="70" rx="6" fill="#f6f8fa" stroke="#8c959f"/>
+    <text x="95" y="150" text-anchor="middle" font-weight="700">state</text>
+    <text x="95" y="171" text-anchor="middle" fill="#57606a">the text, read once</text>
+    <!-- model pass 1 -->
+    <rect x="215" y="110" width="170" height="90" rx="6" fill="#ddeaf7" stroke="#3b6ea5"/>
+    <text x="300" y="143" text-anchor="middle" font-weight="700">frozen open model</text>
+    <text x="300" y="163" text-anchor="middle" fill="#3d444d">llama.cpp, GPU</text>
+    <text x="300" y="182" text-anchor="middle" fill="#3d444d">cached state</text>
+    <line x1="170" y1="155" x2="213" y2="155" stroke="#57606a" stroke-width="1.5" marker-end="url(#a)"/>
+    <!-- branches -->
+    <g>
+      <rect x="440" y="30"  width="190" height="56" rx="6" fill="#ddeaf7" stroke="#3b6ea5"/>
+      <text x="535" y="54" text-anchor="middle">question 1 branch</text>
+      <text x="535" y="73" text-anchor="middle" fill="#3d444d" font-size="12">sees the state and itself</text>
+      <rect x="440" y="127" width="190" height="56" rx="6" fill="#ddeaf7" stroke="#3b6ea5"/>
+      <text x="535" y="151" text-anchor="middle">question 2 branch</text>
+      <text x="535" y="170" text-anchor="middle" fill="#3d444d" font-size="12">each option order asked</text>
+      <rect x="440" y="224" width="190" height="56" rx="6" fill="#ddeaf7" stroke="#3b6ea5"/>
+      <text x="535" y="248" text-anchor="middle">question Q branch</text>
+      <text x="535" y="267" text-anchor="middle" fill="#3d444d" font-size="12">never sees its siblings</text>
+      <path d="M385,145 C410,120 415,70 438,60" fill="none" stroke="#57606a" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#a)"/>
+      <line x1="385" y1="155" x2="438" y2="155" stroke="#57606a" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#a)"/>
+      <path d="M385,165 C410,190 415,240 438,250" fill="none" stroke="#57606a" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#a)"/>
+    </g>
+    <!-- readout + head -->
+    <rect x="680" y="110" width="120" height="90" rx="6" fill="#e6f4ea" stroke="#2f7d4f"/>
+    <text x="740" y="140" text-anchor="middle" font-weight="700">head</text>
+    <text x="740" y="160" text-anchor="middle" fill="#3d444d" font-size="12">letter logits</text>
+    <text x="740" y="177" text-anchor="middle" fill="#3d444d" font-size="12">to calibrated</text>
+    <text x="740" y="192" text-anchor="middle" fill="#3d444d" font-size="12">probabilities</text>
+    <line x1="630" y1="58"  x2="678" y2="140" stroke="#57606a" stroke-width="1.5" marker-end="url(#a)"/>
+    <line x1="630" y1="155" x2="678" y2="155" stroke="#57606a" stroke-width="1.5" marker-end="url(#a)"/>
+    <line x1="630" y1="252" x2="678" y2="170" stroke="#57606a" stroke-width="1.5" marker-end="url(#a)"/>
+    <!-- output -->
+    <rect x="840" y="110" width="105" height="90" rx="6" fill="#f6f8fa" stroke="#8c959f"/>
+    <text x="892" y="140" text-anchor="middle" font-weight="700">answers</text>
+    <text x="892" y="162" text-anchor="middle" fill="#3d444d" font-size="12">supports 0.71</text>
+    <text x="892" y="178" text-anchor="middle" fill="#3d444d" font-size="12">contradicts 0.08</text>
+    <text x="892" y="194" text-anchor="middle" fill="#3d444d" font-size="12">no bearing 0.21</text>
+    <line x1="800" y1="155" x2="838" y2="155" stroke="#57606a" stroke-width="1.5" marker-end="url(#a)"/>
+    <text x="20" y="312" fill="#57606a" font-size="12">Blue: the language model, run by llama.cpp (not trained here). Green: the only fitted part, a few hundred thousand numbers against billions in the model.</text>
+    <text x="20" y="328" fill="#57606a" font-size="12">Dashed: the cached state, reused by every branch. The numbers on the right are illustrative.</text>
+  </g>
+</svg>

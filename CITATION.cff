@@ -1,0 +1,177 @@
+cff-version: 1.2.0
+message: "If you use judgly, please cite it as below. Please also cite llama.cpp, the model you used, and the datasets behind any number you report (each dataset's citation is listed in docs/reproduce.md#data-sources)."
+title: "judgly: calibrated, deterministic judgments from open language models"
+abstract: "A weekend hobby project that asks a frozen open language model typed questions about a text, reads the answer-letter probabilities at one position via llama.cpp, and calibrates them with a small fitted head. Questions branch from one cached reading of the text and are isolated from each other. The idea of typed, calibrated decisions comes from TypeSafe's Jev. Calibration was measured on public benchmarks for two model packs (Gemma 4 12B and Qwen3-4B); heads do not transfer between models, and the stance heads missed their pre-set calibration bar."
+type: software
+version: "0.1.0"
+date-released: "2026-09-28"
+authors:
+  - family-names: Lassmann
+    given-names: Timo
+repository-code: "https://github.com/judgly/judgly"
+license: Apache-2.0
+keywords:
+  - calibration
+  - language models
+  - llama.cpp
+  - classification
+  - decision
+references:
+  - type: software
+    title: llama.cpp
+    authors:
+      - name: "Georgi Gerganov and the ggml authors"
+    repository-code: "https://github.com/ggml-org/llama.cpp"
+    license: MIT
+  - type: article
+    title: "Calibrate Before Use: Improving Few-Shot Performance of Language Models"
+    authors:
+      - family-names: Zhao
+        given-names: Zihao
+      - family-names: Wallace
+        given-names: Eric
+      - family-names: Feng
+        given-names: Shi
+      - family-names: Klein
+        given-names: Dan
+      - family-names: Singh
+        given-names: Sameer
+    year: 2021
+    conference:
+      name: ICML
+  - type: article
+    title: "On Calibration of Modern Neural Networks"
+    authors:
+      - family-names: Guo
+        given-names: Chuan
+      - family-names: Pleiss
+        given-names: Geoff
+      - family-names: Sun
+        given-names: Yu
+      - family-names: Weinberger
+        given-names: Kilian Q.
+    year: 2017
+    conference:
+      name: ICML
+  - type: article
+    title: "Language Models (Mostly) Know What They Know"
+    authors:
+      - family-names: Kadavath
+        given-names: Saurav
+    year: 2022
+    url: "https://arxiv.org/abs/2207.05221"
+    notes: "and others"
+  - type: article
+    title: "Large Language Models Are Not Robust Multiple Choice Selectors"
+    authors:
+      - family-names: Zheng
+        given-names: Chujie
+      - family-names: Zhou
+        given-names: Hao
+      - family-names: Meng
+        given-names: Fandong
+      - family-names: Zhou
+        given-names: Jie
+      - family-names: Huang
+        given-names: Minlie
+    year: 2024
+    conference:
+      name: ICLR
+    url: "https://arxiv.org/abs/2309.03882"
+  - type: article
+    title: "Large Language Models Sensitivity to The Order of Options in Multiple-Choice Questions"
+    authors:
+      - family-names: Pezeshkpour
+        given-names: Pouya
+      - family-names: Hruschka
+        given-names: Estevam
+    year: 2024
+    conference:
+      name: "Findings of NAACL"
+    url: "https://arxiv.org/abs/2308.11483"
+  - type: article
+    title: "Strictly Proper Scoring Rules, Prediction, and Estimation"
+    authors:
+      - family-names: Gneiting
+        given-names: Tilmann
+      - family-names: Raftery
+        given-names: Adrian E.
+    year: 2007
+    journal: "Journal of the American Statistical Association"
+  - type: article
+    title: "Qwen3 Technical Report"
+    authors:
+      - name: "Qwen Team"
+    year: 2025
+    url: "https://arxiv.org/abs/2505.09388"
+  - type: software
+    title: "Gemma 4"
+    authors:
+      - name: Google
+    year: 2026
+    url: "https://huggingface.co/google/gemma-4-12B-it"
+    license: Apache-2.0
+  - type: software
+    title: yyjson
+    authors:
+      - name: YaoYuan
+    repository-code: "https://github.com/ibireme/yyjson"
+    license: MIT
+  - type: blog
+    title: "Launch post for Jev (TypeSafe), 15 September 2026: the source of the idea of typed, calibrated decisions"
+    authors:
+      - name: TypeSafe
+    year: 2026
+    url: "https://typesafe.ai/blog/introducing-system-one-models-and-jev"
+  - type: generic
+    title: "Black-box study of Jev, 17 September 2026: shaped the isolation, option-order and irrelevant-option probes"
+    authors:
+      - family-names: Hume
+        given-names: Archer
+    year: 2026
+    url: "https://archerhume.com/posts/jevs-architecture-unmasked/"
+  - type: software
+    title: Laya
+    authors:
+      - name: convaiinnovations
+    version: "0.3.20"
+    url: "https://huggingface.co/convaiinnovations/laya"
+    license: Apache-2.0
+  - type: software
+    title: CLM-v0.1-8B
+    authors:
+      - name: Contrastive-LM
+    url: "https://huggingface.co/Contrastive-LM/CLM-v0.1-8B"
+    license: Apache-2.0
+  - type: software
+    title: open-alternative-jev
+    authors:
+      - name: ikermoel
+    url: "https://github.com/ikermoel/open-alternative-jev"
+    license: Apache-2.0
+  - type: software
+    title: Cygnet
+    authors:
+      - name: blockbrain-ai
+    url: "https://github.com/blockbrain-ai/cygnet-recipe"
+    license: MIT
+  - type: software
+    title: Kev
+    authors:
+      - name: jaredpalmer
+    url: "https://github.com/jaredpalmer/kev"
+    license: Apache-2.0
+  - type: software
+    title: decider-4b
+    authors:
+      - name: Mapika
+    url: "https://huggingface.co/Mapika/decider-4b"
+    license: Apache-2.0
+  - type: article
+    title: "Smarter, Better, Faster, Longer: A Modern Bidirectional Encoder for Fast, Memory Efficient, and Long Context Finetuning and Inference"
+    authors:
+      - family-names: Warner
+        given-names: Benjamin
+    year: 2024
+    url: "https://arxiv.org/abs/2412.13663"
+    notes: "and others (ModernBERT)"

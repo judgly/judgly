@@ -1,0 +1,2565 @@
+{
+ "schema": 2,
+ "pack": "gemma4-12b-q8",
+ "format": "stance",
+ "quick": false,
+ "head": {
+  "kind": "H2",
+  "sha256": "ac30505af5d62bad368df67cd12e14eff5684103f71e3897bd9c4387e4e5faa5",
+  "licence": "CC-BY-SA-4.0",
+  "fitted_on": [
+   {
+    "source": "fever",
+    "licence": [
+     "cc-by-sa-3.0"
+    ],
+    "card_licence": [
+     "cc-by-sa-3.0",
+     "gpl-3.0"
+    ],
+    "citation": "Thorne et al. 2018, FEVER: a Large-scale Dataset for Fact Extraction and VERification. NAACL; evidence release: Atanasova, Wright and Augenstein 2020, Generating Label Cohesive and Well-Formed Adversarial Claims. EMNLP.",
+    "items": 2800
+   },
+   {
+    "source": "mnli",
+    "licence": [
+     "cc-by-sa-3.0"
+    ],
+    "card_licence": [
+     "cc-by-3.0",
+     "cc-by-sa-3.0",
+     "mit",
+     "other"
+    ],
+    "citation": "Williams, Nangia and Bowman 2018, A Broad-Coverage Challenge Corpus for Sentence Understanding through Inference. NAACL.",
+    "items": 3182
+   },
+   {
+    "source": "scinli",
+    "licence": [
+     "cc-by-sa-4.0"
+    ],
+    "card_licence": [
+     "apache-2.0"
+    ],
+    "citation": "Sadat and Caragea 2022, SciNLI: A Corpus for Natural Language Inference on Scientific Text. ACL.",
+    "items": 1417
+   },
+   {
+    "source": "snli",
+    "licence": [
+     "cc-by-sa-4.0"
+    ],
+    "card_licence": [
+     "cc-by-sa-4.0"
+    ],
+    "citation": "Bowman et al. 2015, A large annotated corpus for learning natural language inference. EMNLP.",
+    "items": 2099
+   },
+   {
+    "source": "vitaminc",
+    "licence": [
+     "cc-by-sa-3.0"
+    ],
+    "card_licence": [
+     "cc-by-sa-3.0"
+    ],
+    "citation": "Schuster, Fisch and Barzilay 2021, Get Your Vitamin C! Robust Fact Verification with Contrastive Evidence. NAACL.",
+    "items": 3159
+   },
+   {
+    "source": "wanli",
+    "licence": [
+     "cc-by-4.0"
+    ],
+    "card_licence": [
+     "cc-by-4.0"
+    ],
+    "citation": "Liu et al. 2022, WANLI: Worker and AI Collaboration for Natural Language Inference Dataset Creation. Findings of EMNLP.",
+    "items": 2126
+   }
+  ],
+  "engine": {
+   "rotations": true,
+   "max_rotations": 4,
+   "content_free": false
+  },
+  "types": {
+   "choice": {
+    "train": 44349,
+    "validation": 9216,
+    "h0_validation_loss": 3.087731,
+    "validation_loss": 0.558312,
+    "lambda": 0.0001,
+    "temperature": 2.93371,
+    "temperature_bounded": false,
+    "prob_sd": 0.348802,
+    "fallback": null,
+    "reason": null
+   },
+   "bool": {
+    "train": 0,
+    "validation": 0,
+    "fallback": "identity",
+    "reason": "no records of this type"
+   },
+   "score": {
+    "train": 0,
+    "validation": 0,
+    "fallback": "identity",
+    "reason": "no records of this type"
+   }
+  },
+  "train_log": [
+   "    iter  13  train 0.717447  validation 0.683476",
+   "    iter  14  train 0.717363  validation 0.683817",
+   "    iter  15  train 0.717234  validation 0.684124",
+   "    iter  16  train 0.716980  validation 0.684252",
+   "    iter  17  train 0.716451  validation 0.683703",
+   "    iter  18  train 0.715620  validation 0.681575",
+   "    iter  19  train 0.715289  validation 0.680557",
+   "    iter  20  train 0.714707  validation 0.677532",
+   "  H2: validation 0.558312 at lambda 0.0001",
+   "  choice: probability sd 0.3488 on validation, temperature 2.9337",
+   "bool: 0 training and 0 validation records; the head stays the identity",
+   "score: 0 training and 0 validation records; the head stays the identity"
+  ]
+ },
+ "conditions": {
+  "raw": "no head (H0): letter probabilities with the pack's engine settings (model.engine)",
+  "h2": "the fitted H2 head, with the pack's engine settings (model.engine)"
+ },
+ "data": {
+  "registry_sha256": "5c7d5d20d6eb9dc5d0963b0666bcc26337d59d2db8c3f7f2eec4c60dcc6b6553",
+  "files": {
+   "stance/final.jsonl": {
+    "sha256": "3e12644c85469f8ab0b82a04d03d746b9b5216c59d2115a39c29d402a8c681f5",
+    "items": 1343
+   },
+   "stance/final-flagged.jsonl": {
+    "sha256": "e692a789ad61367c69a2c12a57763fb452a258d3a3c8b4e7eba7ae06f174dae2",
+    "items": 749
+   },
+   "stance/final-seen.jsonl": {
+    "sha256": "315d67a0796217ad9583eb879521fd3b636c57d50ff4b3a56d4d52af339f038f",
+    "items": 2100
+   },
+   "stance/fitdev.jsonl": {
+    "sha256": "3176629a23f3afaf48f498a79f00917bcef402a8288e8f1d22267900a132c538",
+    "items": 23100
+   }
+  },
+  "seed": 20260926,
+  "settings": {
+   "fit_pool": 4500,
+   "dev_pool": 700,
+   "final_pool": 2100,
+   "seen_pool": 2100,
+   "bench_pool": null,
+   "caps": {
+    "train": 1000000000,
+    "validation": 1000000000,
+    "test": 1000000000
+   },
+   "quick": false
+  }
+ },
+ "model": {
+  "sha256": "abfc3044b93795f6a446fc1a04468ac2d5fc5e9c92e237f09a5b3384c5a433e4",
+  "file": "gemma-4-12B-it-Q8_0.gguf",
+  "template_sha256": "c7864e0f79bfb61441c9ed93a504a2e9ec87bc9dffe924026347b8dc9ee5b38e",
+  "engine": {
+   "rotations": true,
+   "content_free": false,
+   "max_rotations": 4
+  }
+ },
+ "software": {
+  "judgly_commit": "v0.1.0",
+  "judgly_dirty": true,
+  "llama_cpp_commit": "6f41ac59e0a49a00483a316a22ada6b04edd2950"
+ },
+ "platform": {
+  "system": "macOS-27.0-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "cpu": "Apple M3 Max",
+  "python": "3.13.13"
+ },
+ "selftest": [
+  "INFO slots  \" A\" chosen  mean slot mass: plain 0.0000, leading space 0.9999",
+  "PASS T1  measured 0.000000  tolerance 0.000000  prompt integrity, mismatches and forged markers",
+  "PASS T2  measured 0.000003  tolerance 0.050000  rows against logits, max |d logit|",
+  "PASS T3  measured 0.008379  tolerance 0.020000  branch against recompute, max |d p| (max |d logp| 0.036811)",
+  "PASS T4  measured 0.010581  tolerance 0.020000  packed and shared against single, max |d p| (max |d logp| 0.072400)",
+  "PASS T5  measured 0.000205  tolerance 0.010000  isolation from sibling questions, max |d p|",
+  "SKIP T6  no --reference given; the acceptance check always gives one",
+  "PASS T7  measured 0.000000  tolerance 0.000100  gradient check H1 and H2, max relative error",
+  "PASS T8  measured 0.009567  tolerance 0.020000  cached features against live engine, max |d p|",
+  "PASS T9  measured 0.000000  tolerance 0.000000  rotation bookkeeping, violations",
+  "PASS T10  measured 0.000000  tolerance 0.020000  pruned against full sliding-window cache, max |d p|",
+  "PASS: 0 test(s) failed"
+ ],
+ "metrics_note": "accuracy, log loss, Brier score and ECE (10 equal-width bins on the top probability) with 95% percentile bootstrap intervals, resampling items, or whole groups where a tier's items carry one (interval_unit; groups is their number); 'selective' is accuracy and coverage when only answers whose top probability is above the threshold (strictly greater) are kept",
+ "tiers": {
+  "test": {
+   "note": "in-distribution: the fit tier's test split",
+   "conditions": {
+    "raw": {
+     "items": 3145,
+     "interval_unit": "item",
+     "metrics": {
+      "accuracy": {
+       "value": 0.720508744,
+       "lo": 0.7033386328,
+       "hi": 0.7351430843
+      },
+      "log_loss": {
+       "value": 2.785510559,
+       "lo": 2.6191328,
+       "hi": 2.976406531
+      },
+      "brier": {
+       "value": 0.521288957,
+       "lo": 0.4929574582,
+       "hi": 0.5530804557
+      },
+      "ece": {
+       "value": 0.2473107767,
+       "lo": 0.2320911547,
+       "hi": 0.2632352288
+      },
+      "slot_mass": {
+       "value": 0.9999569653,
+       "lo": 0.999955549,
+       "hi": 0.9999583402
+      },
+      "slot_mass_p05": {
+       "value": 0.9998941143,
+       "lo": 0.9998894434,
+       "hi": 0.9998972459
+      },
+      "rps": {
+       "value": null,
+       "lo": null,
+       "hi": null
+      }
+     },
+     "reliability": [
+      {
+       "bin": 0,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 1,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 2,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 3,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 4,
+       "n": 1,
+       "confidence": 0.429996512,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0.7934506882
+      },
+      {
+       "bin": 5,
+       "n": 42,
+       "confidence": 0.5525175112,
+       "accuracy": 0.4285714286,
+       "wilson_lo": 0.2911765108,
+       "wilson_hi": 0.5779376023
+      },
+      {
+       "bin": 6,
+       "n": 174,
+       "confidence": 0.661858153,
+       "accuracy": 0.4885057471,
+       "wilson_lo": 0.4152875392,
+       "wilson_hi": 0.5622205176
+      },
+      {
+       "bin": 7,
+       "n": 46,
+       "confidence": 0.7396542796,
+       "accuracy": 0.4347826087,
+       "wilson_lo": 0.3020926268,
+       "wilson_hi": 0.5775256641
+      },
+      {
+       "bin": 8,
+       "n": 40,
+       "confidence": 0.8504736038,
+       "accuracy": 0.6,
+       "wilson_lo": 0.4459589354,
+       "wilson_hi": 0.7365167441
+      },
+      {
+       "bin": 9,
+       "n": 2842,
+       "confidence": 0.9982231883,
+       "accuracy": 0.745601689,
+       "wilson_lo": 0.7292655021,
+       "wilson_hi": 0.7612748249
+      }
+     ],
+     "selective": [
+      {
+       "threshold": 0.5,
+       "accuracy": 0.7207379135,
+       "coverage": 0.999682035
+      },
+      {
+       "threshold": 0.6,
+       "accuracy": 0.724693746,
+       "coverage": 0.986327504
+      },
+      {
+       "threshold": 0.7,
+       "accuracy": 0.7387295082,
+       "coverage": 0.9310015898
+      },
+      {
+       "threshold": 0.8,
+       "accuracy": 0.7435808466,
+       "coverage": 0.9163751987
+      },
+      {
+       "threshold": 0.9,
+       "accuracy": 0.745601689,
+       "coverage": 0.9036565978
+      },
+      {
+       "threshold": 0.95,
+       "accuracy": 0.7468938587,
+       "coverage": 0.8957074722
+      },
+      {
+       "threshold": 0.99,
+       "accuracy": 0.7554327808,
+       "coverage": 0.8632750397
+      }
+     ],
+     "by_family": {
+      "fit_claims": {
+       "items": 1261,
+       "accuracy": {
+        "value": 0.815226,
+        "lo": 0.793814,
+        "hi": 0.835845
+       },
+       "log_loss": {
+        "value": 1.789998,
+        "lo": 1.570641,
+        "hi": 2.018477
+       },
+       "brier": {
+        "value": 0.345587,
+        "lo": 0.307631,
+        "hi": 0.384998
+       },
+       "ece": {
+        "value": 0.1629,
+        "lo": 0.143993,
+        "hi": 0.184181
+       }
+      },
+      "fit_nli": {
+       "items": 1570,
+       "accuracy": {
+        "value": 0.645223,
+        "lo": 0.623567,
+        "hi": 0.666258
+       },
+       "log_loss": {
+        "value": 3.641548,
+        "lo": 3.387122,
+        "hi": 3.910489
+       },
+       "brier": {
+        "value": 0.662733,
+        "lo": 0.621398,
+        "hi": 0.704379
+       },
+       "ece": {
+        "value": 0.318985,
+        "lo": 0.298759,
+        "hi": 0.341972
+       }
+      },
+      "fit_scientific": {
+       "items": 314,
+       "accuracy": {
+        "value": 0.716561,
+        "lo": 0.665605,
+        "hi": 0.767516
+       },
+       "log_loss": {
+        "value": 2.503225,
+        "lo": 1.964788,
+        "hi": 3.037079
+       },
+       "brier": {
+        "value": 0.519674,
+        "lo": 0.426273,
+        "hi": 0.612131
+       },
+       "ece": {
+        "value": 0.229614,
+        "lo": 0.19011,
+        "hi": 0.285768
+       }
+      }
+     },
+     "confusion": {
+      "contradicts": {
+       "contradicts": 755,
+       "no_bearing": 210,
+       "supports": 116
+      },
+      "no_bearing": {
+       "contradicts": 50,
+       "no_bearing": 319,
+       "supports": 379
+      },
+      "supports": {
+       "contradicts": 30,
+       "no_bearing": 94,
+       "supports": 1192
+      }
+     }
+    },
+    "h2": {
+     "items": 3145,
+     "interval_unit": "item",
+     "metrics": {
+      "accuracy": {
+       "value": 0.786327504,
+       "lo": 0.7707392687,
+       "hi": 0.7996899841
+      },
+      "log_loss": {
+       "value": 0.5500972947,
+       "lo": 0.5254305392,
+       "hi": 0.5798357939
+      },
+      "brier": {
+       "value": 0.3047365833,
+       "lo": 0.2906186819,
+       "hi": 0.3219424869
+      },
+      "ece": {
+       "value": 0.02149023626,
+       "lo": 0.01502986767,
+       "hi": 0.03591659362
+      },
+      "slot_mass": {
+       "value": 0.9999569653,
+       "lo": 0.999955549,
+       "hi": 0.9999583402
+      },
+      "slot_mass_p05": {
+       "value": 0.9998941143,
+       "lo": 0.9998894434,
+       "hi": 0.9998972459
+      },
+      "rps": {
+       "value": null,
+       "lo": null,
+       "hi": null
+      }
+     },
+     "reliability": [
+      {
+       "bin": 0,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 1,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 2,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 3,
+       "n": 24,
+       "confidence": 0.376479826,
+       "accuracy": 0.5833333333,
+       "wilson_lo": 0.3883466572,
+       "wilson_hi": 0.755323975
+      },
+      {
+       "bin": 4,
+       "n": 302,
+       "confidence": 0.4610224526,
+       "accuracy": 0.4801324503,
+       "wilson_lo": 0.4243893308,
+       "wilson_hi": 0.5363746544
+      },
+      {
+       "bin": 5,
+       "n": 407,
+       "confidence": 0.5487224407,
+       "accuracy": 0.5577395577,
+       "wilson_lo": 0.5091718268,
+       "wilson_hi": 0.6052275333
+      },
+      {
+       "bin": 6,
+       "n": 385,
+       "confidence": 0.64925783,
+       "accuracy": 0.6805194805,
+       "wilson_lo": 0.6323566352,
+       "wilson_hi": 0.7251155346
+      },
+      {
+       "bin": 7,
+       "n": 453,
+       "confidence": 0.7501181782,
+       "accuracy": 0.8123620309,
+       "wilson_lo": 0.7738378004,
+       "wilson_hi": 0.8456331222
+      },
+      {
+       "bin": 8,
+       "n": 552,
+       "confidence": 0.851896824,
+       "accuracy": 0.8623188406,
+       "wilson_lo": 0.8310609227,
+       "wilson_hi": 0.8885687371
+      },
+      {
+       "bin": 9,
+       "n": 1022,
+       "confidence": 0.9528415175,
+       "accuracy": 0.9598825832,
+       "wilson_lo": 0.9460292545,
+       "wilson_hi": 0.9702916759
+      }
+     ],
+     "selective": [
+      {
+       "threshold": 0.5,
+       "accuracy": 0.8208584604,
+       "coverage": 0.8963434022
+      },
+      {
+       "threshold": 0.6,
+       "accuracy": 0.8652570481,
+       "coverage": 0.7669316375
+      },
+      {
+       "threshold": 0.7,
+       "accuracy": 0.9003453379,
+       "coverage": 0.6445151033
+      },
+      {
+       "threshold": 0.8,
+       "accuracy": 0.9256670902,
+       "coverage": 0.5004769475
+      },
+      {
+       "threshold": 0.9,
+       "accuracy": 0.9598825832,
+       "coverage": 0.3249602544
+      },
+      {
+       "threshold": 0.95,
+       "accuracy": 0.9724137931,
+       "coverage": 0.1844197138
+      },
+      {
+       "threshold": 0.99,
+       "accuracy": 1,
+       "coverage": 0.003497615262
+      }
+     ],
+     "by_family": {
+      "fit_claims": {
+       "items": 1261,
+       "accuracy": {
+        "value": 0.856463,
+        "lo": 0.837411,
+        "hi": 0.875496
+       },
+       "log_loss": {
+        "value": 0.427338,
+        "lo": 0.381114,
+        "hi": 0.473554
+       },
+       "brier": {
+        "value": 0.214641,
+        "lo": 0.190916,
+        "hi": 0.238685
+       },
+       "ece": {
+        "value": 0.016875,
+        "lo": 0.013367,
+        "hi": 0.037672
+       }
+      },
+      "fit_nli": {
+       "items": 1570,
+       "accuracy": {
+        "value": 0.742675,
+        "lo": 0.719108,
+        "hi": 0.761783
+       },
+       "log_loss": {
+        "value": 0.620169,
+        "lo": 0.590019,
+        "hi": 0.65511
+       },
+       "brier": {
+        "value": 0.35941,
+        "lo": 0.340003,
+        "hi": 0.381501
+       },
+       "ece": {
+        "value": 0.030688,
+        "lo": 0.020909,
+        "hi": 0.051496
+       }
+      },
+      "fit_scientific": {
+       "items": 314,
+       "accuracy": {
+        "value": 0.72293,
+        "lo": 0.675159,
+        "hi": 0.773885
+       },
+       "log_loss": {
+        "value": 0.692733,
+        "lo": 0.615434,
+        "hi": 0.774312
+       },
+       "brier": {
+        "value": 0.393186,
+        "lo": 0.346087,
+        "hi": 0.439613
+       },
+       "ece": {
+        "value": 0.04441,
+        "lo": 0.041002,
+        "hi": 0.104057
+       }
+      }
+     },
+     "confusion": {
+      "contradicts": {
+       "contradicts": 901,
+       "no_bearing": 107,
+       "supports": 73
+      },
+      "no_bearing": {
+       "contradicts": 95,
+       "no_bearing": 438,
+       "supports": 215
+      },
+      "supports": {
+       "contradicts": 41,
+       "no_bearing": 141,
+       "supports": 1134
+      }
+     }
+    }
+   },
+   "items": 3145,
+   "groups": null,
+   "sources": {
+    "fever": 600,
+    "mnli": 661,
+    "scinli": 314,
+    "snli": 458,
+    "vitaminc": 661,
+    "wanli": 451
+   }
+  },
+  "dev": {
+   "note": "held-out families scored during development",
+   "conditions": {
+    "raw": {
+     "items": 2100,
+     "interval_unit": "item",
+     "metrics": {
+      "accuracy": {
+       "value": 0.6542857143,
+       "lo": 0.63475,
+       "hi": 0.674297619
+      },
+      "log_loss": {
+       "value": 3.60663311,
+       "lo": 3.336019022,
+       "hi": 3.866862372
+      },
+      "brier": {
+       "value": 0.6462515306,
+       "lo": 0.6077928599,
+       "hi": 0.6825105556
+      },
+      "ece": {
+       "value": 0.3064787243,
+       "lo": 0.2853418098,
+       "hi": 0.3261600974
+      },
+      "slot_mass": {
+       "value": 0.9999601559,
+       "lo": 0.9999584861,
+       "hi": 0.9999616796
+      },
+      "slot_mass_p05": {
+       "value": 0.9998928835,
+       "lo": 0.9998873125,
+       "hi": 0.9999015272
+      },
+      "rps": {
+       "value": null,
+       "lo": null,
+       "hi": null
+      }
+     },
+     "reliability": [
+      {
+       "bin": 0,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 1,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 2,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 3,
+       "n": 1,
+       "confidence": 0.3386145523,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0.7934506882
+      },
+      {
+       "bin": 4,
+       "n": 4,
+       "confidence": 0.4607671846,
+       "accuracy": 0.75,
+       "wilson_lo": 0.3006418401,
+       "wilson_hi": 0.9544127397
+      },
+      {
+       "bin": 5,
+       "n": 39,
+       "confidence": 0.5551348775,
+       "accuracy": 0.4102564103,
+       "wilson_lo": 0.2707930991,
+       "wilson_hi": 0.5658137723
+      },
+      {
+       "bin": 6,
+       "n": 127,
+       "confidence": 0.6595759137,
+       "accuracy": 0.5511811024,
+       "wilson_lo": 0.464441939,
+       "wilson_hi": 0.6349149477
+      },
+      {
+       "bin": 7,
+       "n": 44,
+       "confidence": 0.7415972621,
+       "accuracy": 0.3863636364,
+       "wilson_lo": 0.2572120266,
+       "wilson_hi": 0.5337642472
+      },
+      {
+       "bin": 8,
+       "n": 35,
+       "confidence": 0.8441037078,
+       "accuracy": 0.4857142857,
+       "wilson_lo": 0.3299423589,
+       "wilson_hi": 0.6443119552
+      },
+      {
+       "bin": 9,
+       "n": 1850,
+       "confidence": 0.997578089,
+       "accuracy": 0.6762162162,
+       "wilson_lo": 0.6545478139,
+       "wilson_hi": 0.6971543217
+      }
+     ],
+     "selective": [
+      {
+       "threshold": 0.5,
+       "accuracy": 0.6544152745,
+       "coverage": 0.9976190476
+      },
+      {
+       "threshold": 0.6,
+       "accuracy": 0.6590466926,
+       "coverage": 0.979047619
+      },
+      {
+       "threshold": 0.7,
+       "accuracy": 0.6661482633,
+       "coverage": 0.9185714286
+      },
+      {
+       "threshold": 0.8,
+       "accuracy": 0.6726790451,
+       "coverage": 0.8976190476
+      },
+      {
+       "threshold": 0.9,
+       "accuracy": 0.6762162162,
+       "coverage": 0.880952381
+      },
+      {
+       "threshold": 0.95,
+       "accuracy": 0.6796276013,
+       "coverage": 0.8695238095
+      },
+      {
+       "threshold": 0.99,
+       "accuracy": 0.6890804598,
+       "coverage": 0.8285714286
+      }
+     ],
+     "by_family": {
+      "dev_claims": {
+       "items": 700,
+       "accuracy": {
+        "value": 0.691429,
+        "lo": 0.657143,
+        "hi": 0.725714
+       },
+       "log_loss": {
+        "value": 2.859008,
+        "lo": 2.488287,
+        "hi": 3.262136
+       },
+       "brier": {
+        "value": 0.576982,
+        "lo": 0.514819,
+        "hi": 0.642083
+       },
+       "ece": {
+        "value": 0.268456,
+        "lo": 0.238164,
+        "hi": 0.304741
+       }
+      },
+      "dev_nli": {
+       "items": 700,
+       "accuracy": {
+        "value": 0.644286,
+        "lo": 0.609964,
+        "hi": 0.675714
+       },
+       "log_loss": {
+        "value": 3.037751,
+        "lo": 2.684625,
+        "hi": 3.410312
+       },
+       "brier": {
+        "value": 0.64687,
+        "lo": 0.587923,
+        "hi": 0.709883
+       },
+       "ece": {
+        "value": 0.302955,
+        "lo": 0.273868,
+        "hi": 0.337599
+       }
+      },
+      "dev_scientific": {
+       "items": 700,
+       "accuracy": {
+        "value": 0.627143,
+        "lo": 0.587143,
+        "hi": 0.662857
+       },
+       "log_loss": {
+        "value": 4.92314,
+        "lo": 4.37537,
+        "hi": 5.478513
+       },
+       "brier": {
+        "value": 0.714903,
+        "lo": 0.646516,
+        "hi": 0.788749
+       },
+       "ece": {
+        "value": 0.349381,
+        "lo": 0.315983,
+        "hi": 0.390164
+       }
+      }
+     },
+     "confusion": {
+      "contradicts": {
+       "contradicts": 433,
+       "no_bearing": 84,
+       "supports": 312
+      },
+      "no_bearing": {
+       "contradicts": 91,
+       "no_bearing": 246,
+       "supports": 114
+      },
+      "supports": {
+       "contradicts": 44,
+       "no_bearing": 81,
+       "supports": 695
+      }
+     }
+    },
+    "h2": {
+     "items": 2100,
+     "interval_unit": "item",
+     "metrics": {
+      "accuracy": {
+       "value": 0.6242857143,
+       "lo": 0.6047619048,
+       "hi": 0.6471428571
+      },
+      "log_loss": {
+       "value": 1.028695029,
+       "lo": 0.9737988689,
+       "hi": 1.082463448
+      },
+      "brier": {
+       "value": 0.5443396355,
+       "lo": 0.5169211644,
+       "hi": 0.5699733822
+      },
+      "ece": {
+       "value": 0.1222095351,
+       "lo": 0.1058603292,
+       "hi": 0.1426610908
+      },
+      "slot_mass": {
+       "value": 0.9999601559,
+       "lo": 0.9999584861,
+       "hi": 0.9999616796
+      },
+      "slot_mass_p05": {
+       "value": 0.9998928835,
+       "lo": 0.9998873125,
+       "hi": 0.9999015272
+      },
+      "rps": {
+       "value": null,
+       "lo": null,
+       "hi": null
+      }
+     },
+     "reliability": [
+      {
+       "bin": 0,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 1,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 2,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 3,
+       "n": 52,
+       "confidence": 0.3774018588,
+       "accuracy": 0.5192307692,
+       "wilson_lo": 0.3868568267,
+       "wilson_hi": 0.6489588565
+      },
+      {
+       "bin": 4,
+       "n": 284,
+       "confidence": 0.4567949123,
+       "accuracy": 0.3978873239,
+       "wilson_lo": 0.3426891755,
+       "wilson_hi": 0.455811012
+      },
+      {
+       "bin": 5,
+       "n": 313,
+       "confidence": 0.5458083316,
+       "accuracy": 0.5399361022,
+       "wilson_lo": 0.4845706247,
+       "wilson_hi": 0.5943331908
+      },
+      {
+       "bin": 6,
+       "n": 227,
+       "confidence": 0.6541452162,
+       "accuracy": 0.59030837,
+       "wilson_lo": 0.52534832,
+       "wilson_hi": 0.6522627565
+      },
+      {
+       "bin": 7,
+       "n": 249,
+       "confidence": 0.7533613491,
+       "accuracy": 0.6184738956,
+       "wilson_lo": 0.5567716827,
+       "wilson_hi": 0.6765761245
+      },
+      {
+       "bin": 8,
+       "n": 316,
+       "confidence": 0.8541991923,
+       "accuracy": 0.6740506329,
+       "wilson_lo": 0.6205485685,
+       "wilson_hi": 0.7233718238
+      },
+      {
+       "bin": 9,
+       "n": 659,
+       "confidence": 0.9509746172,
+       "accuracy": 0.7602427921,
+       "wilson_lo": 0.7261979565,
+       "wilson_hi": 0.7912711839
+      }
+     ],
+     "selective": [
+      {
+       "threshold": 0.5,
+       "accuracy": 0.6638321995,
+       "coverage": 0.84
+      },
+      {
+       "threshold": 0.6,
+       "accuracy": 0.6905582357,
+       "coverage": 0.690952381
+      },
+      {
+       "threshold": 0.7,
+       "accuracy": 0.7091503268,
+       "coverage": 0.5828571429
+      },
+      {
+       "threshold": 0.8,
+       "accuracy": 0.7323076923,
+       "coverage": 0.4642857143
+      },
+      {
+       "threshold": 0.9,
+       "accuracy": 0.7602427921,
+       "coverage": 0.3138095238
+      },
+      {
+       "threshold": 0.95,
+       "accuracy": 0.7692307692,
+       "coverage": 0.1733333333
+      },
+      {
+       "threshold": 0.99,
+       "accuracy": 0.6666666667,
+       "coverage": 0.002857142857
+      }
+     ],
+     "by_family": {
+      "dev_claims": {
+       "items": 700,
+       "accuracy": {
+        "value": 0.622857,
+        "lo": 0.587143,
+        "hi": 0.657179
+       },
+       "log_loss": {
+        "value": 0.838735,
+        "lo": 0.774449,
+        "hi": 0.904157
+       },
+       "brier": {
+        "value": 0.485207,
+        "lo": 0.447816,
+        "hi": 0.523779
+       },
+       "ece": {
+        "value": 0.067637,
+        "lo": 0.044613,
+        "hi": 0.104989
+       }
+      },
+      "dev_nli": {
+       "items": 700,
+       "accuracy": {
+        "value": 0.628571,
+        "lo": 0.59,
+        "hi": 0.664321
+       },
+       "log_loss": {
+        "value": 0.918665,
+        "lo": 0.846403,
+        "hi": 0.985602
+       },
+       "brier": {
+        "value": 0.527854,
+        "lo": 0.486622,
+        "hi": 0.568763
+       },
+       "ece": {
+        "value": 0.087814,
+        "lo": 0.070065,
+        "hi": 0.127422
+       }
+      },
+      "dev_scientific": {
+       "items": 700,
+       "accuracy": {
+        "value": 0.621429,
+        "lo": 0.585679,
+        "hi": 0.657143
+       },
+       "log_loss": {
+        "value": 1.328685,
+        "lo": 1.203393,
+        "hi": 1.452774
+       },
+       "brier": {
+        "value": 0.619958,
+        "lo": 0.563976,
+        "hi": 0.676033
+       },
+       "ece": {
+        "value": 0.228145,
+        "lo": 0.19702,
+        "hi": 0.264193
+       }
+      }
+     },
+     "confusion": {
+      "contradicts": {
+       "contradicts": 463,
+       "no_bearing": 59,
+       "supports": 307
+      },
+      "no_bearing": {
+       "contradicts": 164,
+       "no_bearing": 185,
+       "supports": 102
+      },
+      "supports": {
+       "contradicts": 66,
+       "no_bearing": 91,
+       "supports": 663
+      }
+     }
+    }
+   },
+   "items": 2100,
+   "groups": null,
+   "sources": {
+    "anli": 700,
+    "climate_fever": 700,
+    "covidfact": 700
+   }
+  },
+  "final": {
+   "note": "fresh held-out families, frozen before any head was scored on them: the reported result",
+   "conditions": {
+    "raw": {
+     "items": 1343,
+     "interval_unit": "group",
+     "groups": 315,
+     "metrics_item_resampled": {
+      "accuracy": {
+       "value": 0.82725242,
+       "lo": 0.8078927774,
+       "hi": 0.8481012658
+      },
+      "log_loss": {
+       "value": 1.602996707,
+       "lo": 1.364278514,
+       "hi": 1.824709877
+      },
+      "brier": {
+       "value": 0.3104518948,
+       "lo": 0.2713974958,
+       "hi": 0.3480985156
+      },
+      "ece": {
+       "value": 0.14178231,
+       "lo": 0.1233005549,
+       "hi": 0.1628381295
+      }
+     },
+     "metrics": {
+      "accuracy": {
+       "value": 0.82725242,
+       "lo": 0.806426,
+       "hi": 0.847971
+      },
+      "log_loss": {
+       "value": 1.602996707,
+       "lo": 1.37032,
+       "hi": 1.855065
+      },
+      "brier": {
+       "value": 0.3104518948,
+       "lo": 0.272416,
+       "hi": 0.348485
+      },
+      "ece": {
+       "value": 0.14178231,
+       "lo": 0.122927,
+       "hi": 0.162136
+      },
+      "slot_mass": {
+       "value": 0.9999612167,
+       "lo": 0.9999589363,
+       "hi": 0.9999633683
+      },
+      "slot_mass_p05": {
+       "value": 0.9998891115,
+       "lo": 0.9998777906,
+       "hi": 0.9998979811
+      },
+      "rps": {
+       "value": null,
+       "lo": null,
+       "hi": null
+      }
+     },
+     "reliability": [
+      {
+       "bin": 0,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 1,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 2,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 3,
+       "n": 1,
+       "confidence": 0.3691330892,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0.7934506882
+      },
+      {
+       "bin": 4,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 5,
+       "n": 15,
+       "confidence": 0.5538732008,
+       "accuracy": 0.5333333333,
+       "wilson_lo": 0.3011697988,
+       "wilson_hi": 0.7519046477
+      },
+      {
+       "bin": 6,
+       "n": 81,
+       "confidence": 0.6610405353,
+       "accuracy": 0.5061728395,
+       "wilson_lo": 0.3995078463,
+       "wilson_hi": 0.612278844
+      },
+      {
+       "bin": 7,
+       "n": 15,
+       "confidence": 0.739284865,
+       "accuracy": 0.6666666667,
+       "wilson_lo": 0.4171354756,
+       "wilson_hi": 0.8482367566
+      },
+      {
+       "bin": 8,
+       "n": 8,
+       "confidence": 0.8512145093,
+       "accuracy": 0.375,
+       "wilson_lo": 0.1368442847,
+       "wilson_hi": 0.6942576073
+      },
+      {
+       "bin": 9,
+       "n": 1223,
+       "confidence": 0.9986043653,
+       "accuracy": 0.8577269011,
+       "wilson_lo": 0.8370272934,
+       "wilson_hi": 0.8761862956
+      }
+     ],
+     "selective": [
+      {
+       "threshold": 0.5,
+       "accuracy": 0.8278688525,
+       "coverage": 0.9992553984
+      },
+      {
+       "threshold": 0.6,
+       "accuracy": 0.8311981914,
+       "coverage": 0.9880863738
+      },
+      {
+       "threshold": 0.7,
+       "accuracy": 0.8523274478,
+       "coverage": 0.9277736411
+      },
+      {
+       "threshold": 0.8,
+       "accuracy": 0.8545897644,
+       "coverage": 0.9166046165
+      },
+      {
+       "threshold": 0.9,
+       "accuracy": 0.8577269011,
+       "coverage": 0.9106478034
+      },
+      {
+       "threshold": 0.95,
+       "accuracy": 0.8597359736,
+       "coverage": 0.9024571854
+      },
+      {
+       "threshold": 0.99,
+       "accuracy": 0.8622147084,
+       "coverage": 0.8808637379
+      }
+     ],
+     "by_family": {
+      "final_covid_claims": {
+       "items": 1343,
+       "groups": 315,
+       "accuracy": {
+        "value": 0.827252,
+        "lo": 0.804513,
+        "hi": 0.847154
+       },
+       "log_loss": {
+        "value": 1.602997,
+        "lo": 1.363466,
+        "hi": 1.862137
+       },
+       "brier": {
+        "value": 0.310452,
+        "lo": 0.272706,
+        "hi": 0.352841
+       },
+       "ece": {
+        "value": 0.141782,
+        "lo": 0.124124,
+        "hi": 0.164472
+       }
+      }
+     },
+     "confusion": {
+      "contradicts": {
+       "contradicts": 407,
+       "no_bearing": 21,
+       "supports": 23
+      },
+      "no_bearing": {
+       "contradicts": 66,
+       "no_bearing": 278,
+       "supports": 98
+      },
+      "supports": {
+       "contradicts": 8,
+       "no_bearing": 16,
+       "supports": 426
+      }
+     }
+    },
+    "h2": {
+     "items": 1343,
+     "interval_unit": "group",
+     "groups": 315,
+     "metrics_item_resampled": {
+      "accuracy": {
+       "value": 0.8123603872,
+       "lo": 0.792256143,
+       "hi": 0.8332092331
+      },
+      "log_loss": {
+       "value": 0.5085015586,
+       "lo": 0.4758288619,
+       "hi": 0.5442179802
+      },
+      "brier": {
+       "value": 0.2868207689,
+       "lo": 0.2645522046,
+       "hi": 0.3093739307
+      },
+      "ece": {
+       "value": 0.04785436583,
+       "lo": 0.03532513385,
+       "hi": 0.07092390845
+      }
+     },
+     "metrics": {
+      "accuracy": {
+       "value": 0.8123603872,
+       "lo": 0.789983,
+       "hi": 0.836129
+      },
+      "log_loss": {
+       "value": 0.5085015586,
+       "lo": 0.471728,
+       "hi": 0.549569
+      },
+      "brier": {
+       "value": 0.2868207689,
+       "lo": 0.262884,
+       "hi": 0.31336
+      },
+      "ece": {
+       "value": 0.04785436583,
+       "lo": 0.033602,
+       "hi": 0.071758
+      },
+      "slot_mass": {
+       "value": 0.9999612167,
+       "lo": 0.9999589363,
+       "hi": 0.9999633683
+      },
+      "slot_mass_p05": {
+       "value": 0.9998891115,
+       "lo": 0.9998777906,
+       "hi": 0.9998979811
+      },
+      "rps": {
+       "value": null,
+       "lo": null,
+       "hi": null
+      }
+     },
+     "reliability": [
+      {
+       "bin": 0,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 1,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 2,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 3,
+       "n": 12,
+       "confidence": 0.3707115474,
+       "accuracy": 0.4166666667,
+       "wilson_lo": 0.1932603124,
+       "wilson_hi": 0.6804886892
+      },
+      {
+       "bin": 4,
+       "n": 117,
+       "confidence": 0.4607695003,
+       "accuracy": 0.5299145299,
+       "wilson_lo": 0.4399704893,
+       "wilson_hi": 0.6179566498
+      },
+      {
+       "bin": 5,
+       "n": 169,
+       "confidence": 0.54779472,
+       "accuracy": 0.6686390533,
+       "wilson_lo": 0.5946178704,
+       "wilson_hi": 0.735164118
+      },
+      {
+       "bin": 6,
+       "n": 180,
+       "confidence": 0.650200145,
+       "accuracy": 0.7555555556,
+       "wilson_lo": 0.6878639058,
+       "wilson_hi": 0.8125672839
+      },
+      {
+       "bin": 7,
+       "n": 197,
+       "confidence": 0.749533482,
+       "accuracy": 0.8020304569,
+       "wilson_lo": 0.7408434362,
+       "wilson_hi": 0.8516637117
+      },
+      {
+       "bin": 8,
+       "n": 241,
+       "confidence": 0.8557975511,
+       "accuracy": 0.8796680498,
+       "wilson_lo": 0.8325255462,
+       "wilson_hi": 0.9148968913
+      },
+      {
+       "bin": 9,
+       "n": 427,
+       "confidence": 0.9481367144,
+       "accuracy": 0.9484777518,
+       "wilson_lo": 0.9232257437,
+       "wilson_hi": 0.9657323454
+      }
+     ],
+     "selective": [
+      {
+       "threshold": 0.5,
+       "accuracy": 0.8434925865,
+       "coverage": 0.9039463887
+      },
+      {
+       "threshold": 0.6,
+       "accuracy": 0.8717703349,
+       "coverage": 0.7781087118
+      },
+      {
+       "threshold": 0.7,
+       "accuracy": 0.8959537572,
+       "coverage": 0.644080417
+      },
+      {
+       "threshold": 0.8,
+       "accuracy": 0.9236526946,
+       "coverage": 0.4973938943
+      },
+      {
+       "threshold": 0.9,
+       "accuracy": 0.9484777518,
+       "coverage": 0.3179448995
+      },
+      {
+       "threshold": 0.95,
+       "accuracy": 0.9634703196,
+       "coverage": 0.1630677587
+      },
+      {
+       "threshold": 0.99,
+       "accuracy": 0.8,
+       "coverage": 0.003723008191
+      }
+     ],
+     "by_family": {
+      "final_covid_claims": {
+       "items": 1343,
+       "groups": 315,
+       "accuracy": {
+        "value": 0.81236,
+        "lo": 0.789942,
+        "hi": 0.83347
+       },
+       "log_loss": {
+        "value": 0.508502,
+        "lo": 0.472725,
+        "hi": 0.547327
+       },
+       "brier": {
+        "value": 0.286821,
+        "lo": 0.263766,
+        "hi": 0.311586
+       },
+       "ece": {
+        "value": 0.047854,
+        "lo": 0.033411,
+        "hi": 0.070523
+       }
+      }
+     },
+     "confusion": {
+      "contradicts": {
+       "contradicts": 415,
+       "no_bearing": 21,
+       "supports": 15
+      },
+      "no_bearing": {
+       "contradicts": 95,
+       "no_bearing": 269,
+       "supports": 78
+      },
+      "supports": {
+       "contradicts": 10,
+       "no_bearing": 33,
+       "supports": 407
+      }
+     }
+    }
+   },
+   "items": 1343,
+   "groups": 315,
+   "sources": {
+    "check_covid": 1343
+   }
+  },
+  "final-flagged": {
+   "note": "fresh held-out families with a recorded caveat (see `caveats`): reported beside the final result, never pooled into it, judging no bar",
+   "conditions": {
+    "raw": {
+     "items": 749,
+     "interval_unit": "group",
+     "groups": 749,
+     "metrics_item_resampled": {
+      "accuracy": {
+       "value": 0.7503337784,
+       "lo": 0.7182910547,
+       "hi": 0.782376502
+      },
+      "log_loss": {
+       "value": 1.97829437,
+       "lo": 1.700158535,
+       "hi": 2.29106485
+      },
+      "brier": {
+       "value": 0.4410565865,
+       "lo": 0.3875488278,
+       "hi": 0.4966347725
+      },
+      "ece": {
+       "value": 0.2006900647,
+       "lo": 0.1715719389,
+       "hi": 0.2347496903
+      }
+     },
+     "metrics": {
+      "accuracy": {
+       "value": 0.7503337784,
+       "lo": 0.722296,
+       "hi": 0.782377
+      },
+      "log_loss": {
+       "value": 1.97829437,
+       "lo": 1.665181,
+       "hi": 2.261605
+      },
+      "brier": {
+       "value": 0.4410565865,
+       "lo": 0.388247,
+       "hi": 0.491127
+      },
+      "ece": {
+       "value": 0.2006900647,
+       "lo": 0.173627,
+       "hi": 0.229054
+      },
+      "slot_mass": {
+       "value": 0.9999296442,
+       "lo": 0.9999175642,
+       "hi": 0.9999383941
+      },
+      "slot_mass_p05": {
+       "value": 0.9998093049,
+       "lo": 0.9997838934,
+       "hi": 0.9998364015
+      },
+      "rps": {
+       "value": null,
+       "lo": null,
+       "hi": null
+      }
+     },
+     "reliability": [
+      {
+       "bin": 0,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 1,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 2,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 3,
+       "n": 5,
+       "confidence": 0.3609737217,
+       "accuracy": 0.6,
+       "wilson_lo": 0.2307242794,
+       "wilson_hi": 0.8823792269
+      },
+      {
+       "bin": 4,
+       "n": 3,
+       "confidence": 0.4295298508,
+       "accuracy": 0.3333333333,
+       "wilson_lo": 0.06149194402,
+       "wilson_hi": 0.7923404012
+      },
+      {
+       "bin": 5,
+       "n": 13,
+       "confidence": 0.5401610095,
+       "accuracy": 0.4615384615,
+       "wilson_lo": 0.2320606767,
+       "wilson_hi": 0.7085620444
+      },
+      {
+       "bin": 6,
+       "n": 60,
+       "confidence": 0.6588204191,
+       "accuracy": 0.4833333333,
+       "wilson_lo": 0.3617504945,
+       "wilson_hi": 0.6069219006
+      },
+      {
+       "bin": 7,
+       "n": 13,
+       "confidence": 0.7511634398,
+       "accuracy": 0.5384615385,
+       "wilson_lo": 0.2914379556,
+       "wilson_hi": 0.7679393233
+      },
+      {
+       "bin": 8,
+       "n": 16,
+       "confidence": 0.8470238102,
+       "accuracy": 0.375,
+       "wilson_lo": 0.1848123245,
+       "wilson_hi": 0.6135895962
+      },
+      {
+       "bin": 9,
+       "n": 639,
+       "confidence": 0.9968142623,
+       "accuracy": 0.7981220657,
+       "wilson_lo": 0.7652599314,
+       "wilson_hi": 0.8274211951
+      }
+     ],
+     "selective": [
+      {
+       "threshold": 0.5,
+       "accuracy": 0.7530364372,
+       "coverage": 0.9893190921
+      },
+      {
+       "threshold": 0.6,
+       "accuracy": 0.7582417582,
+       "coverage": 0.9719626168
+      },
+      {
+       "threshold": 0.7,
+       "accuracy": 0.7829341317,
+       "coverage": 0.8918558077
+      },
+      {
+       "threshold": 0.8,
+       "accuracy": 0.7877862595,
+       "coverage": 0.8744993324
+      },
+      {
+       "threshold": 0.9,
+       "accuracy": 0.7981220657,
+       "coverage": 0.8531375167
+      },
+      {
+       "threshold": 0.95,
+       "accuracy": 0.8086124402,
+       "coverage": 0.8371161549
+      },
+      {
+       "threshold": 0.99,
+       "accuracy": 0.8255033557,
+       "coverage": 0.7957276368
+      }
+     ],
+     "by_family": {
+      "final_health_claims": {
+       "items": 749,
+       "groups": 749,
+       "accuracy": {
+        "value": 0.750334,
+        "lo": 0.718291,
+        "hi": 0.778371
+       },
+       "log_loss": {
+        "value": 1.978294,
+        "lo": 1.689938,
+        "hi": 2.282529
+       },
+       "brier": {
+        "value": 0.441057,
+        "lo": 0.390353,
+        "hi": 0.493899
+       },
+       "ece": {
+        "value": 0.20069,
+        "lo": 0.175193,
+        "hi": 0.231362
+       }
+      }
+     },
+     "confusion": {
+      "contradicts": {
+       "contradicts": 107,
+       "no_bearing": 9,
+       "supports": 9
+      },
+      "no_bearing": {
+       "contradicts": 125,
+       "no_bearing": 276,
+       "supports": 21
+      },
+      "supports": {
+       "contradicts": 8,
+       "no_bearing": 15,
+       "supports": 179
+      }
+     }
+    },
+    "h2": {
+     "items": 749,
+     "interval_unit": "group",
+     "groups": 749,
+     "metrics_item_resampled": {
+      "accuracy": {
+       "value": 0.6341789052,
+       "lo": 0.5981308411,
+       "hi": 0.6675567423
+      },
+      "log_loss": {
+       "value": 0.8088271527,
+       "lo": 0.7666907993,
+       "hi": 0.8539216194
+      },
+      "brier": {
+       "value": 0.5002944838,
+       "lo": 0.4700623394,
+       "hi": 0.5309971351
+      },
+      "ece": {
+       "value": 0.1228666162,
+       "lo": 0.09478046035,
+       "hi": 0.1580821092
+      }
+     },
+     "metrics": {
+      "accuracy": {
+       "value": 0.6341789052,
+       "lo": 0.596796,
+       "hi": 0.667557
+      },
+      "log_loss": {
+       "value": 0.8088271527,
+       "lo": 0.761776,
+       "hi": 0.855973
+      },
+      "brier": {
+       "value": 0.5002944838,
+       "lo": 0.467277,
+       "hi": 0.533155
+      },
+      "ece": {
+       "value": 0.1228666162,
+       "lo": 0.093143,
+       "hi": 0.158152
+      },
+      "slot_mass": {
+       "value": 0.9999296442,
+       "lo": 0.9999175642,
+       "hi": 0.9999383941
+      },
+      "slot_mass_p05": {
+       "value": 0.9998093049,
+       "lo": 0.9997838934,
+       "hi": 0.9998364015
+      },
+      "rps": {
+       "value": null,
+       "lo": null,
+       "hi": null
+      }
+     },
+     "reliability": [
+      {
+       "bin": 0,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 1,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 2,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 3,
+       "n": 25,
+       "confidence": 0.3745459773,
+       "accuracy": 0.4,
+       "wilson_lo": 0.2340330227,
+       "wilson_hi": 0.5926054278
+      },
+      {
+       "bin": 4,
+       "n": 147,
+       "confidence": 0.4594519291,
+       "accuracy": 0.6326530612,
+       "wilson_lo": 0.5522683601,
+       "wilson_hi": 0.7062812475
+      },
+      {
+       "bin": 5,
+       "n": 152,
+       "confidence": 0.5476316759,
+       "accuracy": 0.6184210526,
+       "wilson_lo": 0.5391784089,
+       "wilson_hi": 0.6918255888
+      },
+      {
+       "bin": 6,
+       "n": 117,
+       "confidence": 0.6430392109,
+       "accuracy": 0.4957264957,
+       "wilson_lo": 0.4067178049,
+       "wilson_hi": 0.5850068896
+      },
+      {
+       "bin": 7,
+       "n": 110,
+       "confidence": 0.7536300147,
+       "accuracy": 0.5454545455,
+       "wilson_lo": 0.4524405812,
+       "wilson_hi": 0.6354008792
+      },
+      {
+       "bin": 8,
+       "n": 119,
+       "confidence": 0.8519761494,
+       "accuracy": 0.7394957983,
+       "wilson_lo": 0.654029934,
+       "wilson_hi": 0.8099827903
+      },
+      {
+       "bin": 9,
+       "n": 79,
+       "confidence": 0.9322802816,
+       "accuracy": 0.9113924051,
+       "wilson_lo": 0.8282165767,
+       "wilson_hi": 0.9564147043
+      }
+     ],
+     "selective": [
+      {
+       "threshold": 0.5,
+       "accuracy": 0.6447140381,
+       "coverage": 0.7703604806
+      },
+      {
+       "threshold": 0.6,
+       "accuracy": 0.6541176471,
+       "coverage": 0.567423231
+      },
+      {
+       "threshold": 0.7,
+       "accuracy": 0.7142857143,
+       "coverage": 0.4112149533
+      },
+      {
+       "threshold": 0.8,
+       "accuracy": 0.8080808081,
+       "coverage": 0.26435247
+      },
+      {
+       "threshold": 0.9,
+       "accuracy": 0.9113924051,
+       "coverage": 0.1054739653
+      },
+      {
+       "threshold": 0.95,
+       "accuracy": 0.9,
+       "coverage": 0.02670226969
+      },
+      {
+       "threshold": 0.99,
+       "accuracy": null,
+       "coverage": 0
+      }
+     ],
+     "by_family": {
+      "final_health_claims": {
+       "items": 749,
+       "groups": 749,
+       "accuracy": {
+        "value": 0.634179,
+        "lo": 0.600801,
+        "hi": 0.66759
+       },
+       "log_loss": {
+        "value": 0.808827,
+        "lo": 0.763256,
+        "hi": 0.853915
+       },
+       "brier": {
+        "value": 0.500294,
+        "lo": 0.469714,
+        "hi": 0.531643
+       },
+       "ece": {
+        "value": 0.122867,
+        "lo": 0.094237,
+        "hi": 0.156756
+       }
+      }
+     },
+     "confusion": {
+      "contradicts": {
+       "contradicts": 110,
+       "no_bearing": 7,
+       "supports": 8
+      },
+      "no_bearing": {
+       "contradicts": 217,
+       "no_bearing": 199,
+       "supports": 6
+      },
+      "supports": {
+       "contradicts": 16,
+       "no_bearing": 20,
+       "supports": 166
+      }
+     }
+    }
+   },
+   "items": 749,
+   "groups": 749,
+   "sources": {
+    "healthfc": 749
+   },
+   "caveats": {
+    "healthfc": "The evidence sentences are the fact-checkers' own summary and often state the verdict (\"we could not find any meaningful scientific evidence\", verdict headings such as \"Not checked\"), so the no-bearing label (the verdict \"insufficient evidence\") can often be read off the wording, the flaw that excluded PubHealth; and 740 of the 749 claims are yes/no questions, not claims."
+   }
+  },
+  "final-seen": {
+   "note": "secondary evaluation: an earlier held-out tier, its families seen during development",
+   "conditions": {
+    "raw": {
+     "items": 2100,
+     "interval_unit": "item",
+     "metrics": {
+      "accuracy": {
+       "value": 0.6319047619,
+       "lo": 0.6104761905,
+       "hi": 0.6519047619
+      },
+      "log_loss": {
+       "value": 3.629823695,
+       "lo": 3.403738075,
+       "hi": 3.87006709
+      },
+      "brier": {
+       "value": 0.6777205858,
+       "lo": 0.6396122587,
+       "hi": 0.7158385284
+      },
+      "ece": {
+       "value": 0.3204628476,
+       "lo": 0.3021595154,
+       "hi": 0.3417243588
+      },
+      "slot_mass": {
+       "value": 0.9999606868,
+       "lo": 0.9999568842,
+       "hi": 0.9999634009
+      },
+      "slot_mass_p05": {
+       "value": 0.9999035796,
+       "lo": 0.9998983178,
+       "hi": 0.9999105463
+      },
+      "rps": {
+       "value": null,
+       "lo": null,
+       "hi": null
+      }
+     },
+     "reliability": [
+      {
+       "bin": 0,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 1,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 2,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 3,
+       "n": 3,
+       "confidence": 0.3644526139,
+       "accuracy": 0.3333333333,
+       "wilson_lo": 0.06149194402,
+       "wilson_hi": 0.7923404012
+      },
+      {
+       "bin": 4,
+       "n": 2,
+       "confidence": 0.4596059203,
+       "accuracy": 0.5,
+       "wilson_lo": 0.09453120464,
+       "wilson_hi": 0.9054687954
+      },
+      {
+       "bin": 5,
+       "n": 36,
+       "confidence": 0.5565075203,
+       "accuracy": 0.5,
+       "wilson_lo": 0.344743253,
+       "wilson_hi": 0.655256747
+      },
+      {
+       "bin": 6,
+       "n": 176,
+       "confidence": 0.6627684712,
+       "accuracy": 0.4204545455,
+       "wilson_lo": 0.3499886135,
+       "wilson_hi": 0.4943186994
+      },
+      {
+       "bin": 7,
+       "n": 49,
+       "confidence": 0.7454925579,
+       "accuracy": 0.5510204082,
+       "wilson_lo": 0.4131510812,
+       "wilson_hi": 0.6814715902
+      },
+      {
+       "bin": 8,
+       "n": 34,
+       "confidence": 0.8564079007,
+       "accuracy": 0.6176470588,
+       "wilson_lo": 0.4504101722,
+       "wilson_hi": 0.7609981677
+      },
+      {
+       "bin": 9,
+       "n": 1800,
+       "confidence": 0.9974829491,
+       "accuracy": 0.6583333333,
+       "wilson_lo": 0.6361072097,
+       "wilson_hi": 0.679885084
+      }
+     ],
+     "selective": [
+      {
+       "threshold": 0.5,
+       "accuracy": 0.6324582339,
+       "coverage": 0.9976190476
+      },
+      {
+       "threshold": 0.6,
+       "accuracy": 0.6347741622,
+       "coverage": 0.9804761905
+      },
+      {
+       "threshold": 0.7,
+       "accuracy": 0.6548061604,
+       "coverage": 0.8966666667
+      },
+      {
+       "threshold": 0.8,
+       "accuracy": 0.6575790622,
+       "coverage": 0.8733333333
+      },
+      {
+       "threshold": 0.9,
+       "accuracy": 0.6583333333,
+       "coverage": 0.8571428571
+      },
+      {
+       "threshold": 0.95,
+       "accuracy": 0.6638465877,
+       "coverage": 0.8442857143
+      },
+      {
+       "threshold": 0.99,
+       "accuracy": 0.6727379553,
+       "coverage": 0.8104761905
+      }
+     ],
+     "by_family": {
+      "final_scientific": {
+       "items": 2100,
+       "accuracy": {
+        "value": 0.631905,
+        "lo": 0.609524,
+        "hi": 0.65144
+       },
+       "log_loss": {
+        "value": 3.629824,
+        "lo": 3.400713,
+        "hi": 3.859155
+       },
+       "brier": {
+        "value": 0.677721,
+        "lo": 0.64069,
+        "hi": 0.716749
+       },
+       "ece": {
+        "value": 0.320463,
+        "lo": 0.301527,
+        "hi": 0.342522
+       }
+      }
+     },
+     "confusion": {
+      "contradicts": {
+       "contradicts": 194,
+       "no_bearing": 138,
+       "supports": 127
+      },
+      "no_bearing": {
+       "contradicts": 49,
+       "no_bearing": 575,
+       "supports": 182
+      },
+      "supports": {
+       "contradicts": 67,
+       "no_bearing": 210,
+       "supports": 558
+      }
+     }
+    },
+    "h2": {
+     "items": 2100,
+     "interval_unit": "item",
+     "metrics": {
+      "accuracy": {
+       "value": 0.6261904762,
+       "lo": 0.6052261905,
+       "hi": 0.6471428571
+      },
+      "log_loss": {
+       "value": 0.8889132204,
+       "lo": 0.8510653477,
+       "hi": 0.92415769
+      },
+      "brier": {
+       "value": 0.5069840091,
+       "lo": 0.4852873541,
+       "hi": 0.5285282483
+      },
+      "ece": {
+       "value": 0.06695440518,
+       "lo": 0.05070389581,
+       "hi": 0.08860241329
+      },
+      "slot_mass": {
+       "value": 0.9999606868,
+       "lo": 0.9999568842,
+       "hi": 0.9999634009
+      },
+      "slot_mass_p05": {
+       "value": 0.9999035796,
+       "lo": 0.9998983178,
+       "hi": 0.9999105463
+      },
+      "rps": {
+       "value": null,
+       "lo": null,
+       "hi": null
+      }
+     },
+     "reliability": [
+      {
+       "bin": 0,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 1,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 2,
+       "n": 0,
+       "confidence": 0,
+       "accuracy": 0,
+       "wilson_lo": 0,
+       "wilson_hi": 0
+      },
+      {
+       "bin": 3,
+       "n": 89,
+       "confidence": 0.3770087818,
+       "accuracy": 0.4157303371,
+       "wilson_lo": 0.3189052922,
+       "wilson_hi": 0.5195289572
+      },
+      {
+       "bin": 4,
+       "n": 313,
+       "confidence": 0.4528383002,
+       "accuracy": 0.3833865815,
+       "wilson_lo": 0.33124501,
+       "wilson_hi": 0.4383558488
+      },
+      {
+       "bin": 5,
+       "n": 375,
+       "confidence": 0.5467754985,
+       "accuracy": 0.5653333333,
+       "wilson_lo": 0.5147493031,
+       "wilson_hi": 0.6145924013
+      },
+      {
+       "bin": 6,
+       "n": 327,
+       "confidence": 0.6514366765,
+       "accuracy": 0.5871559633,
+       "wilson_lo": 0.5330815819,
+       "wilson_hi": 0.639206378
+      },
+      {
+       "bin": 7,
+       "n": 343,
+       "confidence": 0.7508387816,
+       "accuracy": 0.7055393586,
+       "wilson_lo": 0.655240333,
+       "wilson_hi": 0.7512854625
+      },
+      {
+       "bin": 8,
+       "n": 342,
+       "confidence": 0.8515707541,
+       "accuracy": 0.769005848,
+       "wilson_lo": 0.7214978374,
+       "wilson_hi": 0.8105378549
+      },
+      {
+       "bin": 9,
+       "n": 311,
+       "confidence": 0.9410474701,
+       "accuracy": 0.8006430868,
+       "wilson_lo": 0.7526923333,
+       "wilson_hi": 0.8412573983
+      }
+     ],
+     "selective": [
+      {
+       "threshold": 0.5,
+       "accuracy": 0.6819787986,
+       "coverage": 0.8085714286
+      },
+      {
+       "threshold": 0.6,
+       "accuracy": 0.7150415722,
+       "coverage": 0.63
+      },
+      {
+       "threshold": 0.7,
+       "accuracy": 0.7570281124,
+       "coverage": 0.4742857143
+      },
+      {
+       "threshold": 0.8,
+       "accuracy": 0.7840735069,
+       "coverage": 0.310952381
+      },
+      {
+       "threshold": 0.9,
+       "accuracy": 0.8006430868,
+       "coverage": 0.1480952381
+      },
+      {
+       "threshold": 0.95,
+       "accuracy": 0.8165137615,
+       "coverage": 0.0519047619
+      },
+      {
+       "threshold": 0.99,
+       "accuracy": 1,
+       "coverage": 0.001904761905
+      }
+     ],
+     "by_family": {
+      "final_scientific": {
+       "items": 2100,
+       "accuracy": {
+        "value": 0.62619,
+        "lo": 0.605702,
+        "hi": 0.647619
+       },
+       "log_loss": {
+        "value": 0.888913,
+        "lo": 0.849477,
+        "hi": 0.92623
+       },
+       "brier": {
+        "value": 0.506984,
+        "lo": 0.484682,
+        "hi": 0.527739
+       },
+       "ece": {
+        "value": 0.066954,
+        "lo": 0.050665,
+        "hi": 0.087306
+       }
+      }
+     },
+     "confusion": {
+      "contradicts": {
+       "contradicts": 247,
+       "no_bearing": 98,
+       "supports": 114
+      },
+      "no_bearing": {
+       "contradicts": 98,
+       "no_bearing": 512,
+       "supports": 196
+      },
+      "supports": {
+       "contradicts": 96,
+       "no_bearing": 183,
+       "supports": 556
+      }
+     }
+    }
+   },
+   "items": 2100,
+   "groups": null,
+   "sources": {
+    "healthver": 2100
+   }
+  }
+ }
+}

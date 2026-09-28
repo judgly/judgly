@@ -1,10 +1,25 @@
-# Python-generated files
+# Python
 __pycache__/
 *.py[oc]
+*.egg-info
+.venv
+.pytest_cache/
+
+# Build output
 build/
 dist/
 wheels/
-*.egg-info
+compile_commands.json
 
-# Virtual environments
-.venv
+# Model files are downloaded, never committed
+models/
+*.gguf
+
+# Local results and caches
+/results/
+.DS_Store
+data/raw/
+data/tiers/
+data/tiers-quick/
+results-quick/
+data/*.log

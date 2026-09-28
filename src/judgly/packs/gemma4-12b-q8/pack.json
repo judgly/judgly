@@ -1,0 +1,48 @@
+{
+ "schema": 1,
+ "name": "gemma4-12b-q8",
+ "description": "Google Gemma 4 12B instruction-tuned, 8-bit GGUF. The default model.",
+ "model": {
+  "repo_id": "ggml-org/gemma-4-12B-it-GGUF",
+  "revision": "e3e681731089efaa3f0917336944ac64752db8ba",
+  "filename": "gemma-4-12B-it-Q8_0.gguf",
+  "sha256": "abfc3044b93795f6a446fc1a04468ac2d5fc5e9c92e237f09a5b3384c5a433e4",
+  "size": 12669646976,
+  "base_model": "google/gemma-4-12B-it",
+  "licence": "Apache-2.0 (Google); GGUF conversion by ggml-org"
+ },
+ "template": "template.tpl",
+ "template_source": "judgly",
+ "engine": {
+  "rotations": true,
+  "content_free": false,
+  "max_rotations": 4
+ },
+ "heads": {
+  "*": {
+   "file": "heads/h2.bin",
+   "status": "available",
+   "sha256": "bdf84fac9bb91fefac915e168d95dc5f42fdadae48e5590d70223e0b8e78d9ff",
+   "licence": "Apache-2.0",
+   "calibration": "calibration/general.json",
+   "final_tier": {
+    "accuracy": 0.7368955451,
+    "log_loss": 0.6308785127,
+    "ece": 0.02004988251
+   }
+  },
+  "stance": {
+   "file": "heads/h2-stance.bin",
+   "status": "available",
+   "sha256": "ac30505af5d62bad368df67cd12e14eff5684103f71e3897bd9c4387e4e5faa5",
+   "licence": "CC-BY-SA-4.0",
+   "calibration": "calibration/stance.json",
+   "final_tier": {
+    "accuracy": 0.8123603872,
+    "log_loss": 0.5085015586,
+    "ece": 0.04785436583
+   }
+  }
+ },
+ "licence_notes": "The model weights are not part of judgly; they are downloaded from Hugging Face under their own licence. The template is judgly's own text around the model's chat markers."
+}

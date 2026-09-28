@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="t d">
+  <title id="t">judgly</title>
+  <desc id="d">judgly: calibrated, deterministic judgments from an open language model. A weekend hobby project.</desc>
+  <rect width="1280" height="640" fill="#faf8f3"/>
+  <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif" fill="#1f2328">
+    <text x="96" y="250" font-size="120" font-weight="700" letter-spacing="-2">judgly</text>
+    <text x="100" y="322" font-size="36" fill="#3d444d">Calibrated, deterministic judgments from an open language model</text>
+    <text x="100" y="372" font-size="26" fill="#6e7781">Typed questions in, one probability per allowed answer out. No text generated.</text>
+  </g>
+  <!-- a small reliability-style motif: bars rising to the diagonal -->
+  <g transform="translate(100,430)">
+    <line x1="0" y1="120" x2="240" y2="0" stroke="#b6bcc4" stroke-width="2" stroke-dasharray="6 6"/>
+    <g fill="#3b6ea5">
+      <rect x="4"   y="108" width="40" height="12"/>
+      <rect x="52"  y="84"  width="40" height="36"/>
+      <rect x="100" y="60"  width="40" height="60"/>
+      <rect x="148" y="36"  width="40" height="84"/>
+      <rect x="196" y="12"  width="40" height="108"/>
+    </g>
+    <line x1="0" y1="120.5" x2="240" y2="120.5" stroke="#1f2328" stroke-width="1"/>
+  </g>
+  <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="22" fill="#6e7781">
+    <text x="380" y="500">A weekend hobby project, built on llama.cpp and Google's Gemma</text>
+    <text x="380" y="536">choice  ·  yes / no  ·  score</text>
+  </g>
+</svg>

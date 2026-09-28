@@ -1,0 +1,12 @@
+INFO slots  " A" chosen  mean slot mass: plain 0.0000, leading space 1.0000
+PASS T1  measured 0.000000  tolerance 0.000000  prompt integrity, mismatches and forged markers
+PASS T2  measured 0.000010  tolerance 0.050000  rows against logits, max |d logit|
+PASS T3  measured 0.008565  tolerance 0.020000  branch against recompute, max |d p| (max |d logp| 0.066569)
+PASS T4  measured 0.006503  tolerance 0.020000  packed and shared against single, max |d p| (max |d logp| 0.161266)
+PASS T5  measured 0.001422  tolerance 0.010000  isolation from sibling questions, max |d p|
+SKIP T6  no --reference given; the acceptance check always gives one
+PASS T7  measured 0.000000  tolerance 0.000100  gradient check H1 and H2, max relative error
+PASS T8  measured 0.014633  tolerance 0.020000  cached features against live engine, max |d p|
+PASS T9  measured 0.000000  tolerance 0.000000  rotation bookkeeping, violations
+SKIP T10  the model has no sliding-window layers
+PASS: 0 test(s) failed
