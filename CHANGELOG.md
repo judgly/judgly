@@ -4,7 +4,7 @@ All notable changes to judgly. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/) (0.x: the API may still change).
 
-## Unreleased
+## 0.2.0 - 2026-09-30
 
 ### Added
 

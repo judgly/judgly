@@ -3,8 +3,8 @@ message: "If you use judgly, please cite it as below. Please also cite llama.cpp
 title: "judgly: calibrated, deterministic judgments from open language models"
 abstract: "A weekend hobby project that asks a frozen open language model typed questions about a text, reads the answer-letter probabilities at one position via llama.cpp, and calibrates them with a small fitted head. Questions branch from one cached reading of the text and are isolated from each other. The idea of typed, calibrated decisions comes from TypeSafe's Jev. Calibration was measured on public benchmarks for two model packs (Gemma 4 12B and Qwen3-4B); heads do not transfer between models, and the stance heads missed their pre-set calibration bar."
 type: software
-version: "0.1.0"
-date-released: "2026-09-28"
+version: "0.2.0"
+date-released: "2026-09-30"
 authors:
   - family-names: Lassmann
     given-names: Timo
