@@ -23,3 +23,6 @@ data/tiers/
 data/tiers-quick/
 results-quick/
 data/*.log
+
+# Confirmation extraction outputs (branch confirm-temperature)
+/results-confirm/

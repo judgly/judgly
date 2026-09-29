@@ -1,0 +1,8 @@
+# Confirm tier (built 2026-09-29 by scripts/prep_tiers.py; SHA-256 in data/tiers-confirm.sha256)
+# format   family            source            type    items  groups  labels
+general    kinship           clutrr            choice  500    500     17 relations (hop counts 2-10 balanced)
+general    code_outcome      code_outcome      choice  500    500     125 each: compile_error, runtime_error, time_limit_exceeded, runs_without_error
+general    spatial           spartqa           bool    500    500     250 true, 250 false
+general    argument_quality  argument_quality  score   500    15      3 levels, 167/167/166
+general    humour            humicroedit       score   500    417     3 levels, 167/167/166
+stance     confirm_climate   climatecheck      choice  1785   175     710 supports, 254 contradicts, 821 no_bearing

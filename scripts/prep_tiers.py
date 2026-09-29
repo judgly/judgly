@@ -13,6 +13,8 @@ Writes, per format (general, stance):
                                      previously seen families (split heldout)
   OUT_DIR/<format>/bench.jsonl       external benchmarks, evaluation only (general format;
                                      split heldout; each item carries the benchmark's gold)
+  OUT_DIR/<format>/confirm.jsonl     untouched families for the pre-registered confirmation,
+                                     evaluation only (split heldout), built last (below)
 and OUT_DIR/manifest.json: settings, counts per source, task and split, labels, every drop
 and why, the registry's SHA-256 and the SHA-256 of every file written.
 
@@ -27,9 +29,17 @@ and dev are built from their sources alone; the bench tier
 drops nothing for overlap (a benchmark is scored as published), only questions longer than the
 extraction can take (MAX_CHARS). Exact duplicates are dropped within a tier;
 fit items are split 70/15/15 by a hash of their passage (or recorded group), so items sharing
-one stay in one split. Items of the final and final-flagged tiers carry a `group` (items that
-share a claim, an abstract, a table or a template), which the calibration record resamples
-together for its intervals. scripts/check_contamination.py checks the result.
+one stay in one split. Items of the final, final-flagged and confirm tiers carry a `group` (items
+that share a claim, an abstract, a table, a story or a template), which the calibration record
+resamples together for its intervals. scripts/check_contamination.py checks the result.
+
+The confirm tier is built after all the others and drops an item that matches any of them in any
+of the four ways, or any text of a reserved source (reserved now, not `was_reserved`), or, for
+stance, any claim or passage of an evaluation source (dev, final, final-flagged, final-seen) as
+a whole, not only the items its tier holds; an item that matches a confirm source built before
+it is dropped too, and a source marked `distinct` keeps no two items that nearly duplicate each
+other. The tiers built before it are still checked against every `was_reserved` source, so they
+stay byte-identical to the 0.1.0 release.
 
 Everything is deterministic: items are ordered by a hash of their id and the first N kept
 (evenly across labels or strata where a source asks for it), so a rerun gives byte-identical
@@ -64,25 +74,27 @@ FULL = {
     # unless `pool` says otherwise, 700 per dev source, 2,100 per final and final-seen source.
     # The bench tier is every item of every benchmark.
     "general": {"fit_pool": 7000, "dev_pool": 250, "final_pool": 1000, "seen_pool": 700, "bench_pool": None,
-                "caps": {"train": 6300, "validation": 1350, "test": 1350}},
+                "confirm_pool": 500, "caps": {"train": 6300, "validation": 1350, "test": 1350}},
     "stance": {"fit_pool": 4500, "dev_pool": 700, "final_pool": 2100, "seen_pool": 2100, "bench_pool": None,
-               "caps": {"train": 10 ** 9, "validation": 10 ** 9, "test": 10 ** 9}},
+               "confirm_pool": None, "caps": {"train": 10 ** 9, "validation": 10 ** 9, "test": 10 ** 9}},
 }
 QUICK = {
     "general": {"fit_pool": 60, "dev_pool": 8, "final_pool": 8, "seen_pool": 8, "bench_pool": 16,
-                "caps": {"train": 192, "validation": 64, "test": 32}},
+                "confirm_pool": 8, "caps": {"train": 192, "validation": 64, "test": 32}},
     "stance": {"fit_pool": 90, "dev_pool": 16, "final_pool": 48, "seen_pool": 48, "bench_pool": 16,
-               "caps": {"train": 96, "validation": 32, "test": 32}},
+               "confirm_pool": 16, "caps": {"train": 96, "validation": 32, "test": 32}},
 }
 POOL_KEY = {"fit": "fit_pool", "dev": "dev_pool", "final": "final_pool", "final-flagged": "final_pool",
-            "final-seen": "seen_pool", "bench": "bench_pool"}
-BUILD_ORDER = ("final-seen", "dev", "final", "final-flagged", "bench", "fit")   # after reserved; see the docstring
+            "final-seen": "seen_pool", "bench": "bench_pool", "confirm": "confirm_pool"}
+BUILD_ORDER = ("final-seen", "dev", "final", "final-flagged", "bench", "fit", "confirm")  # after reserved; see the docstring
 STRICT = {"final": ("reserved", "final-seen", "dev"),                          # tiers checked for shared
           "final-flagged": ("reserved", "final-seen", "dev", "final"),          # sentences, shared passages
-          "fit": ("reserved", "final-seen", "dev", "final", "final-flagged", "bench")}  # and near duplicates
+          "fit": ("reserved", "final-seen", "dev", "final", "final-flagged", "bench"),  # and near duplicates
+          # "sources": the confirm tier's reserved and (stance) whole evaluation sources (confirm_texts)
+          "confirm": ("sources", "final-seen", "dev", "final", "final-flagged", "bench", "fit")}
 OUT_FILE = {"fit": "fitdev", "dev": "fitdev", "final": "final", "final-flagged": "final-flagged",
-            "final-seen": "final-seen", "bench": "bench"}
-GROUPED = ("final", "final-flagged")    # tiers whose rows carry their resampling group
+            "final-seen": "final-seen", "bench": "bench", "confirm": "confirm"}
+GROUPED = ("final", "final-flagged", "confirm")    # tiers whose rows carry their resampling group
 # Longer items are left out, never truncated: s1-features reads 32 examples at a time in one
 # context of 32,768 tokens (tools/s1-features.c), so an example must stay far below 1/32 of it.
 MAX_CHARS = {"general": 2500, "stance": 4000, "bench": 20000}
@@ -124,6 +136,7 @@ class Spec:
     levels: int = 0
     balance: bool = False                    # sample evenly across labels (or Item.stratum)
     one_per_group: bool = False              # keep at most one item per Item.group
+    distinct: bool = False                   # confirm: no two kept items nearly duplicate each other
     setup: Callable | None = None            # (reg) -> convert, for converters that need other data
 
 
@@ -327,6 +340,73 @@ CEFR = {"A1": 1, "A2": 2, "B1": 3, "B2": 4, "C1": 5, "C2": 6}
 POLITENESS = {"impolite": 1, "neutral": 2, "polite": 3}
 
 
+def short(prefix: str, text: str) -> str:
+    """A group name for items sharing a text: the prefix and a hash of the normalised text."""
+    import hashlib
+    return prefix + hashlib.sha256(norm(text).encode()).hexdigest()[:16]
+
+
+# ---- confirm tier converters (families new on 2026-09-29) -----------------------------------
+
+FEMALE = {"aunt", "daughter", "daughter-in-law", "granddaughter", "grandmother", "mother", "mother-in-law", "niece",
+          "sister"}
+
+
+def clutrr(names):
+    """The gold relation and three other relations of the same gender (so that a pronoun in the
+    story does not give the answer away), as "<tail> is <head>'s <relation>"."""
+    def convert(row, item_id):
+        k = row["label"]
+        if k is None or not 0 <= k < len(names):
+            return None
+        gold = names[k]
+        same = [n for n in names if n != gold and (n in FEMALE) == (gold in FEMALE)]
+        shown = [gold] + random.Random(f"{SEED}:{item_id}").sample(same, 3)
+        options = [(slug(n), f"{row['tail']} is {row['head']}'s {n}") for n in shown]
+        return Item(item_id, row["story"], row["query"], options, slug(gold), group=short("story:", row["story"]),
+                    stratum=f"hops{int(row['hops']):02d}")
+    return convert
+
+
+def spartqa(row, item_id):
+    if row["answer"] not in ("Yes", "No"):
+        return "answer DK (not a yes/no answer)"
+    return Item(item_id, row["story"], row["question"].replace(" ,", ","), [], "true" if row["answer"] == "Yes" else "false",
+                group=short("story:", row["story"]))
+
+
+def argument_quality(row, item_id):
+    wa = float(row["WA"])
+    state = f"Topic: {row['topic'].strip()}\nArgument: {row['argument'].strip()}"
+    return Item(item_id, state, None, [], str(1 if wa < 0.6 else 2 if wa < 0.85 else 3), group=short("topic:", row["topic"]))
+
+
+def humicroedit(row, item_id):
+    g = float(row["meanGrade"])
+    level = 1 if g <= 0.4 + 1e-9 else 2 if 0.6 - 1e-9 <= g <= 1.2 + 1e-9 else 3 if g >= 1.4 - 1e-9 else None
+    if level is None:
+        return "mean grade between two levels"
+    state = f"Original headline: {row['headline'].strip()}\nEdited headline: {row['edited'].strip()}"
+    return Item(item_id, state, None, [], str(level), group=short("headline:", row["headline"]))
+
+
+VERDICT = {"Compile Error": "Compile Error", "Runtime Error": "Runtime Error", "Time Limit Exceeded": "Time Limit Exceeded",
+           "Memory Limit Exceeded": "Memory Limit Exceeded", "Internal error": "Internal error",
+           "No abnormally found": "Runs without error"}
+
+
+def code_outcome(row, item_id):
+    choices, k = list(row["choices"]), "ABCD".find(row["answer"] or "")
+    if not 0 <= k < len(choices) or len(set(choices)) != len(choices) or any(c not in VERDICT for c in choices):
+        return None
+    if choices[k] == "Memory Limit Exceeded":
+        return "verdict Memory Limit Exceeded (too rare to balance)"
+    if len(row["question"]) > 1500:
+        return "program longer than 1,500 characters"
+    options = [(slug(VERDICT[c]), VERDICT[c]) for c in choices]
+    return Item(item_id, row["question"], None, options, options[k][0])
+
+
 NLI3 = [("entailment", "The text supports the claim"),
         ("neutral", "The text neither supports nor contradicts the claim"),
         ("contradiction", "The text contradicts the claim")]
@@ -455,6 +535,16 @@ GENERAL: dict[str, Spec] = {
                   "Rate how positive this review is, from 1 (very negative) to 5 (very positive)."), levels=5),
     "boolq": Spec(boolean(lambda r: r["passage"], lambda r: r["question"].rstrip("?") + "?", lambda r: r["answer"]),
                   ('The answer to the question "{q}" is yes.', 'According to the text, the answer to "{q}" is yes.')),
+    # confirm (untouched families, 2026-09-29)
+    "clutrr": Spec(clutrr, ("{q}",), needs_names="label", balance=True, one_per_group=True),
+    "spartqa": Spec(spartqa, ('The answer to the question "{q}" is yes.',), balance=True, one_per_group=True),
+    "argument_quality": Spec(argument_quality, ("Disregarding your own opinion on the topic, how strongly would you "
+                                                "recommend using this argument, as is, in a speech on the topic, from 1 "
+                                                "(not recommended) to 3 (recommended)?",), levels=3, balance=True),
+    "humicroedit": Spec(humicroedit, ("How funny is the edited headline, from 1 (not funny) to 3 (funny)?",),
+                        levels=3, balance=True),
+    "code_outcome": Spec(code_outcome, ("This program was submitted to an online judge and run on the problem's "
+                                        "hidden test inputs. What was the verdict?",), balance=True, distinct=True),
 }
 
 
@@ -628,6 +718,15 @@ def scinli(row, item_id):
     return stance_item(item_id, row["sentence2"], row["sentence1"], SCINLI[row["label"]])
 
 
+def climatecheck(row, item_id):
+    """Confirm tier: each labelled claim x abstract pair; items sharing a claim form a group."""
+    it = stance_item(item_id, row["claim"], row["abstract"], {"Supports": "supports", "Refutes": "contradicts",
+                                                               "Not Enough Information": "no_bearing"}.get(row["annotation"]))
+    if it:
+        it.group = short("claim:", row["claim"])
+    return it
+
+
 STANCE: dict[str, Spec] = {
     "mnli": Spec(lambda r, i: stance_item(i, r["hypothesis"], r["premise"], NLI_STANCE.get(r["label"]))),
     "vitaminc": Spec(vitaminc),
@@ -638,9 +737,7 @@ STANCE: dict[str, Spec] = {
     "anli": Spec(lambda r, i: stance_item(i, r["hypothesis"], r["premise"], NLI_STANCE.get(r["label"]))),
     "climate_fever": Spec(lambda r, i: stance_item(i, r["claim"], " ".join(e["evidence"] for e in r["evidences"]),
                                                    {0: "supports", 1: "contradicts", 2: "no_bearing"}.get(int(r["claim_label"])))),
-    "climatecheck": Spec(lambda r, i: stance_item(i, r["claim"], r["abstract"],
-                                                  {"Supports": "supports", "Refutes": "contradicts",
-                                                   "Not Enough Information": "no_bearing"}.get(r["annotation"]))),
+    "climatecheck": Spec(climatecheck),
 }
 
 
@@ -715,13 +812,28 @@ def multivers(name: str, splits: list[str]) -> Iterator[Item]:
                         yield it
 
 
-def reserved_texts(reg: dict, fmt: str) -> list[str]:
+def reserved_texts(reg: dict, fmt: str, held: bool = True) -> list[str]:
     """The claims and passages of every reserved source of a format, as the tiers are checked
     against them: for a MultiVerS source every claim and every abstract (with and without its
-    title), for any other source the texts of every item it holds."""
+    title), for any other source the texts of every item it holds (every file of it). With
+    `held`, also the sources reserved when the 0.1.0 tiers were built (`was_reserved`), which
+    those tiers are checked against; without, the reserved sources of now (the confirm tier)."""
+    return source_texts(reg, fmt, lambda name, src: registry.tier_of(reg, name) == "reserved"
+                        or (held and src.get("was_reserved", False)))
+
+
+def confirm_texts(reg: dict, fmt: str) -> list[str]:
+    """The texts the confirm tier is checked against besides the other tiers: the reserved
+    sources and, for stance, every claim and passage of every evaluation source as a whole (the
+    tiers hold only a sample of them)."""
+    tiers = ("reserved",) + (("dev", "final", "final-flagged", "final-seen") if fmt == "stance" else ())
+    return source_texts(reg, fmt, lambda name, src: registry.tier_of(reg, name) in tiers and registry.used(reg, name))
+
+
+def source_texts(reg: dict, fmt: str, chosen: Callable[[str, dict], bool]) -> list[str]:
     out: list[str] = []
     for name, src in reg["sources"].items():
-        if src["format"] != fmt or registry.tier_of(reg, name) != "reserved":
+        if src["format"] != fmt or not chosen(name, src):
             continue
         if src.get("raw") == "multivers":
             for line in open(multivers_dir() / name / "corpus.jsonl"):
@@ -733,7 +845,7 @@ def reserved_texts(reg: dict, fmt: str) -> list[str]:
             continue
         s = Source(name, fmt, "reserved", src["family"], src.get("type", "choice"),
                    (GENERAL if fmt == "general" else STANCE).get(name, Spec(None)))
-        load_source(reg, s, keep_long=True)
+        load_source(reg, s, keep_long=True, all_files=True)
         for it in s.items:
             out += list(item_texts(fmt, it))
     return out
@@ -812,7 +924,9 @@ def add(src: Source, it) -> None:
         src.items.append(it)
 
 
-def load_source(reg: dict, src: Source, pool_hint: int = 0, keep_long: bool = False) -> None:
+def load_source(reg: dict, src: Source, pool_hint: int = 0, keep_long: bool = False, all_files: bool = False) -> None:
+    """The items of a source; of its `files`, only those named in `item_files` (if given)
+    unless `all_files`."""
     info = reg["sources"][src.name]
     spec = src.spec
     if src.name == "generated":
@@ -824,7 +938,8 @@ def load_source(reg: dict, src: Source, pool_hint: int = 0, keep_long: bool = Fa
         src.items = list(RAW_LOADERS[info["raw"]](info))
     elif info.get("files") or info.get("file_pattern"):
         convert = spec.setup(reg) if spec.setup else spec.convert
-        for tag, path in hub_files(info):
+        only = None if all_files else info.get("item_files")
+        for tag, path in hub_files(info | ({"files": {t: info["files"][t] for t in only}} if only else {})):
             if spec.needs_names:
                 convert = spec.convert(class_names(path, spec.needs_names))
             for n, row in enumerate(read_rows(path, info.get("columns"))):
@@ -979,6 +1094,28 @@ def sample(src: Source, pool: int | None, bad: Callable[[Item], str | None] | No
                     out.append(it)
                     break
     src.items = sorted(out, key=lambda x: unit(x.id))
+
+
+def confirm_check(src: Source, bad: Callable[[Item], str | None], earlier: Strict) -> Callable[[Item], str | None]:
+    """The confirm tier's check of one item: the strict check against every other tier, the
+    same check against the confirm sources built before this one, and, for a `distinct` source,
+    no near duplicate of an item of it already taken (taken items are indexed as they pass)."""
+    taken = NearIndex()
+
+    def check(it: Item) -> str | None:
+        why = bad(it)
+        if why:
+            return why
+        if earlier(it):
+            return "matches an item of another confirm family"
+        texts = [t for t in item_texts(src.fmt, it) if t]
+        if src.spec.distinct:
+            if any(taken.near(t) for t in texts):
+                return "near duplicate of an item of its source already taken"
+            for k, t in enumerate(texts):
+                taken.add(f"{it.id}#{k}", t)
+        return None
+    return check
 
 
 def fit_split(fmt: str, it: Item) -> str:
@@ -1169,11 +1306,23 @@ def build_format(reg: dict, fmt: str, cfg: dict, out: Path) -> dict:
         segments["reserved"] |= segment_digests(t)
         near["reserved"].add(f"reserved-{i}", t)
         shingles["reserved"].add(f"reserved-{i}", t)
+    tier_digests: set[str] = set()          # the digests of every tier's items (not the reserved texts)
     for tier in BUILD_ORDER:
         seen: set[str] = set()
+        tier_sources = [s for s in sources.values() if s.tier == tier]
+        exact = against
+        if tier == "confirm" and tier_sources:
+            extra = confirm_texts(reg, fmt)
+            exact = tier_digests | {d for d in (digest(t) for t in extra) if d}
+            segments["sources"], near["sources"], shingles["sources"] = set(), NearIndex(), ShingleIndex()
+            for i, t in enumerate(extra):
+                segments["sources"] |= segment_digests(t)
+                near["sources"].add(f"sources-{i}", t)
+                shingles["sources"].add(f"sources-{i}", t)
+            print(f"{fmt} confirm: checked against {len(extra)} texts of reserved and evaluation sources", file=sys.stderr)
         strict = STRICT.get(tier)
         bad = strict_for(fmt, strict, segments, near, shingles) if strict else None
-        tier_sources = [s for s in sources.values() if s.tier == tier]
+        earlier = Strict(fmt, set(), [NearIndex()], ShingleIndex())     # confirm: the confirm sources built so far
         for s in tier_sources:
             if tier == "bench":
                 BENCH_LOADERS[s.name](reg, s)
@@ -1182,12 +1331,20 @@ def build_format(reg: dict, fmt: str, cfg: dict, out: Path) -> dict:
                     s.items = s.items[:cfg[POOL_KEY[tier]]]
             else:
                 load_source(reg, s, pool_for(reg, s, cfg) or 0)
-                clean(s, against, seen)
-                sample(s, pool_for(reg, s, cfg), bad)
+                clean(s, exact, seen)
+                sample(s, pool_for(reg, s, cfg), confirm_check(s, bad, earlier) if tier == "confirm" else bad)
             print(f"{fmt} {tier} {s.name}: {len(s.items)} items; dropped {s.drops}", file=sys.stderr)
+            if tier == "confirm":
+                for it in s.items:
+                    earlier.segments |= item_segments(fmt, it)
+                    for k, t in enumerate(item_texts(fmt, it)):
+                        if t:
+                            earlier.near[0].add(f"{it.id}#{k}", t)
+                            earlier.shingles.add(f"{it.id}#{k}", t)
         segments[tier], near[tier], shingles[tier] = set(), NearIndex(), ShingleIndex()
         for s in tier_sources:
             for it in s.items:
+                tier_digests |= item_digests(fmt, it)
                 against |= item_digests(fmt, it)
                 segments[tier] |= item_segments(fmt, it)
                 for k, t in enumerate(item_texts(fmt, it)):

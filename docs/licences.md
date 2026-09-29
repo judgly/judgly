@@ -142,7 +142,12 @@ file at the pinned commit):
 | HealthFC, github.com/jvladika/HealthFC @ 9f31d765 | final-flagged (final_health_claims) | repository `LICENSE-CC-BY-NC-ND`: "Creative Commons Attribution-NonCommercial-NoDerivs 4.0 International License" | evaluation only; no adapted text is redistributed. Reported beside the final tier, not in it: the evidence sentences are the fact-checkers' own summary and often state the verdict (the flaw that excluded PubHealth), and 740 of 749 claims are yes/no questions |
 | typed-decisions, `LocalLLaMA/typed-decisions` @ f7a2487e | bench | card `license: apache-2.0` | the test split only. The gold is a teacher model's output (model-written labels), so the rule in section 2 keeps it to evaluation, although the licence would allow fitting; the teacher and the model that wrote the states are not named |
 | JevBench public items (all 231), github.com/fstandhartinger/jevbench @ 1df665e3 (tag v1.4.2) | bench | `LICENSE`: "MIT License Copyright (c) 2026 Florian Standhartinger and contributors"; per-item `provenance.license` MIT | the hard items were written by Claude Opus 5 and GPT-5.6 Sol (`provenance.author_model`): evaluation only, never fitted on |
-| ClimateCheck, `rabuahmad/climatecheck` @ 93d0dc50 | reserved | card `license: mit` | in no tier; kept unseen as the next stance final tier. Some of its abstracts quote passages that Climate-FEVER (a dev-tier source) also holds: `make check` reports them, and those items are to be removed before it is promoted |
+| ClimateCheck, `rabuahmad/climatecheck` @ 93d0dc50 | confirm (confirm_climate) | card `license: mit` | reserved in 0.1.0; now the stance confirm tier (labelled test split only). Items overlapping any other tier or, as whole sources, Climate-FEVER, COVID-Fact, HealthVer, Check-COVID, HealthFC or SciFact are dropped |
+| CLUTRR, `tasksource/clutrr` @ 3f0016e8 | confirm (kinship) | card: no licence field; the original `CLUTRR/v1` card says `license: unknown`; github.com/facebookresearch/clutrr `LICENSE`: "Attribution-NonCommercial 4.0 International" | evaluation only (CC BY-NC 4.0) |
+| SpartQA-YN, `tasksource/spartqa-yn` @ 150c819e | confirm (spatial) | card `license: apache-2.0`; github.com/HLR/SpartQA_generation and HLR/SpartQA-baselines `LICENSE.md`: MIT | generated scenes |
+| IBM Argument Quality Ranking 30k, `ibm-research/argument_quality_ranking_30k` @ 590726b3 | confirm (argument_quality) | card `license: cc-by-3.0`; licensing section: "(c) Copyright IBM 2014. Released under CC-BY-SA 3.0" and Wikipedia copyright | evaluation only either way. FLAG: card field and card text disagree |
+| Humicroedit (SemEval-2020 Task 7), `tasksource/humicroedit` @ f5a16e65 | confirm (humour) | card `license: unknown` (as the original `SemEvalWorkshop/humicroedit` card); the primary page cs.rochester.edu/u/nhossain/humicroedit.html states no licence | evaluation only. FLAG: no licence stated anywhere |
+| CodeMMLU execution prediction, `Fsoft-AIC/CodeMMLU` @ f7c12212 | confirm (code_outcome) | card `license: mit`; github.com/FSoft-AI4Code/CodeMMLU `LICENSE`: MIT; the programs are Project CodeNet submissions (IBM/Project_CodeNet repository Apache-2.0) | FLAG (weak): the CodeNet data licence was not confirmed from its README |
 
 ### 2.1 Candidates not used, and why
 
@@ -172,7 +177,7 @@ Candidates for fitting, final or bench data that were checked and are not used:
 | wikiHow goal-step, e-CARE, MC-TACO | Relatives of families already used (HellaSwag and SWAG, COPA, commonsense) |
 | OneStopEnglish | 567 long texts; CEFR-SP is used for difficulty |
 | Toxicity, hate-speech and clickbait sets | Relatives of the fit family moderation |
-| CodeMMLU execution prediction | Allowed (MIT) but left out: its name reads as a variant of the fit source MMLU |
+| CodeMMLU execution prediction | Allowed (MIT) but left out of the 0.1.0 tiers: its name reads as a variant of the fit source MMLU (its data is Project CodeNet, not MMLU); used in the confirm tier |
 | JevBench official score (sealed and held-out items, imported router and judge items) | Not published; only the operator can run it |
 | Kev "transfer-v4" test | Not published; the figure often quoted next to Jev's is on a different item set |
 

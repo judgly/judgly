@@ -107,6 +107,18 @@ def test_flagged_tier_is_checked_like_final(tmp_path):
     assert write(tmp_path, fitdev, final) > 0
 
 
+def test_confirm_tier_is_checked_against_every_other_tier(tmp_path):
+    fitdev, final = clean_tiers()
+    confirm = [ex(i, "clutrr", "kinship", "heldout") for i in range(3)]
+    (tmp_path / "general").mkdir(parents=True, exist_ok=True)
+    path = tmp_path / "general" / "confirm.jsonl"
+    path.write_text("".join(json.dumps(r) + "\n" for r in confirm))
+    assert write(tmp_path, fitdev, final, seen=seen_tier()) == 0
+    for leak in (final[0]["state"], seen_tier()[0]["state"], fitdev[0]["state"] + " x"):
+        path.write_text("".join(json.dumps(r) + "\n" for r in confirm + [ex(9, "clutrr", "kinship", "heldout", state=leak)]))
+        assert write(tmp_path, fitdev, final, seen=seen_tier()) > 0
+
+
 def test_flagged_sources_record_a_caveat():
     reg = registry.load()
     flagged = [n for n in reg["sources"] if registry.tier_of(reg, n) == "final-flagged"]
