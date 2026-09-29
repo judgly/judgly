@@ -36,6 +36,17 @@ All notable changes to judgly. The format follows
   tiers they read, the protocol and its amendment, the confirm tier's construction, per-family
   and secondary results, and the negative results), temperature rows for every tier in the model
   cards, and a diagram of both options in `docs/calibration-options.md`.
+- A comparison with three dedicated decision models served by Ollama 0.35.0 (Nimble 9B by Bespoke
+  Labs, Tev1 4B and Tev1 0.8B by Together AI) on the same 17,482 items of judgly's confirm,
+  final, bench and final-flagged tiers, scored by the same code; descriptive, with the protocol,
+  runner and scorer frozen before any of these models answered a test item. The record
+  (`docs/results/external-comparison/`: protocol, decision note, the 52,446 raw answers, results,
+  single-request timings, environment and model digests), `make compare-score` (rebuilds every
+  result from the committed answers, byte for byte) and `make compare-run` (asks the models
+  again, never into the record); `make compare-figures` and two figures (accuracy against ECE on
+  six test sets, reliability on the confirm tiers); a README section "Comparison with dedicated
+  decision models" and a methods section with every number, interval and paired difference.
+  Only the models' outputs are committed, not their weights.
 
 ### Changed
 

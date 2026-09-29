@@ -293,6 +293,18 @@ runner (resumable), scores the new answers into `COMPARE_OUT/final/` and reports
 equal the record. No tolerance has been set for what counts as the same result on other hardware
 or Ollama versions.
 
+**Figures (CPU, under a minute).** Needs the tier files (`make data`):
+
+```bash
+make compare-figures
+```
+
+It rescores every item from the committed answers and dumps, checks every point value, interval
+and paired difference of the four result files (replaying the frozen scorer's bootstrap), adds
+intervals for bench split by source, and writes `docs/assets/results/compare-tiers.{svg,png}`,
+`compare-reliability.{svg,png}`, `compare-by-source.json` and the comparison section of
+`CAPTIONS.md`. A rerun gives byte-identical files.
+
 ## Checks that must pass
 
 - `make licences`: every card matches the registry and the policy holds.

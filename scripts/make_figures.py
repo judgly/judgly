@@ -372,7 +372,11 @@ def main() -> None:
     fig_selective(runs)
     for pack in PACKS:
         fig_families(pack, runs, tasks)
-    (OUT / "CAPTIONS.md").write_text(captions(runs))
+    # The external-comparison captions (scripts/make_compare_figures.py) follow a marker; keep them.
+    marker = "<!-- external comparison: written by scripts/make_compare_figures.py -->"
+    old = (OUT / "CAPTIONS.md").read_text() if (OUT / "CAPTIONS.md").is_file() else ""
+    tail = marker + old.split(marker, 1)[1] if marker in old else ""
+    (OUT / "CAPTIONS.md").write_text(captions(runs).rstrip("\n") + "\n\n" + tail if tail else captions(runs))
     print(f"make_figures: checked against record.json and tables.md; wrote {len(list(OUT.iterdir()))} files "
           f"in {OUT.relative_to(ROOT)}")
 

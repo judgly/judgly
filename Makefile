@@ -14,6 +14,7 @@
 #                                     extracts (see "Calibration options" below)
 #   make install-pack MODEL=...       copy a finished (non-QUICK) pack into src/judgly/packs
 #   make figures                      the results figures from the snapshot in docs/results
+#   make compare-figures              the external-comparison figures (needs make data)
 #   make compare-score                CPU only: rescore the committed answers of the external comparison
 #                                     with its frozen scorer and check the results equal the committed ones
 #   make compare-run                  ask the Ollama models of the external comparison again (Ollama >= 0.35.0,
@@ -71,7 +72,7 @@ endif
 ACCEPT_FAIL ?=
 
 .PHONY: pack run stop status data check verify-data licences fetch tools install-pack features format figures \
-        calibrate compare-score compare-run
+        calibrate compare-score compare-run compare-figures
 .DELETE_ON_ERROR:
 
 # ---- control -------------------------------------------------------------------------------
@@ -296,6 +297,11 @@ install-pack:
 # plotted number is checked against record.json. Reruns give byte-identical files.
 figures:
 	uv run --group figures python scripts/make_figures.py
+
+# The external-comparison figures (docs/results/external-comparison); needs the tier files from
+# make data, rescores every item and checks every plotted number against the record's results.
+compare-figures:
+	uv run --group figures python scripts/make_compare_figures.py
 
 # ---- external comparison ---------------------------------------------------------------------
 

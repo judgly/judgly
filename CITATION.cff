@@ -175,3 +175,27 @@ references:
     year: 2024
     url: "https://arxiv.org/abs/2412.13663"
     notes: "and others (ModernBERT)"
+  - type: software
+    title: "Bespoke-Nimble-9B (Nimble)"
+    authors:
+      - name: "Bespoke Labs"
+    url: "https://huggingface.co/bespokelabs/Bespoke-Nimble-9B"
+    repository-code: "https://github.com/bespokelabsai/nimble"
+    license: Apache-2.0
+    notes: "Weights licence as stated on the model card. Run through Ollama as nimble:9b in the external comparison (docs/results/external-comparison); no weights are redistributed."
+  - type: software
+    title: "Tev1 (Tev1-4B-experimental, Tev1-0.8B-experimental)"
+    authors:
+      - name: "Together AI"
+    url: "https://huggingface.co/togethercomputer/Tev1-4B-experimental"
+    repository-code: "https://github.com/togethercomputer/tev1"
+    license: MIT
+    notes: "MIT covers the code; the model card describes the weights' licence as being finalized. Run through Ollama as tev1:4b and tev1:0.8b in the external comparison; no weights are redistributed."
+  - type: software
+    title: Ollama
+    authors:
+      - name: "Ollama"
+    version: "0.35.0"
+    repository-code: "https://github.com/ollama/ollama"
+    license: MIT
+    notes: "Served the models of the external comparison through its /v1/systemone endpoint."
