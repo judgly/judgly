@@ -30,11 +30,12 @@ drops nothing for overlap (a benchmark is scored as published), only questions l
 extraction can take (MAX_CHARS). Exact duplicates are dropped within a tier;
 fit items are split 70/15/15 by a hash of their passage (or recorded group), so items sharing
 one stay in one split. Items of the final, final-flagged and confirm tiers carry a `group` (items
-that share a claim, an abstract, a table, a story or a template), which the calibration record
-resamples together for its intervals. scripts/check_contamination.py checks the result.
+that share a claim, an abstract, a table, a story or a template; for ClimateCheck, the connected
+components of shared claims and abstracts), which the calibration record resamples together for
+its intervals. scripts/check_contamination.py checks the result.
 
 The confirm tier is built after all the others and drops an item that matches any of them in any
-of the four ways, or any text of a reserved source (reserved now, not `was_reserved`), or, for
+of the four ways (its passage check counts boilerplate n-grams too, see scripts/texthash.py), or any text of a reserved source (reserved now, not `was_reserved`), or, for
 stance, any claim or passage of an evaluation source (dev, final, final-flagged, final-seen) as
 a whole, not only the items its tier holds; an item that matches a confirm source built before
 it is dropped too, and a source marked `distinct` keeps no two items that nearly duplicate each
@@ -64,7 +65,7 @@ from pathlib import Path
 from typing import Callable, Iterator
 
 import registry
-from texthash import NearIndex, ShingleIndex, digest, digests_of, norm, passage_of, segment_digests
+from texthash import SHINGLE_DF, NearIndex, ShingleIndex, digest, digests_of, norm, passage_of, segment_digests
 
 SEED = 20260926
 FULL = {
@@ -137,6 +138,10 @@ class Spec:
     balance: bool = False                    # sample evenly across labels (or Item.stratum)
     one_per_group: bool = False              # keep at most one item per Item.group
     distinct: bool = False                   # confirm: no two kept items nearly duplicate each other
+    linked: bool = False                     # stance: items linked by a shared claim or evidence
+                                             # passage, directly or through others, form one
+                                             # resampling group (link_clusters); the row also
+                                             # records its claim group as `claim_group`
     setup: Callable | None = None            # (reg) -> convert, for converters that need other data
 
 
@@ -403,6 +408,8 @@ def code_outcome(row, item_id):
         return "verdict Memory Limit Exceeded (too rare to balance)"
     if len(row["question"]) > 1500:
         return "program longer than 1,500 characters"
+    if len(row["question"].strip()) < 20:
+        return "program shorter than 20 characters (not a program)"
     options = [(slug(VERDICT[c]), VERDICT[c]) for c in choices]
     return Item(item_id, row["question"], None, options, options[k][0])
 
@@ -719,7 +726,8 @@ def scinli(row, item_id):
 
 
 def climatecheck(row, item_id):
-    """Confirm tier: each labelled claim x abstract pair; items sharing a claim form a group."""
+    """Confirm tier: each labelled claim x abstract pair, grouped by claim; the resampling group
+    joins claims that share an abstract (Spec.linked)."""
     it = stance_item(item_id, row["claim"], row["abstract"], {"Supports": "supports", "Refutes": "contradicts",
                                                                "Not Enough Information": "no_bearing"}.get(row["annotation"]))
     if it:
@@ -737,7 +745,7 @@ STANCE: dict[str, Spec] = {
     "anli": Spec(lambda r, i: stance_item(i, r["hypothesis"], r["premise"], NLI_STANCE.get(r["label"]))),
     "climate_fever": Spec(lambda r, i: stance_item(i, r["claim"], " ".join(e["evidence"] for e in r["evidences"]),
                                                    {0: "supports", 1: "contradicts", 2: "no_bearing"}.get(int(r["claim_label"])))),
-    "climatecheck": Spec(climatecheck),
+    "climatecheck": Spec(climatecheck, linked=True),
 }
 
 
@@ -1025,27 +1033,29 @@ class Strict:
     """The sentence-level, passage-level and near-duplicate check of one tier against earlier
     ones."""
 
-    def __init__(self, fmt: str, segments: set[str], near: list[NearIndex], shingles: ShingleIndex):
-        self.fmt, self.segments, self.near, self.shingles = fmt, segments, near, shingles
+    def __init__(self, fmt: str, segments: set[str], near: list[NearIndex], shingles: ShingleIndex,
+                 df: int | None = SHINGLE_DF):
+        self.fmt, self.segments, self.near, self.shingles, self.df = fmt, segments, near, shingles, df
 
     def __call__(self, it: Item) -> str | None:
         texts = [t for t in item_texts(self.fmt, it) if t]
         if any(segment_digests(t) & self.segments for t in texts):
             return "shares a sentence with an earlier tier"
-        if any(self.shingles.shared(t) for t in texts):
+        if any(self.shingles.shared(t, self.df) for t in texts):
             return "shares a passage with an earlier tier"
         if any(index.near(t) for index in self.near for t in texts):
             return "near duplicate of an earlier tier"
         return None
 
 
-def strict_for(fmt: str, tiers: tuple[str, ...], segments: dict, near: dict, shingles: dict) -> Strict:
+def strict_for(fmt: str, tiers: tuple[str, ...], segments: dict, near: dict, shingles: dict,
+               df: int | None = SHINGLE_DF) -> Strict:
     joined = ShingleIndex()
     for t in tiers:
         if t in shingles:
             joined.update(shingles[t])
     return Strict(fmt, set().union(*(segments.get(t, set()) for t in tiers)), [near[t] for t in tiers if t in near],
-                  joined)
+                  joined, df)
 
 
 def sample(src: Source, pool: int | None, bad: Callable[[Item], str | None] | None = None) -> None:
@@ -1094,6 +1104,31 @@ def sample(src: Source, pool: int | None, bad: Callable[[Item], str | None] | No
                     out.append(it)
                     break
     src.items = sorted(out, key=lambda x: unit(x.id))
+
+
+def link_clusters(items: list[Item]) -> None:
+    """Sets the resampling group (Item.cluster) of stance items to the connected component of
+    the graph linking items that share a claim or an evidence passage (normalised), named by the
+    smallest `group` in it, so that one abstract behind several claims does not split the claims'
+    groups apart."""
+    parent: dict[str, str] = {}
+
+    def find(x: str) -> str:
+        while parent.setdefault(x, x) != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    for it in items:
+        a, b = find("c:" + norm(it.claim)), find("e:" + norm(it.evidence))
+        if a != b:
+            parent[max(a, b)] = min(a, b)
+    name: dict[str, str] = {}
+    for it in items:
+        root = find("c:" + norm(it.claim))
+        name[root] = min(name.get(root, it.group or it.id), it.group or it.id)
+    for it in items:
+        it.cluster = "linked:" + name[find("c:" + norm(it.claim))].removeprefix("claim:")
 
 
 def confirm_check(src: Source, bad: Callable[[Item], str | None], earlier: Strict) -> Callable[[Item], str | None]:
@@ -1321,8 +1356,9 @@ def build_format(reg: dict, fmt: str, cfg: dict, out: Path) -> dict:
                 shingles["sources"].add(f"sources-{i}", t)
             print(f"{fmt} confirm: checked against {len(extra)} texts of reserved and evaluation sources", file=sys.stderr)
         strict = STRICT.get(tier)
-        bad = strict_for(fmt, strict, segments, near, shingles) if strict else None
-        earlier = Strict(fmt, set(), [NearIndex()], ShingleIndex())     # confirm: the confirm sources built so far
+        df = None if tier == "confirm" else SHINGLE_DF      # confirm: boilerplate n-grams count too
+        bad = strict_for(fmt, strict, segments, near, shingles, df) if strict else None
+        earlier = Strict(fmt, set(), [NearIndex()], ShingleIndex(), None)   # confirm: the confirm sources built so far
         for s in tier_sources:
             if tier == "bench":
                 BENCH_LOADERS[s.name](reg, s)
@@ -1333,6 +1369,8 @@ def build_format(reg: dict, fmt: str, cfg: dict, out: Path) -> dict:
                 load_source(reg, s, pool_for(reg, s, cfg) or 0)
                 clean(s, exact, seen)
                 sample(s, pool_for(reg, s, cfg), confirm_check(s, bad, earlier) if tier == "confirm" else bad)
+                if s.spec.linked:
+                    link_clusters(s.items)
             print(f"{fmt} {tier} {s.name}: {len(s.items)} items; dropped {s.drops}", file=sys.stderr)
             if tier == "confirm":
                 for it in s.items:
@@ -1370,6 +1408,8 @@ def build_format(reg: dict, fmt: str, cfg: dict, out: Path) -> dict:
             ex = it.row if it.row is not None else render(s, it, split, s.items)
             if s.tier in GROUPED:
                 ex["group"] = eval_group(s, it)
+                if s.spec.linked:           # the narrower grouping, for an analysis that wants it
+                    ex["claim_group"] = f"{s.name}:{it.group}"
             rows.setdefault(OUT_FILE[s.tier], []).append(ex)
             tier_split = split if s.tier == "fit" else s.tier
             counts.setdefault(ex["task"], {}).setdefault(tier_split, 0)

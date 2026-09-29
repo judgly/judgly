@@ -18,7 +18,8 @@ when:
   - a bench item matches the fit tier in any of these ways
   - an item of the confirm tier matches any other tier (fit, dev, final, final-flagged,
     final-seen, bench) or the texts it is built against (prep_tiers.confirm_texts: the
-    reserved sources and, for stance, every evaluation source as a whole) in any of these ways
+    reserved sources and, for stance, every evaluation source as a whole) in any of these ways,
+    its passage check counting boilerplate n-grams too
   - a family appears in more than one tier
   - a fit-tier item comes from a source the licence policy does not allow for fitting, or
     any item from a source the registry puts in another tier
@@ -43,7 +44,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import registry  # noqa: E402
 from prep_tiers import OUT_FILE, STRICT, confirm_texts, reserved_texts  # noqa: E402  the same reading of the sources
-from texthash import (NearIndex, ShingleIndex, digest, digests_of, segment_digests, segments_of,  # noqa: E402
+from texthash import (SHINGLE_DF, NearIndex, ShingleIndex, digest, digests_of, segment_digests, segments_of,  # noqa: E402
                       texts_of)
 
 SPLITS = ("train", "validation", "test")
@@ -95,11 +96,11 @@ def shingle_index(examples: list[dict]) -> ShingleIndex:
     return idx
 
 
-def shingle_pairs(examples: list[dict], idx: ShingleIndex) -> list[tuple[str, str]]:
+def shingle_pairs(examples: list[dict], idx: ShingleIndex, df: int | None = SHINGLE_DF) -> list[tuple[str, str]]:
     out = []
     for ex in examples:
         for name, text in texts_of(ex).items():
-            for key, n in idx.shared(text) if text else ():
+            for key, n in idx.shared(text, df) if text else ():
                 out.append((f"{ex['id']}#{name}", f"{key} ({n} shared 8-grams)"))
     return out
 
@@ -175,7 +176,7 @@ def check_format(reg: dict, data: Path, fmt: str, other_fit: list[dict] | None =
             failures[f"confirm in {t}"] = overlap(idx["confirm"], idx[t])
             failures |= against("confirm", "confirm", t)
         failures[f"confirm shares a passage with another tier ({', '.join(STRICT['confirm'])})"] = \
-            shingle_pairs(tiers["confirm"], joined(STRICT["confirm"]))
+            shingle_pairs(tiers["confirm"], joined(STRICT["confirm"]), None)   # boilerplate n-grams count too
 
     families: dict[str, set[str]] = {}
     for tier, exs in tiers.items():
