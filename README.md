@@ -6,10 +6,13 @@ judgly asks an open language model typed questions about a piece of text (pick o
 options, yes or no, a rating from 1 to 5) and returns a probability for every allowed answer
 instead of generated text, on your own Mac. A small head fitted on public data recalibrates
 those probabilities, aiming for answers given with 0.8 to be right about 80% of the time. On
-eight task families that no head was fitted on, it brought the pooled calibration error (ECE)
-from 0.194 to 0.020 (Gemma 4 12B) and from 0.268 to 0.030 (Qwen3-4B), at a cost of about 2
-accuracy points. Every accuracy and calibration number for judgly in this README can be
-recomputed from the per-item results committed in docs/results/.
+eight task families that no head was fitted on, the released heads (H2) brought the pooled
+calibration error (ECE) from 0.194 to 0.020 (Gemma 4 12B) and from 0.268 to 0.030 (Qwen3-4B), at
+a cost of about 2 accuracy points. A second, simpler option, one temperature per question type,
+keeps the raw accuracy; it is the default where a pre-registered comparison on untouched data
+confirmed it ([Two calibration options](https://github.com/judgly/judgly/blob/v0.1.0/README.md#two-calibration-options)).
+Every accuracy and calibration number for judgly in this README can be recomputed from the
+per-item results committed in docs/results/.
 
 It is a weekend hobby project, built from well-known pieces (llama.cpp, an open model,
 option-order averaging and a calibration head). It is not more accurate than Jev or the best
@@ -99,11 +102,12 @@ with Engine.load("gemma4-12b-q8") as engine:
 It prints one probability per stance option (they sum to 1) and the probability of "yes". With
 Gemma 4 12B on an M3 Max, loading takes about 22 seconds with the file already downloaded.
 
-> **About the stance head.** The `stance` question above uses the pack's stance head. On the
-> fresh final tier (Check-COVID, n = 1,343) its ECE was 0.048 for Gemma 4 12B and 0.052 for
-> Qwen3-4B, around the bar of 0.05, but it missed the dev-tier bar in both packs (scientific
-> abstracts were the hardest), and on other health claims it did worse (see Results below).
-> Treat its probabilities with more caution than the general head's.
+> **About stance calibration.** The `stance` question above uses the pack's default stance
+> calibration, the per-type temperature. On the fresh final tier (Check-COVID, n = 1,343) its ECE
+> was 0.087 for Gemma 4 12B and 0.093 for Qwen3-4B, worse than the H2 stance heads' 0.048 and
+> 0.052; on the untouched confirm tier (ClimateCheck, n = 1,780) it was 0.052 and 0.106, better
+> than H2's 0.078 and 0.183 (see Results below). Stance calibration varies a lot between kinds of
+> claims and evidence: treat its probabilities with more caution than the general ones.
 > `heads=False` gives the raw letter probabilities, which rank the answers but are overconfident.
 
 More examples are in [examples/](https://github.com/judgly/judgly/tree/v0.1.0/examples):
@@ -247,6 +251,29 @@ determinism checks are in the model cards: [Gemma 4 12B](https://github.com/judg
 [Qwen3-4B](https://github.com/judgly/judgly/blob/v0.1.0/docs/model-cards/qwen3-4b-q8.md). How the tiers were built and which bars were met
 is in [docs/methods.md](https://github.com/judgly/judgly/blob/v0.1.0/docs/methods.md#results); `docs/tools/final_tier_stats.py` recomputes
 the per-family averages and paired differences above from the snapshot.
+
+### Two calibration options
+
+Each pack now ships a second calibration option next to H2: one temperature per question type,
+applied to the probabilities after they are averaged over the option orders, fitted on the same
+train items. It never changes which answer is on top, so its accuracy is the raw accuracy. The
+idea came from exploratory analyses of the 0.1.0 readouts, which read the final tier again, so
+the two options were compared on a new tier that nothing had read: five general families never
+used before (2,500 items) and ClimateCheck for stance (1,780 items), read once, with criteria
+fixed in advance (paired temperature minus H2, 95% interval: accuracy above -0.01, Brier score
+below +0.01, ECE below +0.02). The temperature met them in three of four cases:
+
+| pack | format (confirm tier) | accuracy T / H2 | ECE T / H2 | Brier T / H2 | verdict | default |
+|---|---|---|---|---|---|---|
+| gemma4-12b-q8 | general (2,500) | 0.509 / 0.509 | 0.087 / 0.051 | 0.579 / 0.562 | not confirmed | H2 |
+| gemma4-12b-q8 | stance (1,780) | 0.655 / 0.629 | 0.052 / 0.078 | 0.476 / 0.490 | confirmed | temperature |
+| qwen3-4b-q8 | general (2,500) | 0.484 / 0.463 | 0.047 / 0.076 | 0.597 / 0.624 | confirmed | temperature |
+| qwen3-4b-q8 | stance (1,780) | 0.568 / 0.526 | 0.106 / 0.183 | 0.581 / 0.612 | confirmed | temperature |
+
+`Engine.load(pack)` uses the default shown; `calibration="h2"`, `"temperature"` or `"raw"`
+chooses for every format. The tables above are for H2. Both options on every tier, the paired
+intervals and how each number came to be are in
+[Calibration options](https://github.com/judgly/judgly/blob/v0.1.0/docs/calibration-options.md).
 
 The weak spots (where the heads cost accuracy, bars that were missed, and families that stay
 poorly calibrated) are collected under
@@ -392,6 +419,8 @@ not committed; the speed figures come from the run logs, which are not committed
 - [Model packs](https://github.com/judgly/judgly/blob/v0.1.0/docs/model-packs.md)
 - [Calibration](https://github.com/judgly/judgly/blob/v0.1.0/docs/calibration.md): what ECE and selective accuracy mean, and how to check or
   fit calibration on your own data
+- [Calibration options](https://github.com/judgly/judgly/blob/v0.1.0/docs/calibration-options.md): the H2 head and the
+  per-type temperature, how they were compared, and every number of both
 - [Methods](https://github.com/judgly/judgly/blob/v0.1.0/docs/methods.md): the method and the evaluation design
 - [Reproduce](https://github.com/judgly/judgly/blob/v0.1.0/docs/reproduce.md)
 - [FAQ](https://github.com/judgly/judgly/blob/v0.1.0/docs/faq.md)

@@ -1,6 +1,7 @@
 """Write tests/fixtures/golden-qwen3-4b-q8.json: the responses of the built-in qwen3-4b-q8 pack
-to one fixed request, with heads off (h0) and with the shipped heads (h2). tests/test_engine.py
-compares the live engine with these values within 1e-6.
+to one fixed request, with no calibration (h0), with the shipped H2 heads (h2) and with the
+shipped per-type temperatures (temperature). tests/test_engine.py and tests/test_temperature.py
+compare the live engine with these values within 1e-6.
 
     JUDGLY_MODEL_DIR=/path/to/models uv run python scripts/make_golden.py
 
@@ -36,8 +37,8 @@ REQUEST = {
 }
 
 
-def respond(heads: bool) -> dict:
-    with Engine.load("qwen3-4b-q8", heads=heads) as engine:
+def respond(calibration: str) -> dict:
+    with Engine.load("qwen3-4b-q8", calibration=calibration) as engine:
         out = json.loads(engine.decide_json(json.dumps(REQUEST)))
     out.pop("timing_ms", None)
     return out
@@ -48,8 +49,8 @@ def main() -> int:
         print("set JUDGLY_MODEL_DIR to the directory holding the Qwen3-4B GGUF file",
               file=sys.stderr)
         return 2
-    golden = {"pack": "qwen3-4b-q8", "request": REQUEST, "h0": respond(False),
-              "h2": respond(True)}
+    golden = {"pack": "qwen3-4b-q8", "request": REQUEST, "h0": respond("raw"),
+              "h2": respond("h2"), "temperature": respond("temperature")}
     OUT.write_text(json.dumps(golden, indent=1) + "\n")
     print(f"wrote {OUT}")
     return 0

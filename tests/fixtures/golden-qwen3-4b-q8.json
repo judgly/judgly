@@ -138,5 +138,62 @@
    "state": 70,
    "questions": 283
   }
+ },
+ "temperature": {
+  "schema": 1,
+  "answers": {
+   "urgency": {
+    "type": "choice",
+    "probs": {
+     "now": 0.9405497829937782,
+     "today": 0.02360652906434889,
+     "week": 0.01922742297493825,
+     "none": 0.016616264966934788
+    },
+    "top": "now",
+    "slot_mass": 1.0,
+    "rotation_spread": 3.0605740164446615e-11,
+    "n_rotations": 4,
+    "format": null,
+    "head": "254fe8c749a331f6f123f217f992cb418ce0877dbbebb90ace1591feff1bf56a",
+    "head_format": "*"
+   },
+   "cardiac": {
+    "type": "bool",
+    "p_true": 0.855458898943781,
+    "top": true,
+    "slot_mass": 0.9999999403953552,
+    "rotation_spread": 8.421752184517572e-11,
+    "n_rotations": 2,
+    "format": null,
+    "head": "254fe8c749a331f6f123f217f992cb418ce0877dbbebb90ace1591feff1bf56a",
+    "head_format": "*"
+   },
+   "severity": {
+    "type": "score",
+    "probs": [
+     0.13376134566629438,
+     0.13967353139906377,
+     0.13754051131329548,
+     0.17043453530763433,
+     0.41859007631371203
+    ],
+    "mean": 3.600418465203406,
+    "top": 5,
+    "slot_mass": 1.0,
+    "rotation_spread": 0.0,
+    "n_rotations": 1,
+    "format": null,
+    "head": "254fe8c749a331f6f123f217f992cb418ce0877dbbebb90ace1591feff1bf56a",
+    "head_format": "*"
+   }
+  },
+  "model_sha256": "391c1e410fd9f4cf2de2b510273b56a84c19ce18f4fa3bfb3774031dac4ef068",
+  "template_sha256": "f509b74bf401323f0d83922fb799a197bf17e6537c7108e29bcf2ea7daa613e9",
+  "truncated": false,
+  "tokens": {
+   "state": 70,
+   "questions": 283
+  }
  }
 }

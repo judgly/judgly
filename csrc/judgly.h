@@ -9,7 +9,10 @@
  *   "model"            path of a single-file GGUF model (required)
  *   "template"         path of the prompt template file (required)
  *   "heads"            {format: head file}, "*" the fallback for any format; absent or {} for
- *                      no head (H0: raw letter probabilities)
+ *                      no head (H0: raw letter probabilities). A head file is an H1 or H2 head
+ *                      (applied to each rotation's letter logits) or a temperature head (one
+ *                      temperature per question type, applied to the probabilities averaged
+ *                      over the rotations); the file says which
  *   "model_sha256"     the model file's SHA-256 if the caller has verified it already; the file
  *                      is hashed when absent
  *   "n_ctx"            cache cells shared by the state and the question branches, at least
@@ -43,7 +46,9 @@
  *   answer: "type"; choice: "probs" {key: p}, "top" key; bool: "p_true", "top" true|false;
  *   score: "probs" [p per level], "mean", "top" level; all: "slot_mass", "rotation_spread" (the
  *   range, max minus min, of the top option's probability across the rotations asked; 0 with
- *   one rotation), "n_rotations", "format", "head" (the head file's SHA-256 or null),
+ *   one rotation; with a temperature head, the range before the temperature, since the
+ *   rotations are read without a head), "n_rotations", "format", "head" (the head file's
+ *   SHA-256 or null),
  *   "head_format" (the heads entry used: the format itself, "*", or null).
  *   On failure: {"error": "..."}.
  */

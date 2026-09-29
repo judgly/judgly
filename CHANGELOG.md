@@ -4,6 +4,37 @@ All notable changes to judgly. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/) (0.x: the API may still change).
 
+## Unreleased
+
+### Added
+
+- A second calibration option in every built-in pack, the per-type temperature: one temperature
+  per question type (choice, yes/no, score), applied to the probabilities after they are
+  averaged over the option orders, fitted on the same train items as H2
+  (`heads/temperature.bin`, `heads/temperature-stance.bin`). The shipped values are the ones
+  frozen before a pre-registered comparison with H2 on an untouched confirm tier, where the
+  temperature met all three criteria for Gemma 4 12B stance and Qwen3-4B general and stance, and
+  not for Gemma 4 12B general. `docs/calibration-options.md` describes the fit, the exploratory
+  analyses that led to it (which read the final tier again), the confirmation and both options on
+  every tier; `docs/results/calibration-study/` holds their scripts and outputs.
+- `Engine.load(pack, calibration="default" | "h2" | "temperature" | "raw")` and
+  `engine.calibration`; `Pack.heads(calibration=...)`, `Pack.defaults()`,
+  `Pack.calibration_options()`.
+- A temperature head type in the engine (head file type 3; `s1-train --head temperature`,
+  `s1-eval --head`), with the head guardrails (model and template SHA-256, engine settings in
+  the sidecar, temperature within [0.05, 100]).
+- The confirm tier (five general families never used before and ClimateCheck for stance) in the
+  pipeline and the calibration records; `make calibrate` fits and scores the temperature from
+  cached features on the CPU; `docs/tools/confirmation_check.py`.
+
+### Changed
+
+- The default calibration is now the temperature for Qwen3-4B (general and stance) and for Gemma
+  4 12B stance; Gemma 4 12B general keeps H2. Use `calibration="h2"` for the 0.1.0 behaviour.
+  The H2 head files, and every raw and H2 number and per-item dump, are unchanged.
+- `pack.json` schema 2 (per format, the options and the default); schema 1 packs still load.
+  Calibration records are schema 3 (the `temperature` option, the condition and the confirm tier).
+
 ## 0.1.0 - 2026-09-28
 
 First functional release. A weekend hobby project; Apple silicon (macOS 14 or later) wheels only.

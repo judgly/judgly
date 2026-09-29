@@ -94,7 +94,8 @@ endif()
 # The engine (the s1_ sources).
 add_library(s1 STATIC csrc/s1_engine.c csrc/s1_prompt.c csrc/s1_rows.c csrc/s1_decide.c
                       csrc/s1_request.c csrc/s1_sha256.c csrc/s1_lbfgs.c csrc/s1_head.c
-                      csrc/s1_feat.c csrc/s1_args.c csrc/s1_headfile.c csrc/s1_metrics.c)
+                      csrc/s1_feat.c csrc/s1_args.c csrc/s1_headfile.c csrc/s1_metrics.c
+                      csrc/s1_temperature.c)
 target_include_directories(s1 PUBLIC csrc)
 target_compile_options(s1 PRIVATE ${JUDGLY_WARNINGS})
 target_compile_definitions(s1 PRIVATE _POSIX_C_SOURCE=200809L)   # pread, strdup under strict -std=c11

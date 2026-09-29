@@ -51,9 +51,10 @@ def qwen_h0():
 
 @pytest.fixture(scope="session")
 def qwen_h2():
-    """The built-in pack with its shipped heads (general and stance)."""
+    """The built-in pack with its shipped H2 heads (general and stance). The pack's default for
+    Qwen3-4B is the temperature (tests/test_temperature.py), so H2 is chosen explicitly."""
     need(QWEN)
     from judgly import Engine
 
-    with Engine.load("qwen3-4b-q8", model_path=QWEN) as engine:
+    with Engine.load("qwen3-4b-q8", calibration="h2", model_path=QWEN) as engine:
         yield engine

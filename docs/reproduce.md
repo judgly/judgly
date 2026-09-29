@@ -138,6 +138,28 @@ one tier build: start a full run in a fresh `results/` (move an older one aside)
 made from other tier files are not detected. Do not run another GPU-heavy program at the same
 time.
 
+A full run also fits the second calibration option, the per-type temperature, next to H2, and
+scores both on every tier, the confirm tier included (`data/tiers/<format>/confirm.jsonl`, built
+by `make data` after all the other tiers; its SHA-256 is in `data/tiers-confirm.sha256`:
+`(cd data/tiers && shasum -a 256 -c ../tiers-confirm.sha256)`).
+
+**5b. Calibration options from cached features (CPU, minutes).** With the features of a finished
+run in `results/`, and the confirm tier's features as the confirmation extracted them in
+`results-confirm/<pack>/<format>/confirm.feat` (set `CONFIRM_FROM` for another place):
+
+```bash
+make calibrate MODEL=gemma4-12b-q8
+make calibrate MODEL=qwen3-4b-q8
+uv run --no-project --with numpy python docs/tools/confirmation_check.py
+```
+
+`make calibrate` fits `temperature.bin` per format (`s1-train --head temperature`), evaluates
+raw, h2 and temperature on every tier, writes the records and assembles the pack; it never runs
+the model (every feature file is passed to make as old, and a missing one stops it), and it
+refits H2 only if `h2.bin` is missing. `confirmation_check.py` checks the shipped temperatures
+and the engine's temperature output against the frozen confirmation
+([calibration-options.md](calibration-options.md#reproducing-the-numbers)).
+
 **6. Check the snapshot and redraw the figures (CPU, seconds).** From the repository root:
 
 ```bash
@@ -180,11 +202,12 @@ Per pack, in `results/<pack>/`:
 | `verify-data.txt` | the tier check against `data/tiers.sha256` (full tiers only) |
 | `contamination.txt` | the contamination checker's output |
 | `selftest.txt`, `selftest.log` | the self-test gate and any accepted failures |
-| `<format>/{fitdev,final,final-flagged,final-seen,bench}/shards/shard-NNNN.{feat,feat.names.tsv,log}` | extracted shards and their logs (bench: general only) |
-| `<format>/{fitdev,final,final-flagged,final-seen,bench}/features.feat`, `.names.tsv` | extracted features (merged from `shards/`) and the task and family names |
+| `<format>/{fitdev,final,final-flagged,confirm,final-seen,bench}/shards/shard-NNNN.{feat,feat.names.tsv,log}` | extracted shards and their logs (bench: general only) |
+| `<format>/{fitdev,final,final-flagged,confirm,final-seen,bench}/features.feat`, `.names.tsv` | extracted features (merged from `shards/`; for confirm, a link made by `make calibrate` to the confirmation's extraction) and the task and family names |
 | `<format>/h2.bin`, `h2.bin.json`, `train-h2.log` | the fitted head, the trainer's sidecar (features SHA-256, lambda per question type, validation losses) and its log |
-| `<format>/{raw,h2}-{test,dev,final,final-flagged,final-seen,bench}.{json,txt}`, `eval.done` | the evaluation reports (bench: general only), and the marker that all finished |
-| `<format>/items-{raw,h2}-{test,dev,final,final-flagged,final-seen,bench}.tsv` | per-item probabilities, for recomputing any number |
+| `<format>/temperature.bin`, `temperature.bin.json`, `train-temperature.log` | the per-type temperature, its sidecar (per type: train and validation items, the temperature and its unrounded value, losses, fallback) and its log |
+| `<format>/{raw,h2,temperature}-{test,dev,final,final-flagged,confirm,final-seen,bench}.{json,txt}`, `eval.done` | the evaluation reports (bench: general only), and the marker that all finished |
+| `<format>/items-{raw,h2,temperature}-{test,dev,final,final-flagged,confirm,final-seen,bench}.tsv` | per-item probabilities, for recomputing any number |
 | `<format>/record.json`, `tables.md`, `tables.txt` | the calibration record (metrics with intervals, resampled by group on final, final-flagged and bench, per family, selective accuracy, stance confusion matrix, the bench scored against each benchmark's own gold, sources and the licences they are used under, model and template SHA-256, engine options, self-test output, judgly and llama.cpp commits, platform), its tables (final-flagged, with each family's caveat, and final-seen in tables of their own), and the tables as printed during the run |
 | `pack/` | the finished pack: `pack.json`, template, `heads/` (with each head's sidecar), `calibration/` |
 
@@ -196,28 +219,35 @@ when complete, so a file that exists is a file that finished.
 `docs/results/<pack>/` holds, per pack, `selftest.txt` (the self-test gate) and per format
 (`general`, `stance`):
 
-- **`record.json`**, the calibration record: `schema` (2), `pack`, `format`, `quick`, `head`
+- **`record.json`**, the calibration record: `schema` (3), `pack`, `format`, `quick`, `head`
   (`kind`, `sha256`, `licence`, `fitted_on`: source, licences, citation and item count per
-  fitting source), `conditions` (what `raw` and `h2` mean), `data`, `model` (file, SHA-256,
+  fitting source), `temperature` (the second option: `sha256`, `licence`, how it is applied and
+  fitted, its per-type sidecar entries and training log), `conditions` (what `raw`, `h2` and
+  `temperature` mean), `data`, `model` (file, SHA-256,
   template SHA-256, `engine` settings), `software` (judgly and llama.cpp commits), `platform`,
   `selftest` (the gate's lines), `metrics_note`, and `tiers`. Each of
-  `tiers.<test|dev|final|final-flagged|final-seen|bench>` (bench: general only) has a `note`,
-  `items`, `groups`, `sources` (items per task; final-flagged also `caveats`) and
-  `conditions.<raw|h2>` with `items`, `interval_unit` (`item` or `group`), `metrics`
+  `tiers.<test|dev|final|final-flagged|confirm|final-seen|bench>` (bench: general only) has a
+  `note`, `items`, `groups`, `sources` (items per task; final-flagged and confirm also
+  `caveats`) and `conditions.<raw|h2|temperature>` with `items`, `interval_unit` (`item` or `group`), `metrics`
   (`accuracy`, `log_loss`, `brier`, `ece`, `slot_mass`, `slot_mass_p05`, `rps`, each a point
   value with its 95% interval; on grouped tiers also `groups` and `metrics_item_resampled`),
   `reliability` (ten bins), `selective` (seven thresholds), `by_family` (accuracy, log loss,
   Brier score and ECE per family, with intervals), for stance `confusion`, and in the bench tier
   `benchmark` (each benchmark scored against its own gold).
-- **`tables.md`**: the record as tables. **`train-h2.log`**: the trainer's log.
-- **`items-<raw|h2>-<test|dev|final|final-flagged|final-seen|bench>.tsv.gz`**, one line per item after a header, tab-separated:
+- **`tables.md`**: the record as tables. **`train-h2.log`**, **`train-temperature.log`**: the
+  trainers' logs.
+- **`items-<raw|h2|temperature>-<test|dev|final|final-flagged|confirm|final-seen|bench>.tsv.gz`**, one line per item after a header, tab-separated:
   `id_hash` (16 hex digits, the 64-bit FNV-1a hash of the item id), `task_id` (the low 32 bits
   of the FNV-1a-64 hash of the task name), `family_id` (the low 16 bits of the hash of the family
   name), `type` (0 choice, 1 yes or no, 2 score), `K` (number of options), `label` (index of the
   correct option, from 0) and `p` (the probability of every option, comma-separated, in option
   order).
-- **`names-<fitdev|final|final-flagged|final-seen|bench>.tsv.gz`**, tab-separated without a header: `task` or `family`, the id
+- **`names-<fitdev|final|final-flagged|confirm|final-seen|bench>.tsv.gz`**, tab-separated without a header: `task` or `family`, the id
   as in the item dumps, and the name.
+
+`docs/results/calibration-study/` holds the exploratory analyses and the pre-registered
+confirmation behind the temperature option, as they were run
+([its README](results/calibration-study/README.md)).
 
 `docs/results/MANIFEST` has the SHA-256 of every file in the snapshot, and
 `docs/results/INPUTS.sha256` those of the large inputs that are not committed. The snapshot and
@@ -232,6 +262,8 @@ the figures made from it are under CC-BY-4.0 ([licences.md](licences.md#5-result
   except T6 (the independent CPU reference), which the pipeline does not run: its output says
   `SKIP T6`, and the difference between this hardware and others is therefore not checked.
 - `scripts/calibration_record.py` stops if its recomputed metrics differ from the evaluator's.
+- `docs/tools/confirmation_check.py`: the shipped temperatures are the confirmed ones, and the
+  engine's temperature output equals the frozen confirmation scorer's.
 
 ## Data sources
 
@@ -242,9 +274,7 @@ share-alike ones for stance) are used for fitting; everything else is evaluation
 cite the datasets you rely on.
 
 <!-- SOURCES:BEGIN (generated by docs/tools/sources_table.py) -->
-Registry: `data/registry.yaml`, schema 1, licences checked 2026-09-27, SHA-256 `4fd611bbdc29c6daea778d38256fe109587a7b4bdc17563242046c09c6256c21`.
-
-> The tiers are built from registry SHA-256 `5c7d5d20d6eb9dc5d0963b0666bcc26337d59d2db8c3f7f2eec4c60dcc6b6553`; the registry above differs from it in comments or notes only when `make verify-data` passes.
+Registry: `data/registry.yaml`, schema 1, licences checked 2026-09-27, SHA-256 `404eaab9455ed7be8b6fd325d232ad5b0d293f44fbadef8894528f680a6adaee`.
 
 **general**
 
@@ -307,11 +337,16 @@ Registry: `data/registry.yaml`, schema 1, licences checked 2026-09-27, SHA-256 `
 | `yahoo` | topic | final-seen | [`community-datasets/yahoo_answers_topics`](https://huggingface.co/datasets/community-datasets/yahoo_answers_topics) | `6652a1e7c94f` | unknown | Zhang, Zhao and LeCun 2015 (as ag_news). |
 | `yelp` | rating | final-seen | [`Yelp/yelp_review_full`](https://huggingface.co/datasets/Yelp/yelp_review_full) | `c1f9ee939b7d` | other | Zhang, Zhao and LeCun 2015 (as ag_news); Yelp Dataset Challenge. |
 | `arc` | knowledge | not used | [`allenai/ai2_arc`](https://huggingface.co/datasets/allenai/ai2_arc) | `210d026faf99` | cc-by-sa-4.0 | Clark et al. 2018, Think you have Solved Question Answering? Try ARC. arXiv:1803.05457. |
+| `argument_quality` | argument_quality | confirm | [`ibm-research/argument_quality_ranking_30k`](https://huggingface.co/datasets/ibm-research/argument_quality_ranking_30k) | `590726b3765b` | cc-by-3.0 | Gretz et al. 2020, A Large-scale Dataset for Argument Quality Ranking: Construction and Analysis. AAAI. |
+| `clutrr` | kinship | confirm | [`tasksource/clutrr`](https://huggingface.co/datasets/tasksource/clutrr) | `3f0016e8d7bb` | none on card | Sinha et al. 2019, CLUTRR: A Diagnostic Benchmark for Inductive Reasoning from Text. EMNLP. |
+| `code_outcome` | code_outcome | confirm | [`Fsoft-AIC/CodeMMLU`](https://huggingface.co/datasets/Fsoft-AIC/CodeMMLU) | `f7c1221269df` | mit | Manh et al. 2025, CodeMMLU: A Multi-Task Benchmark for Assessing Code Understanding Capabilities of CodeLLMs. ICLR; Puri et al. 2021, Project CodeNet. NeurIPS Datasets and Benchmarks. |
 | `dair_emotion` | emotion | not used | [`dair-ai/emotion`](https://huggingface.co/datasets/dair-ai/emotion) | `cab853a1dbdf` | other | Saravia et al. 2018, CARER: Contextualized Affect Representations for Emotion Recognition. EMNLP. |
+| `humicroedit` | humour | confirm | [`tasksource/humicroedit`](https://huggingface.co/datasets/tasksource/humicroedit) | `f5a16e65b085` | unknown | Hossain, Krumm and Gamon 2019, "President Vows to Cut <Taxes> Hair": Dataset and Analysis of Creative Text Editing for Humorous Headlines. NAACL; Hossain et al. 2020, SemEval-2020 Task 7. SemEval. |
 | `jevbench` | bench_jevbench | bench | [github.com/fstandhartinger/jevbench](https://github.com/fstandhartinger/jevbench) (below) | `1df665e3956d` | mit | Standhartinger 2026, JevBench (github.com/fstandhartinger/jevbench), v1.4.2. |
 | `openbookqa` | knowledge | not used | [`allenai/openbookqa`](https://huggingface.co/datasets/allenai/openbookqa) | `388097ea7776` | unknown | Mihaylov et al. 2018, Can a Suit of Armor Conduct Electricity? EMNLP. |
 | `race` | reading | not used | [`ehovy/race`](https://huggingface.co/datasets/ehovy/race) | `2fec9fd81f1d` | other | Lai et al. 2017, RACE: Large-scale ReAding Comprehension Dataset From Examinations. EMNLP. |
 | `sciq` | knowledge | not used | [`allenai/sciq`](https://huggingface.co/datasets/allenai/sciq) | `2c94ad3e1aaf` | cc-by-nc-3.0 | Welbl et al. 2017, Crowdsourcing Multiple Choice Science Questions. W-NUT. |
+| `spartqa` | spatial | confirm | [`tasksource/spartqa-yn`](https://huggingface.co/datasets/tasksource/spartqa-yn) | `150c819e88bb` | apache-2.0 | Mirzaee et al. 2021, SPARTQA: A Textual Question Answering Benchmark for Spatial Reasoning. NAACL. |
 | `typed_decisions` | bench_typed_decisions | bench | [`LocalLLaMA/typed-decisions`](https://huggingface.co/datasets/LocalLLaMA/typed-decisions) | `f7a2487edd7a` | apache-2.0 | LocalLLaMA/typed-decisions on Hugging Face (dataset card, no paper). |
 
 **stance**
@@ -330,7 +365,7 @@ Registry: `data/registry.yaml`, schema 1, licences checked 2026-09-27, SHA-256 `
 | `check_covid` | final_covid_claims | final | [github.com/posuer/Check-COVID](https://github.com/posuer/Check-COVID) (below) | `3ae70f8cac4d` | mit | Wang et al. 2023, Check-COVID: Fact-Checking COVID-19 News Claims with Scientific Evidence. Findings of ACL. |
 | `healthfc` | final_health_claims | final-flagged | [github.com/jvladika/HealthFC](https://github.com/jvladika/HealthFC) (below) | `9f31d765e5d4` | cc-by-nc-nd-4.0 | Vladika, Schneider and Matthes 2024, HealthFC: Verifying Health Claims with Evidence-Based Medical Fact-Checking. LREC-COLING. |
 | `healthver` | final_scientific | final-seen | MultiVerS release (below) | n/a | unconfirmed | Sarrouti et al. 2021, Evidence-based Fact-Checking of Health-related Claims. Findings of EMNLP. |
-| `climatecheck` | reserved_climate | reserved | [`rabuahmad/climatecheck`](https://huggingface.co/datasets/rabuahmad/climatecheck) | `93d0dc5007e9` | mit | ClimateCheck shared task, SDP 2025 workshop (rabuahmad/climatecheck on Hugging Face). |
+| `climatecheck` | confirm_climate | confirm | [`rabuahmad/climatecheck`](https://huggingface.co/datasets/rabuahmad/climatecheck) | `93d0dc5007e9` | mit | ClimateCheck shared task, SDP 2025 workshop (rabuahmad/climatecheck on Hugging Face). |
 | `scifact` | reserved_scientific | reserved | MultiVerS release (below) | n/a | unconfirmed | Wadden et al. 2020, Fact or Fiction: Verifying Scientific Claims. EMNLP. |
 | `fever_nli` | unused | none | [`pietrolesci/nli_fever`](https://huggingface.co/datasets/pietrolesci/nli_fever) | `1eddac63112e` | none on card | Thorne et al. 2018, FEVER. NAACL; Nie, Chen and Bansal 2019, Combining Fact Extraction and Verification with Neural Semantic Matching Networks. AAAI. |
 

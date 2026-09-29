@@ -22,6 +22,10 @@ stance head brought ECE from 0.187 [0.167, 0.212] to 0.052 [0.034, 0.077], which
 0.778 to 0.773 (paired difference -0.005 [-0.024, 0.013], within noise).
 This is the small, fast pack; the default pack, [gemma4-12b-q8](gemma4-12b-q8.md), is more accurate.
 
+These are the numbers of the H2 heads. The pack also ships a per-type temperature for each
+format and uses it by default for both general and stance questions
+([Calibration options](#calibration-options)).
+
 ## Contents
 
 - [Model details](#model-details)
@@ -32,6 +36,7 @@ This is the small, fast pack; the default pack, [gemma4-12b-q8](gemma4-12b-q8.md
 - [Metrics](#metrics)
 - [Results: general format](#results-general-format)
 - [Results: stance format](#results-stance-format)
+- [Calibration options](#calibration-options)
 - [Selective accuracy](#selective-accuracy)
 - [Known weaknesses](#known-weaknesses)
 - [Determinism checks](#determinism-checks)
@@ -316,6 +321,37 @@ as if independent and may be too narrow.
 |---|---|---|---|---|---|---|
 | final-seen | 2,100 | raw | 0.571 [0.548, 0.592] | 5.891 [5.525, 6.277] | 0.766 [0.729, 0.807] | 0.354 [0.333, 0.377] |
 | final-seen | 2,100 | h2 | 0.548 [0.527, 0.570] | 0.997 [0.966, 1.032] | 0.592 [0.572, 0.613] | 0.100 [0.084, 0.122] |
+
+## Calibration options
+
+Besides the H2 heads described above, the pack ships a second calibration option per format: one
+temperature per question type, applied to the probabilities after they are averaged over the
+option orders, fitted on the same train items (general: 6.846 (choice), 13.36 (yes/no), 24.22 (score); stance:
+12.391 (choice)). It keeps the raw readout's ranking, so its accuracy is the raw accuracy.
+In a pre-registered comparison with H2 on the confirm tier (untouched families, read once) the
+temperature was **confirmed** for general questions and **confirmed**
+for stance, so `Engine.load("qwen3-4b-q8")` uses the temperature for general questions and
+the temperature for stance by default; `calibration="h2"` or `"temperature"` chooses one for
+both. The final tier had been read by three exploratory analyses of the temperature before the
+confirmation, so for this comparison only the confirm tier is untouched.
+
+| format | tier | items | condition | accuracy | log loss | ECE |
+|---|---|---|---|---|---|---|
+| general | final | 7,879 (6,803 groups) | raw | 0.656 [0.644, 0.667] | 3.474 [3.330, 3.639] | 0.268 [0.259, 0.279] |
+| | | | h2 | 0.639 [0.628, 0.650] | 0.797 [0.779, 0.815] | 0.030 [0.025, 0.040] |
+| | | | temperature | 0.656 [0.646, 0.668] | 0.783 [0.765, 0.802] | 0.034 [0.027, 0.042] |
+| general | confirm | 2,500 (1,932 groups) | raw | 0.484 [0.463, 0.507] | 4.674 [4.277, 5.083] | 0.406 [0.380, 0.429] |
+| | | | h2 | 0.463 [0.441, 0.483] | 1.041 [1.017, 1.065] | 0.076 [0.062, 0.100] |
+| | | | temperature | 0.484 [0.464, 0.506] | 1.009 [0.986, 1.031] | 0.047 [0.031, 0.068] |
+| stance | final | 1,343 (315 groups) | raw | 0.778 [0.755, 0.801] | 3.185 [2.812, 3.589] | 0.187 [0.167, 0.212] |
+| | | | h2 | 0.773 [0.749, 0.795] | 0.594 [0.562, 0.628] | 0.052 [0.034, 0.077] |
+| | | | temperature | 0.778 [0.754, 0.802] | 0.650 [0.617, 0.682] | 0.093 [0.068, 0.116] |
+| stance | confirm | 1,780 (70 groups) | raw | 0.568 [0.523, 0.608] | 6.492 [5.719, 7.182] | 0.383 [0.344, 0.423] |
+| | | | h2 | 0.526 [0.452, 0.557] | 0.989 [0.938, 1.083] | 0.183 [0.155, 0.228] |
+| | | | temperature | 0.568 [0.524, 0.605] | 0.966 [0.914, 1.038] | 0.106 [0.078, 0.153] |
+
+Every tier, the paired criteria of the confirmation and how each number came to be are in
+[calibration-options.md](../calibration-options.md).
 
 ## Selective accuracy
 

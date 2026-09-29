@@ -1,0 +1,5 @@
+{
+ "note": "Per-question-type temperatures fitted on the judgly 0.1.0 fit tier's train split (cpu-tricks/tricks.py). Question types: 0 choice, 1 yes/no, 2 score.",
+ "gemma4-12b-q8": {"general": {"0": 3.461, "1": 7.491, "2": 6.538}, "stance": {"0": 7.151}},
+ "qwen3-4b-q8": {"general": {"0": 6.846, "1": 13.36, "2": 24.22}, "stance": {"0": 12.391}}
+}

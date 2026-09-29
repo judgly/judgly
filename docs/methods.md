@@ -99,6 +99,13 @@ question type (choice, yes/no, score) and per format.
 - **H2**: u[k] = a dot(w[k] + d[k], h) - c zc[k] + b[k]. The model's letter rows w[k] stay
   fixed. The corrections d[k] (26 x hidden size per type) start at zero, so an untrained H2 is
   H1, and are penalised with lambda * sum(d^2).
+- **Per-type temperature** (the second calibration option, added after 0.1.0): not a head on
+  each rotation. Each rotation is read as H0, the rotations are averaged, and then
+  p_T[k] = softmax_k(log(max(p[k], 1e-12)) / T), with one T per question type, fitted by
+  minimising the mean log loss of the train items (each item once, unweighted) and rounded to
+  three decimals. It keeps the ranking of the raw readout.
+  [calibration-options.md](calibration-options.md) describes its fit, the analyses that led to
+  it, its pre-registered confirmation against H2 and its results.
 
 The loss is the mean cross-entropy (log loss) of the correct option. H1 is fitted by full-batch
 L-BFGS. H2 is fitted from the H1 solution for each lambda in a short grid, with early stopping
@@ -195,7 +202,8 @@ not independent tests. Each family belongs to exactly one tier, per format:
 | final-flagged | politeness (Stanford Politeness) | health questions (HealthFC) | fresh families read with final, but each with a recorded caveat: reported beside the final numbers, never pooled into them, judging no bar |
 | final-seen | topic, biomedical, legal, maths, finance, truthfulness, MMLU-Pro, ratings, yes/no reading | HealthVer | a secondary evaluation, reported separately: an earlier held-out tier whose families were read during development |
 | bench | typed-decisions, JevBench public items | none | external benchmarks, evaluation only, also scored as each defines |
-| reserved | none | SciFact, ClimateCheck | nothing; kept unseen for later work (ClimateCheck must first drop the items that overlap Climate-FEVER, which dev holds) |
+| confirm | kinship (CLUTRR), code outcome (CodeMMLU execution prediction), spatial (SpartQA yes/no), argument quality (IBM ArgQ 30k), humour (Humicroedit) | ClimateCheck | the pre-registered comparison of the two calibration options: families never used before, built after every other tier and cleaned against all of them, read once ([calibration-options.md](calibration-options.md#the-pre-registered-confirmation)) |
+| reserved | none | SciFact | nothing; kept unseen for later work (ClimateCheck was reserved in 0.1.0 and became the stance confirm tier after its overlap with Climate-FEVER and every other tier was removed) |
 
 Tier sizes: general 9,000 fit (6,300 train, 1,350 validation, 1,350 test), 4,500 dev (250 per
 task), 7,879 final (1,000 per task, 1,005 for BLiMP, 500 each for the two ETHICS subsets, 874
@@ -325,8 +333,10 @@ stance 13 and 14).
 Each pack is evaluated per format on the fit tier's test split (in-distribution), dev, final
 (fresh held-out families; the reported result), final-flagged (fresh families with a caveat,
 reported beside final), final-seen (an earlier held-out tier, reported separately as seen
-during development) and, for the general format, bench. The QUICK pipeline does not score final or final-flagged. Two conditions are scored on
-each: raw (H0 with the served engine settings) and H2.
+during development), confirm (the untouched tier of the pre-registered comparison of the two
+calibration options) and, for the general format, bench. The QUICK pipeline does not score
+final, final-flagged or confirm. Three conditions are scored on each: raw (H0 with the served
+engine settings), H2 and the per-type temperature.
 
 - **Metrics**: accuracy, log loss (primary), Brier score, ECE over 10 equal-width bins of the
   top probability, the reliability table, selective accuracy and share answered at thresholds
@@ -408,6 +418,15 @@ each `pack.json`; features for fitting are extracted with the same settings):
   231 JevBench items); stance fit 21,000 (14,783 train, 3,072 validation, 3,145 test), dev 2,100,
   final 1,343, final-flagged 749 and final-seen 2,100. Calibration curves flatten after a few
   hundred labelled items, so a fit tier of a few thousand items is enough for heads of this size.
+
+### Calibration options
+
+The numbers in the rest of this section are those of the 0.1.0 release: raw against H2. The
+per-type temperature, added later as a second option, is reported against both on every tier,
+with the order in which its analyses read which tier, in
+[calibration-options.md](calibration-options.md#both-options-on-every-tier). On the confirm tier,
+which no analysis had read, it met the pre-registered criteria against H2 in three of four cases
+(Gemma 4 12B stance, Qwen3-4B general and stance) and not for Gemma 4 12B general.
 
 ### Tiers and contamination
 

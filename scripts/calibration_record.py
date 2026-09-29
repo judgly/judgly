@@ -2,12 +2,19 @@
 
     uv run --group pipeline python scripts/calibration_record.py FORMAT_DIR DATA_DIR PACK FORMAT QUICK
 
-FORMAT_DIR is RESULTS/<pack>/<format> as the Makefile writes it: h2.bin, train-h2.log, and
-per condition (raw, h2) and tier (test, dev, final, final-flagged, final-seen, bench; a tier the
-format does not have is skipped, and a QUICK run never reads final or final-flagged) the s1-eval
-report <cond>-<tier>.json and its per-item dump items-<cond>-<tier>.tsv; fitdev/, final/,
-final-flagged/, final-seen/ and bench/ hold the feature files and their names sidecars. Writes
-FORMAT_DIR/record.json (machine-readable) and FORMAT_DIR/tables.md.
+FORMAT_DIR is RESULTS/<pack>/<format> as the Makefile writes it: h2.bin, train-h2.log,
+temperature.bin, train-temperature.log, and per condition (raw, h2, temperature) and tier (test,
+dev, final, final-flagged, confirm, final-seen, bench; a tier the format does not have is skipped,
+and a QUICK run never reads final, final-flagged or confirm) the s1-eval report
+<cond>-<tier>.json and its per-item dump items-<cond>-<tier>.tsv; fitdev/, final/,
+final-flagged/, confirm/, final-seen/ and bench/ hold the feature files and their names sidecars.
+Writes FORMAT_DIR/record.json (machine-readable) and FORMAT_DIR/tables.md.
+
+The two calibration options are H2 (the head, `head` in the record) and the per-type temperature
+(`temperature`); both are fitted on the fit tier's train split and scored on the same items.
+confirm is the untouched tier of the pre-registered comparison of the two (docs/calibration.md):
+read once, by both, after both were frozen; the numbers here are recomputed from those same
+readouts with the same frozen head and temperatures.
 
 final is the fresh final tier (the reported result); final-flagged holds fresh families with a
 recorded caveat (the registry's `caveat`), reported in their own table beside final and never
@@ -35,6 +42,7 @@ import json
 import platform
 import subprocess
 import sys
+import zlib
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -45,19 +53,26 @@ import registry  # noqa: E402
 
 BINS, RESAMPLES, SEED = 10, 1000, 20260926
 TIERS = {"test": ("fitdev", "test"), "dev": ("fitdev", "heldout"), "final": ("final", "heldout"),
-         "final-flagged": ("final-flagged", "heldout"), "final-seen": ("final-seen", "heldout"),
-         "bench": ("bench", "heldout")}
-FRESH = ("final", "final-flagged")       # never read by a QUICK run
+         "final-flagged": ("final-flagged", "heldout"), "confirm": ("confirm", "heldout"),
+         "final-seen": ("final-seen", "heldout"), "bench": ("bench", "heldout")}
+FRESH = ("final", "final-flagged", "confirm")       # never read by a QUICK run
 METRICS = ("accuracy", "log_loss", "brier", "ece")
 TIER_NOTE = {"test": "in-distribution: the fit tier's test split",
              "dev": "held-out families scored during development",
              "final": "fresh held-out families, frozen before any head was scored on them: the reported result",
              "final-flagged": "fresh held-out families with a recorded caveat (see `caveats`): reported beside "
                               "the final result, never pooled into it, judging no bar",
+             "confirm": "untouched families (general) and ClimateCheck (stance), built after every other tier and "
+                        "read once, after both calibration options were frozen, for the pre-registered comparison "
+                        "of the temperature with H2 (docs/calibration.md); `caveats` lists the families the "
+                        "review flagged",
              "final-seen": "secondary evaluation: an earlier held-out tier, its families seen during development",
              "bench": "external benchmarks, evaluation only (also scored against their own gold in `benchmark`)"}
 CONDITIONS = {"raw": "no head (H0): letter probabilities with the pack's engine settings (model.engine)",
-              "h2": "the fitted H2 head, with the pack's engine settings (model.engine)"}
+              "h2": "the fitted H2 head, with the pack's engine settings (model.engine)",
+              "temperature": "the per-type temperature applied to the raw probabilities averaged over the option "
+                             "orders, with the pack's engine settings (model.engine)"}
+FITTED = ("h2", "temperature")
 
 
 def fnv(text: str) -> int:
@@ -226,7 +241,7 @@ def main(fdir: Path, data: Path, pack: str, fmt: str, quick: bool) -> None:
         for line in open(data / fmt / f"{part}.jsonl", encoding="utf-8"):
             ex = json.loads(line)
             examples[fnv(ex["id"])] = ex
-    rng = np.random.default_rng(SEED)
+    main_rng = np.random.default_rng(SEED)
     tiers = {}
     for tier, (part, split) in TIERS.items():
         if not (fdir / f"raw-{tier}.json").is_file() or (quick and tier in FRESH):
@@ -234,6 +249,10 @@ def main(fdir: Path, data: Path, pack: str, fmt: str, quick: bool) -> None:
         nm = names(fdir / part / "features.feat.names.tsv")
         t: dict = {"note": TIER_NOTE[tier], "conditions": {}}
         for cond in CONDITIONS:
+            # raw and h2 on the 0.1.0 tiers draw from the one stream they drew from in 0.1.0, in the
+            # same order, so their intervals are unchanged; every other pair has its own stream
+            rng = main_rng if cond in ("raw", "h2") and tier != "confirm" else \
+                np.random.default_rng([SEED, zlib.crc32(f"{tier}/{cond}".encode())])
             report = json.loads((fdir / f"{cond}-{tier}.json").read_text())
             rows = read_dump(fdir / f"items-{cond}-{tier}.tsv")
             x = per_item(rows)
@@ -281,22 +300,38 @@ def main(fdir: Path, data: Path, pack: str, fmt: str, quick: bool) -> None:
         t["sources"] = dict(sorted(srcs.items()))
         if tier == "final-flagged":
             t["caveats"] = {s: reg["sources"][s]["caveat"] for s in t["sources"]}
+        if tier == "confirm":
+            t["caveats"] = {s: reg["sources"][s]["confirm_caveat"] for s in t["sources"]
+                            if reg["sources"][s].get("confirm_caveat")}
         tiers[tier] = t
 
     fit_sources = sorted({ex["source"] for ex in examples.values() if ex["split"] in ("train", "validation")})
     head = fdir / "h2.bin"
     sidecar = json.loads((fdir / "h2.bin.json").read_text())   # per type: fitted, or the identity and why
+    temp = fdir / "temperature.bin"
+    temp_sidecar = json.loads((fdir / "temperature.bin.json").read_text())
+    fitted_on = [{"source": s, "licence": licence_used(reg["sources"][s]), "card_licence": reg["sources"][s]["licence"],
+                  "citation": reg["sources"][s]["citation"],
+                  "items": sum(1 for ex in examples.values() if ex["source"] == s and ex["split"] == "train")}
+                 for s in fit_sources]
     record = {
-        "schema": 2, "pack": pack, "format": fmt, "quick": quick,
+        "schema": 3, "pack": pack, "format": fmt, "quick": quick,
         "head": {"kind": "H2", "sha256": registry.sha256(head), "licence": reg["policy"]["head_licence"][fmt],
-                 "fitted_on": [{"source": s, "licence": licence_used(reg["sources"][s]),
-                                "card_licence": reg["sources"][s]["licence"],
-                                "citation": reg["sources"][s]["citation"],
-                                "items": sum(1 for ex in examples.values() if ex["source"] == s and ex["split"] == "train")}
-                               for s in fit_sources],
+                 "fitted_on": fitted_on,
                  "engine": sidecar["engine"],
                  "types": sidecar["types"],
                  "train_log": (fdir / "train-h2.log").read_text().splitlines()[-12:]},
+        "temperature": {"kind": "temperature", "sha256": registry.sha256(temp),
+                        "licence": reg["policy"]["head_licence"][fmt],
+                        "applied": "p_T = softmax(log(max(p, 1e-12)) / T), T of the question's type, p the raw "
+                                   "probabilities averaged over the option orders",
+                        "fitted": "per question type, the T in [0.05, 100] minimising the mean log loss of the fit "
+                                  "tier's train items (each item once, unweighted), rounded to three decimals; the "
+                                  "validation split only for the verdict (fallback to T = 1)",
+                        "fitted_on": "the same train items as head",
+                        "engine": temp_sidecar["engine"],
+                        "types": temp_sidecar["types"],
+                        "train_log": (fdir / "train-temperature.log").read_text().splitlines()},
         "conditions": CONDITIONS,
         "data": {"registry_sha256": manifest["registry_sha256"], "files": manifest["formats"][fmt]["files"],
                  "seed": manifest["seed"], "settings": manifest["formats"][fmt]["settings"]},
@@ -331,6 +366,8 @@ def n_items(t: dict) -> str:
 def tables(r: dict) -> str:
     out = [f"# {r['pack']} / {r['format']}" + (" (QUICK smoke run: not results)" if r["quick"] else ""), ""]
     main_tiers = [t for t in ("test", "dev", "final") if t in r["tiers"]]
+    out += ["Conditions: raw (no calibration), h2 (the fitted head) and temperature (one temperature per question",
+            "type, applied after the mean over option orders). Both are fitted on the fit tier's train split.", ""]
     out += ["| tier | items | condition | accuracy | log loss | ECE |", "|---|---|---|---|---|---|"]
     for tier in main_tiers:
         t = r["tiers"][tier]
@@ -346,6 +383,17 @@ def tables(r: dict) -> str:
         for cond, c in t["conditions"].items():
             m = c["metrics"]
             out.append(f"| final-flagged | {n_items(t)} | {cond} | {cell(m['accuracy'])} | {cell(m['log_loss'])} | "
+                       f"{cell(m['ece'])} |")
+    if "confirm" in r["tiers"]:
+        t = r["tiers"]["confirm"]
+        out += ["", "## Confirmation tier (confirm): untouched families, read once", "",
+                "Built after every other tier and read once, by both calibration options, after both were frozen",
+                "(the pre-registered comparison in docs/calibration.md). Families the review flagged:", ""]
+        out += [f"- {s}: {c}" for s, c in t.get("caveats", {}).items()]
+        out += ["", "| tier | items | condition | accuracy | log loss | ECE |", "|---|---|---|---|---|---|"]
+        for cond, c in t["conditions"].items():
+            m = c["metrics"]
+            out.append(f"| confirm | {n_items(t)} | {cond} | {cell(m['accuracy'])} | {cell(m['log_loss'])} | "
                        f"{cell(m['ece'])} |")
     if "final-seen" in r["tiers"]:
         t = r["tiers"]["final-seen"]
@@ -366,29 +414,32 @@ def tables(r: dict) -> str:
                 out.append(f"| {fam} | {b['items']} ({b['cases']}) | {cond} | {cell(b['accuracy'])} | {cell(b['brier'])} | {cell(b['kl'])} | "
                            f"{cell(b['ece'])} | {cell(b['score_mae']) if b['score_mae'] else 'n/a'} |")
     sel_tier = "final" if "final" in r["tiers"] else main_tiers[-1]
-    thresholds = r["tiers"][sel_tier]["conditions"]["h2"]["selective"]
-    out += ["", "## Selective accuracy (h2): accuracy / share answered", "",
-            "| tier | " + " | ".join(f"{s['threshold']:.2f}" for s in thresholds) + " |",
-            "|---|" + "---|" * len(thresholds)]
-    for tier, t in r["tiers"].items():
-        out.append(f"| {tier} | " + " | ".join("n/a / 0%" if s["accuracy"] is None else
-                                               f"{s['accuracy']:.2f} / {s['coverage']:.0%}"
-                                               for s in t["conditions"]["h2"]["selective"]) + " |")
-    out += ["", "## By family", "", "| tier | family | items | raw accuracy | h2 accuracy | raw ECE | h2 ECE |",
-            "|---|---|---|---|---|---|---|"]
+    for cond in FITTED:
+        thresholds = r["tiers"][sel_tier]["conditions"][cond]["selective"]
+        out += ["", f"## Selective accuracy ({cond}): accuracy / share answered", "",
+                "| tier | " + " | ".join(f"{s['threshold']:.2f}" for s in thresholds) + " |",
+                "|---|" + "---|" * len(thresholds)]
+        for tier, t in r["tiers"].items():
+            out.append(f"| {tier} | " + " | ".join("n/a / 0%" if s["accuracy"] is None else
+                                                   f"{s['accuracy']:.2f} / {s['coverage']:.0%}"
+                                                   for s in t["conditions"][cond]["selective"]) + " |")
+    out += ["", "## By family", "",
+            "| tier | family | items | raw accuracy | h2 accuracy | temperature accuracy | raw ECE | h2 ECE | "
+            "temperature ECE |", "|---|---|---|---|---|---|---|---|---|"]
     for tier, t in r["tiers"].items():
         for fam, h in t["conditions"]["h2"]["by_family"].items():
-            raw = t["conditions"]["raw"]["by_family"][fam]
+            raw, tt = (t["conditions"][c]["by_family"][fam] for c in ("raw", "temperature"))
             out.append(f"| {tier} | {fam} | {n_items(h)} | {cell(raw['accuracy'])} | {cell(h['accuracy'])} | "
-                       f"{cell(raw['ece'])} | {cell(h['ece'])} |")
+                       f"{cell(tt['accuracy'])} | {cell(raw['ece'])} | {cell(h['ece'])} | {cell(tt['ece'])} |")
     if r["format"] == "stance":
-        out += ["", "## Confusion (h2): gold (rows) by predicted (columns)", ""]
-        for tier, t in r["tiers"].items():
-            conf = t["conditions"]["h2"]["confusion"]
-            keys = sorted({k for c in conf.values() for k in c} | set(conf))
-            out += [f"**{tier}**", "", "| gold | " + " | ".join(keys) + " |", "|---|" + "---|" * len(keys)]
-            out += [f"| {g} | " + " | ".join(str(conf.get(g, {}).get(k, 0)) for k in keys) + " |" for g in keys]
-            out.append("")
+        for cond in FITTED:
+            out += ["", f"## Confusion ({cond}): gold (rows) by predicted (columns)", ""]
+            for tier, t in r["tiers"].items():
+                conf = t["conditions"][cond]["confusion"]
+                keys = sorted({k for c in conf.values() for k in c} | set(conf))
+                out += [f"**{tier}**", "", "| gold | " + " | ".join(keys) + " |", "|---|" + "---|" * len(keys)]
+                out += [f"| {g} | " + " | ".join(str(conf.get(g, {}).get(k, 0)) for k in keys) + " |" for g in keys]
+                out.append("")
     return "\n".join(out) + "\n"
 
 

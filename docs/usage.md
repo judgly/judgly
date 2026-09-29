@@ -8,7 +8,9 @@ complete scripts.
 ```python
 from judgly import Engine
 
-engine = Engine.load("gemma4-12b-q8")          # built-in pack, with its heads
+engine = Engine.load("gemma4-12b-q8")          # built-in pack, with its default calibration
+engine = Engine.load("gemma4-12b-q8", calibration="temperature")  # the per-type temperature
+engine = Engine.load("gemma4-12b-q8", calibration="h2")           # the H2 heads
 engine = Engine.load("gemma4-12b-q8", heads=False)            # raw probabilities (H0)
 engine = Engine.load("path/to/pack")           # a pack directory
 engine = Engine.load("gemma4-12b-q8", heads={"*": "my-h1.bin"})  # your own heads
@@ -19,7 +21,18 @@ the model, template and heads. The first load downloads the model file (12.7 GB 
 and hashes it once; after that, loading Gemma 4 12B takes a few seconds. The first native call
 in a process also compiles the Metal kernels (about 15 seconds).
 
-A `heads` mapping replaces the pack's heads entirely. A question uses the entry named by its
+**Calibration.** Each built-in pack ships two calibration options per format: the H2 head and
+the per-type temperature (one temperature per question type, applied after the answers are
+averaged over the option orders). `calibration="default"` (the default) uses the option the
+pack names for each format: the temperature for Qwen3-4B (general and stance) and for Gemma 4
+12B stance, H2 for Gemma 4 12B general, as a pre-registered comparison on untouched data
+decided ([calibration-options.md](calibration-options.md)). `"h2"` or `"temperature"` uses that
+option for every format, `"raw"` none (the same as `heads=False`). Any other value raises
+`ValueError`. `engine.calibration` tells which option each format uses, for example
+`{"*": "h2", "stance": "temperature"}`.
+
+A `heads` mapping replaces the pack's heads entirely (and cannot be combined with a
+`calibration` other than `"default"`). A question uses the entry named by its
 `format`, or else the entry `"*"`; if the mapping has no `"*"` entry, questions without a
 matching format get raw probabilities (`head` is `None` in the answer).
 
@@ -164,7 +177,9 @@ the C defaults only matter when calling `libjudgly` directly.
 - `HeadsNotAvailable` (a `FileNotFoundError`): the pack names heads whose files are missing.
 - `ModelMismatch` (a `ValueError`): the model file's size or SHA-256 is not the one the pack
   pins, or a head file is not the one the pack names.
-- `ValueError`: `pack.json` has an unsupported schema.
+- `ValueError`: `pack.json` has an unsupported schema, or `calibration` is not one of
+  `"default"`, `"h2"`, `"temperature"` and `"raw"`, names an option the pack does not offer, or
+  contradicts `heads`.
 - `TypeError`: `Engine.load` was given `model`, `template` or `model_sha256`, which the pack
   fixes (use `model_path=` or `Engine(config)`).
 - `pydantic.ValidationError`: a question or an engine option is malformed (for example a single
@@ -177,9 +192,11 @@ the C defaults only matter when calling `libjudgly` directly.
 
 Everything below is importable from `judgly`.
 
-- `Engine.load(pack, *, heads=True, model_path=None, **options) -> Engine`: `pack` is a
-  built-in pack name or a pack directory. `heads=True` uses the pack's heads, `heads=False`
-  none (raw probabilities), and a mapping `{format: path}` those files. `model_path` uses a
+- `Engine.load(pack, *, calibration="default", heads=True, model_path=None, **options) -> Engine`:
+  `pack` is a built-in pack name or a pack directory. `calibration` is `"default"` (the pack's
+  default option per format), `"h2"`, `"temperature"` or `"raw"` (see
+  [Load an engine](#load-an-engine)). `heads=True` uses the pack's heads for that choice,
+  `heads=False` none (raw probabilities), and a mapping `{format: path}` those files. `model_path` uses a
   local copy of the pack's model file (checked like a download); otherwise
   `JUDGLY_MODEL_DIR/<file name>` is used if it exists, and the file is downloaded if not.
   `options` override `EngineConfig` fields (see [Engine options](#engine-options)).
@@ -187,13 +204,16 @@ Everything below is importable from `judgly`.
   pack is involved: whatever `model`, `template` and `heads` the configuration names are
   loaded. If it gives `model_sha256`, the file is trusted to have that hash and is not hashed.
 - `Engine.decide(state, questions) -> Decision`, `await Engine.adecide(state, questions)`,
-  `Engine.decide_json(request_json) -> str`, `Engine.close()`; `Engine.config` and
-  `Engine.pack` hold what was loaded.
+  `Engine.decide_json(request_json) -> str`, `Engine.close()`; `Engine.config`, `Engine.pack`
+  and `Engine.calibration` (the option used per format; `{}` for raw or your own head files)
+  hold what was loaded.
 - `EngineConfig`: `model`, `template`, `heads` (`{format: path}`), `model_sha256`, and the
   options in the table above. Unknown fields are refused.
-- `Pack.find(name_or_path) -> Pack`; `Pack.heads() -> dict[str, Path]` (the head file per
-  format, checked against the SHA-256 in `pack.json`); `Pack.name`, `Pack.directory`,
-  `Pack.model`, `Pack.template`, `Pack.engine_options`.
+- `Pack.find(name_or_path) -> Pack`; `Pack.heads(calibration="default") -> dict[str, Path]`
+  (the head file per format for that choice, checked against the SHA-256 in `pack.json`);
+  `Pack.defaults() -> dict[str, str]` (the default option per format);
+  `Pack.calibration_options()` (per format, the default and every option's `pack.json` entry);
+  `Pack.name`, `Pack.directory`, `Pack.model`, `Pack.template`, `Pack.engine_options`.
 - `list_packs() -> list[str]`: the built-in pack names.
 - `native_version() -> str`: JSON with the judgly version, the llama.cpp commit and the
   backends compiled into the native library.

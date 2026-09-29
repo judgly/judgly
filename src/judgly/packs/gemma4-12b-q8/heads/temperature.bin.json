@@ -1,0 +1,8 @@
+{"head": "temperature", "features": "results/gemma4-12b-q8/general/fitdev/features.feat", "features_sha256": "afbd7cac91a943d00c6d27dd434f4f91222d7f71e8aead3441efafa148e83190",
+ "limit_train": -1,
+ "engine": {"rotations": true, "max_rotations": 4, "content_free": false},
+ "types": {
+  "choice": {"train_items": 4156, "validation_items": 892, "h0_validation_loss": 1.569063, "train_loss": 0.756997, "validation_loss": 0.762128, "temperature": 3.461, "temperature_unrounded": 3.46119939, "temperature_bounded": false, "prob_sd": 0.310139, "fallback": null, "reason": null},
+  "bool": {"train_items": 1093, "validation_items": 232, "h0_validation_loss": 1.459302, "train_loss": 0.525801, "validation_loss": 0.494026, "temperature": 7.491, "temperature_unrounded": 7.49107451, "temperature_bounded": false, "prob_sd": 0.271543, "fallback": null, "reason": null},
+  "score": {"train_items": 1051, "validation_items": 226, "h0_validation_loss": 3.405263, "train_loss": 1.231133, "validation_loss": 1.193585, "temperature": 6.538, "temperature_unrounded": 6.53829104, "temperature_bounded": false, "prob_sd": 0.265881, "fallback": null, "reason": null}
+ }}

@@ -5,6 +5,17 @@ names the Hugging Face repository, revision and file it comes from and the file'
 ``resolve_model`` downloads it into the Hugging Face cache on first use (or takes a local copy)
 and checks the SHA-256 before the file is used. Heads are only valid for the exact model file
 and template they were fitted with.
+
+Calibration options. A pack of schema 2 offers, per format, several calibration options, each a
+head file: ``"h2"`` (the fitted head H2, applied to every option order's letter logits) and
+``"temperature"`` (one temperature per question type, applied to the probabilities averaged over
+the option orders), and names the one it uses by ``"default"``. ``"raw"`` means no head. A pack
+of schema 1 has one head per format, which is its only option and its default.
+
+    "heads": {"*":      {"default": "h2", "default_basis": "...",
+                         "options": {"h2": {"file": ..., "sha256": ...},
+                                     "temperature": {"file": ..., "sha256": ...}}},
+              "stance": {...}}
 """
 
 from __future__ import annotations
@@ -16,7 +27,11 @@ from dataclasses import dataclass
 from importlib.resources import files
 from pathlib import Path
 
-__all__ = ["Pack", "HeadsNotAvailable", "ModelMismatch", "list_packs", "resolve_model"]
+__all__ = ["Pack", "HeadsNotAvailable", "ModelMismatch", "list_packs", "resolve_model", "CALIBRATIONS"]
+
+CALIBRATIONS = ("default", "h2", "temperature", "raw")
+"""The values of ``calibration`` in ``Pack.heads`` and ``Engine.load``: the pack's default per
+format, the H2 head, the per-type temperature, or no calibration (raw letter probabilities)."""
 
 _BUILTIN = files("judgly") / "packs"
 
@@ -60,7 +75,7 @@ class Pack:
     @classmethod
     def _read(cls, path: Path) -> Pack:
         spec = json.loads((path / "pack.json").read_text(encoding="utf-8"))
-        if spec.get("schema") != 1:
+        if spec.get("schema") not in (1, 2):
             raise ValueError(f"judgly: {path / 'pack.json'}: unsupported pack schema")
         return cls(spec["name"], path, spec)
 
@@ -85,13 +100,47 @@ class Pack:
     def engine_options(self) -> dict:
         return dict(self.spec.get("engine", {}))
 
-    def heads(self, *, allow_unverified: bool = False) -> dict[str, Path]:
-        """Head file per format. Raises HeadsNotAvailable if any named file is missing, and
-        ModelMismatch if a file differs from the SHA-256 the pack names for it. An entry that
-        names no SHA-256 is refused (ValueError) unless ``allow_unverified`` is true."""
+    def calibration_options(self) -> dict[str, dict]:
+        """Per format: {"default": option, "options": {option: head entry}}, the form of schema 2.
+        A schema-1 entry (one head per format) is its format's only option, "head"."""
+        out = {}
+        for fmt, entry in self.spec.get("heads", {}).items():
+            if self.spec.get("schema") == 1:
+                out[fmt] = {"default": "head", "options": {"head": entry}}
+            else:
+                if entry.get("default") not in entry.get("options", {}):
+                    raise ValueError(f"judgly: pack {self.name!r}: format {fmt!r} names default "
+                                     f"{entry.get('default')!r}, which is not one of its options "
+                                     f"{sorted(entry.get('options', {}))}")
+                out[fmt] = entry
+        return out
+
+    def defaults(self) -> dict[str, str]:
+        """The calibration option each format uses by default."""
+        return {fmt: e["default"] for fmt, e in self.calibration_options().items()}
+
+    def heads(self, *, allow_unverified: bool = False,
+              calibration: str = "default") -> dict[str, Path]:
+        """Head file per format for one calibration choice (see CALIBRATIONS): the pack's default
+        option of each format, "h2" or "temperature" for every format, or "raw" (no heads, {}).
+
+        Raises ValueError for an unknown choice or one a format does not offer, HeadsNotAvailable
+        if any named file is missing, and ModelMismatch if a file differs from the SHA-256 the
+        pack names for it. An entry that names no SHA-256 is refused (ValueError) unless
+        ``allow_unverified`` is true."""
+        if calibration not in CALIBRATIONS:
+            raise ValueError(f"judgly: calibration must be one of {', '.join(map(repr, CALIBRATIONS))}, "
+                             f"not {calibration!r}")
+        if calibration == "raw":
+            return {}
         heads: dict[str, Path] = {}
         missing = []
-        for fmt, entry in self.spec.get("heads", {}).items():
+        for fmt, choice in self.calibration_options().items():
+            option = choice["default"] if calibration == "default" else calibration
+            if option not in choice["options"]:
+                raise ValueError(f"judgly: pack {self.name!r} offers no calibration {option!r} for "
+                                 f"format {fmt!r} (it offers {', '.join(sorted(choice['options']))})")
+            entry = choice["options"][option]
             path = self._inside(entry["file"], f"head {fmt!r}")
             if not entry.get("sha256") and not allow_unverified:
                 raise ValueError(f"judgly: pack {self.name!r}: head {fmt!r} names no SHA-256; add "

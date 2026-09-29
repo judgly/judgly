@@ -1,4 +1,5 @@
-/* A trained head on disk. Little-endian, field by field. */
+/* A trained head on disk. Little-endian, field by field. Head type 1 is H1, 2 is H2, 3 a
+ * per-type temperature (n_embd 0, one float64 per question type). */
 #include "s1.h"
 
 #include <stdlib.h>
@@ -74,14 +75,14 @@ int s1_head_save(const struct s1_head *head, const char *path)
     }
     fwrite(MAGIC, 1, 8, f);
     put32(f, VERSION);
-    put32(f, head->h2 ? 2 : 1);
-    put32(f, (uint32_t)head->n_embd);
+    put32(f, head->temperature ? 3 : head->h2 ? 2 : 1);
+    put32(f, head->temperature ? 0 : (uint32_t)head->n_embd);
     fwrite(head->gguf_sha256, 1, S1_SHA256_HEX, f);
     fwrite(head->template_sha256, 1, S1_SHA256_HEX, f);
     for (int k = 0; k < S1_K_MAX; k++) {
         put32(f, (uint32_t)head->slot[k]);
     }
-    int n = s1_head_n_param(head->h2, head->n_embd);
+    int n = head->temperature ? 1 : s1_head_n_param(head->h2, head->n_embd);
     for (int type = 0; type < N_TYPES; type++) {
         for (int i = 0; i < n; i++) {
             put_double(f, head->x[type][i]);
@@ -110,13 +111,21 @@ int s1_head_load(struct s1_head *head, const char *path)
     }
     uint32_t kind   = get32(f);
     uint32_t n_embd = get32(f);
-    if (n_embd < 1 || n_embd > S1_HEAD_N_EMBD_MAX) {
+    if (kind == 3 && n_embd != 0) {
+        fprintf(stderr, "judgly: head file %s: a temperature head has hidden size 0, not %u\n",
+                path, n_embd);
+        fclose(f);
+        return -1;
+    }
+    if (kind != 3 && (n_embd < 1 || n_embd > S1_HEAD_N_EMBD_MAX)) {
         fprintf(stderr, "judgly: head file %s: hidden size %u is outside 1 to %d\n", path, n_embd,
                 S1_HEAD_N_EMBD_MAX);
         fclose(f);
         return -1;
     }
-    int rc = kind == 1 || kind == 2 ? s1_head_init(head, kind == 2, (int)n_embd) : -1;
+    int rc = kind == 1 || kind == 2 ? s1_head_init(head, kind == 2, (int)n_embd)
+             : kind == 3            ? s1_temperature_head_init(head)
+                                    : -1;
     if (rc == 0) {
         rc = fread(head->gguf_sha256, 1, S1_SHA256_HEX, f) == S1_SHA256_HEX &&
                      fread(head->template_sha256, 1, S1_SHA256_HEX, f) == S1_SHA256_HEX
@@ -127,7 +136,7 @@ int s1_head_load(struct s1_head *head, const char *path)
         for (int k = 0; k < S1_K_MAX; k++) {
             head->slot[k] = (int32_t)get32(f);
         }
-        int n = s1_head_n_param(head->h2, head->n_embd);
+        int n = head->temperature ? 1 : s1_head_n_param(head->h2, head->n_embd);
         for (int type = 0; type < N_TYPES; type++) {
             for (int i = 0; i < n; i++) {
                 head->x[type][i] = get_double(f);
@@ -141,6 +150,15 @@ int s1_head_load(struct s1_head *head, const char *path)
             fprintf(stderr, "judgly: head file %s has bytes after its end\n", path);
             s1_head_free(head);
             rc = -1;
+        }
+        for (int type = 0; rc == 0 && head->temperature && type < N_TYPES; type++) {
+            double t = head->x[type][0]; /* written as a finite number in the bounds, or 1 */
+            if (!(t == 1.0 || (t >= S1_TEMP_MIN && t <= S1_TEMP_MAX))) {
+                fprintf(stderr, "judgly: head file %s: temperature %g of question type %d is "
+                                "outside [%g, %g]\n", path, t, type, S1_TEMP_MIN, S1_TEMP_MAX);
+                s1_head_free(head);
+                rc = -1;
+            }
         }
     } else {
         fprintf(stderr, "judgly: head file %s has an unknown head type\n", path);

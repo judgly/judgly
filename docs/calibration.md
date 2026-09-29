@@ -18,6 +18,12 @@ brought ECE from 0.142 to 0.048 [0.034, 0.072] and from 0.187 to 0.052 [0.034, 0
 0.077; see [methods.md](methods.md#paired-differences-and-per-family-averages)
 ([README results](../README.md#results), [model cards](model-cards/gemma4-12b-q8.md)).
 
+These are the numbers of the H2 heads released in 0.1.0. The packs now also ship a second
+calibration option, one temperature per question type, and use it by default where a
+pre-registered comparison on untouched data confirmed it (Qwen3-4B general and stance, Gemma 4
+12B stance); Gemma 4 12B general keeps H2. [calibration-options.md](calibration-options.md) has
+both options on every tier and how each number came to be.
+
 ## The numbers reported
 
 - **Accuracy**: how often the top answer is correct.
@@ -51,6 +57,7 @@ levels:
 | H0 | nothing: the raw letter probabilities, averaged over option orders | 0 | no |
 | H1 | a temperature, a bias per letter and, only with the content-free pass (off in the built-in packs), how much of the content-free scores to subtract, per question type | 28 per type | a few hundred |
 | H2 | H1 plus a small correction to each letter's output row of the model | 28 + 26 x hidden size per type | thousands |
+| temperature | one temperature per question type, applied to the probabilities after they are averaged over the option orders | 1 per type | a few hundred |
 
 H1 is contextual calibration (Zhao et al. 2021) with the amount of correction learned rather
 than fixed, plus temperature scaling (Guo et al. 2017). H2 lets the correction depend on the
@@ -59,10 +66,14 @@ pass, so their heads use no contextual-calibration term. Both are fitted by mini
 L-BFGS; H2's corrections are penalised towards zero, with the penalty chosen on validation
 data. [methods.md](methods.md#the-heads) has the equations.
 
-The shipped heads are H2 heads fitted on public data (general and stance); for score questions
-they are H1, fitted with every level weighted equally ([methods.md](methods.md#the-heads)). They are fitted on
-some task families and evaluated on others, so the published calibration describes tasks the
-head has not seen. Your task is also one it has not seen: check it.
+The packs ship two options per format, both fitted on the same public data (general and
+stance): an H2 head (for score questions it is H1, fitted with every level weighted equally,
+[methods.md](methods.md#the-heads)) and the per-type temperature. `Engine.load(pack)` uses the
+pack's default per format; `calibration="h2"`, `"temperature"` or `"raw"` chooses one for every
+format ([calibration-options.md](calibration-options.md)). The temperature never changes which
+answer is on top, so its accuracy is the raw readout's; H2 can change it, for better or worse.
+Both are fitted on some task families and evaluated on others, so the published calibration
+describes tasks they have not seen. Your task is also one they have not seen: check it.
 
 ## Check calibration on your own data
 
@@ -97,9 +108,13 @@ cases and check it on another.
 ## Fitting a head on your own data
 
 With a source checkout and the command-line tools
-([installation.md](installation.md#build-from-source)), you can fit an H1 head on your own
-labelled cases. H1 needs a few hundred cases: calibration curves flatten after a few hundred
-labelled items.
+([installation.md](installation.md#build-from-source)), you can fit an H1 head or a per-type
+temperature on your own labelled cases. H1 needs a few hundred cases: calibration curves flatten
+after a few hundred labelled items. A temperature has one number per question type; in an
+exploratory analysis of held-out families, a temperature fitted on about 50 to 100 of a family's
+own items usually calibrated that family better than the shipped one
+([calibration-options.md](calibration-options.md#what-the-results-do-and-do-not-show)), but that
+was not confirmed, so check it on cases you held back.
 
 1. Write your cases as JSONL with the fields `id`, `task`, `family`, `split`, `type`, `state`,
    `instructions`, `options` and `label`. Split them yourself into `train`, `validation` and
@@ -122,6 +137,9 @@ labelled items.
    build/cli/s1-eval --features my_cases.feat --split test --rotations
    build/cli/s1-eval --features my_cases.feat --split test --rotations --head my-h1.bin
    ```
+
+   For a temperature instead, use `--head temperature --out my-temperature.bin` (it takes neither
+   `--limit-train` nor `--probe`) and pass that file to `s1-eval --head` in the same way.
 
    `s1-train` takes the same engine settings as `s1-features`, checks the features against them,
    and records them in `my-h1.bin.json`; the engine refuses the head under other settings. Its
