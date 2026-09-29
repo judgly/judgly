@@ -119,7 +119,7 @@ the general sources; stance head: the stance sources). `NOTICE` and each pack's
 `LICENSE` name this fitting data, with its licences and the attribution each
 licence asks for.
 
-Evaluation-only sources (dev, final, final-flagged, final-seen, bench and reserved tiers) are
+Evaluation-only sources (dev, final, final-flagged, final-seen, bench, confirm and reserved tiers) are
 not fitted on and not redistributed. Several have non-permissive or unconfirmed
 licences (e.g. ANLI CC-BY-NC, COVID-Fact / HealthVer / SciFact unconfirmed,
 HealthFC CC-BY-NC-ND, CEFR-SP CC-BY-NC-SA); publishing numbers on them is

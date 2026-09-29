@@ -71,7 +71,8 @@ def main(results: Path, packs: list[str]) -> None:
         for part in PARTS:
             if (ROOT / "data" / "tiers" / fmt / f"{part}.jsonl").is_file():
                 inputs.append(ROOT / "data" / "tiers" / fmt / f"{part}.jsonl")
-    files = sorted(p for p in OUT.rglob("*") if p.is_file() and p.name not in ("MANIFEST", "INPUTS.sha256"))
+    files = sorted(p for p in OUT.rglob("*") if p.is_file() and p.name not in ("MANIFEST", "INPUTS.sha256")
+                   and "__pycache__" not in p.parts)
     (OUT / "MANIFEST").write_text("".join(f"{sha256(p)}  {p.relative_to(OUT)}\n" for p in files))
     (OUT / "INPUTS.sha256").write_text(
         "".join(f"{sha256(p)}  {p.resolve().relative_to(ROOT)}\n" for p in inputs))

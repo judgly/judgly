@@ -45,6 +45,32 @@ that order matters for how much the numbers can be trusted.
 
 ## What the temperature does
 
+Both options start from the same readout of the model: for each order in which the options are
+shown, the model's scores for the answer letters. They differ in where the calibration acts.
+
+```text
+                   question, shown in up to 4 option orders
+                                   |
+                                   v
+                model: letter scores z, one set per order
+                                   |
+            +----------------------+----------------------+
+            | H2                                          | per-type temperature
+            v                                             v
+   per order: u = a * dot(w + d, h) + b          per order: softmax(z),
+   (fitted temperature, letter biases,           mapped back to the options
+   correction to the letter rows),                        |
+   softmax(u), mapped back to the options                 v
+            |                                    mean over orders = p (raw)
+            v                                             |
+   mean over orders                                       v
+            |                                    p_T proportional to
+            |                                    exp(log p / T[question type])
+            v                                             v
+   calibrated probabilities;                     calibrated probabilities;
+   the top answer can change                     the top answer is raw's
+```
+
 For a question with K options, the engine reads the letter probabilities under up to four
 cyclic orders of the options (all K orders for yes/no; one order, the natural one, for score
 questions), maps each order's probabilities back to the options and averages them: that average
@@ -104,6 +130,12 @@ on its derivative to machine precision and rounds it to three decimals. The vali
 used only for the same verdict as H2's: a type whose temperature is no better than the raw
 readout on validation, or whose output hardly varies, falls back to T = 1 (none did).
 
+**H2, for comparison** ([methods.md](methods.md#the-heads)): fitted on the same train items per
+question type, by L-BFGS on the mean log loss over the option orders (score levels weighted
+equally), from the H1 solution; its penalty on the row corrections is chosen from a short grid by
+validation log loss, with early stopping on validation. So the validation split takes part in
+fitting H2 but only in the fallback verdict for the temperature.
+
 **Relation to the confirmed values.** The temperatures in the table above are exactly the values
 frozen in `docs/results/calibration-study/confirmation/temperatures.json` before the
 confirmation. Those were fitted by the exploratory script `tricks.py` (Nelder-Mead in log T,
@@ -119,8 +151,12 @@ numbers mean. All of this happened after judgly 0.1.0 was released with H2, usin
 readouts cached by the release runs (no model was run):
 
 1. **Exploratory analysis 0** (`exploratory-0-combine`): temperature-only variants and a
-   combination of the two packs, with parameters fitted on the fit tier's test split, reported on
-   dev, final and final-seen.
+   combination (log-linear pool) of the two packs, with parameters fitted on the fit tier's test
+   split, reported on dev, final and final-seen. A temperature per question type (fitted there on
+   the test split) had a lower log loss than H2 in 7 of the 12 pack, format and tier cases. Pooling Gemma 4 12B with Qwen3-4B was never more than 0.0022 more
+   accurate than Gemma 4 12B alone, and its best variant's log loss was within 0.030 of the best
+   Gemma-only variant's (lower in four of six cases, higher in two); it would need both models at
+   run time and was not pursued.
 2. **Exploratory analysis 1** (`exploratory-1-temperature`): one temperature for everything,
    the per-type temperature, and the per-type temperature with a bias per option position, all
    fitted on the train split and compared with H2. The rule written into the script before any
@@ -147,6 +183,10 @@ readouts cached by the release runs (no model was run):
    made after reading the held-out tiers, including the fresh final tier, which by then had been
    read by the release run and by all three analyses. The final tier therefore cannot confirm the
    temperature, and a new, untouched tier was built for that purpose.
+
+Each analysis has a README with its data, its dates and how to rerun it
+([results/calibration-study](results/calibration-study/README.md)); rerun from the repository,
+all four reproduced their committed output byte for byte.
 
 ## The pre-registered confirmation
 
@@ -195,6 +235,11 @@ accuracy, lower bound above -0.01; Brier score, upper bound below +0.01; ECE, up
 | gemma4-12b-q8 | stance | 1,780 (70) | 0.655 / 0.629 | 0.052 / 0.078 | 0.476 / 0.490 | +0.026 [+0.011, +0.049]; -0.026 [-0.045, +0.007]; -0.014 [-0.044, -0.001] | confirmed |
 | qwen3-4b-q8 | general | 2,500 (1,932) | 0.484 / 0.463 | 0.047 / 0.076 | 0.597 / 0.624 | +0.022 [+0.008, +0.036]; -0.029 [-0.049, -0.014]; -0.027 [-0.035, -0.020] | confirmed |
 | qwen3-4b-q8 | stance | 1,780 (70) | 0.568 / 0.526 | 0.106 / 0.183 | 0.581 / 0.612 | +0.042 [+0.023, +0.090]; -0.078 [-0.097, -0.054]; -0.031 [-0.065, -0.018] | confirmed |
+
+The table reports the scorer's output (`result-confirm.txt`), which rounds to four decimals and
+then prints three; the calibration records round once, so Gemma 4 12B general H2 ECE (0.05048)
+reads 0.051 here and 0.050 in the tables below. At four decimals every point value of the scorer
+equals the record's.
 
 Log loss, reported without a criterion: Gemma general 0.959 against 0.933 (+0.026 [+0.017,
 +0.037], H2 better); Gemma stance 0.823 against 0.812 (+0.012 [-0.036, +0.033]); Qwen general
@@ -339,6 +384,10 @@ confirmation. Only the confirm tier is untouched for the comparison of the two o
   although the temperature is now the stance default. On the stance confirm tier (ClimateCheck)
   the temperature was better in both. Stance calibration depends strongly on the kind of claims
   and evidence, and either option can miss a bar of 0.05 on a new source.
+- **One family carries the Qwen3-4B general accuracy gain.** On spatial (SpartQA yes/no) H2
+  lowered Qwen3-4B's accuracy from 0.612 to 0.488; the five general families have 500 items each,
+  and the mean accuracy difference of the other four is -0.004 (post hoc arithmetic, no interval).
+  The protocol specified no analysis without spatial.
 - **The confirmation is one tier per format.** Five general families and one stance source, with
   70 resampling groups for stance, so the stance intervals are wide. It tests "at least as good
   as H2" by the three criteria; it does not show that the temperature is better, and a case that
@@ -377,6 +426,21 @@ calibration record, and assembles the pack. Every feature file is passed to make
 extraction runs; a missing one stops it. The raw and H2 dumps and record sections it writes are
 byte-identical to the 0.1.0 release's (the bootstrap draws of raw and H2 on the 0.1.0 tiers use
 the same random stream as in 0.1.0; every other condition and tier has its own).
+
+The analyses themselves are rerun, unchanged, by
+`uv run --no-project --with numpy --with scipy --with scikit-learn python docs/results/calibration-study/rerun.py all`,
+which compares each output with the committed one.
+
+**How the analysis outputs relate to the records.** The per-type temperature's point values in
+the records (every tier, both packs, both formats) were compared with the Ttype rows of
+`temperature.json` and `tricks.json` and with `result-confirm.json`, all at four decimals. The
+confirmation's values (overall and per family, raw, temperature and H2) are all equal. Of the
+exploratory Ttype values, all but two (analysis 1) and three (analysis 2) are equal; those differ
+by 1e-4 because the exploratory scripts applied their own unrounded optimum and the shipped files
+hold the temperature rounded to three decimals. Three raw log losses of Qwen3-4B differ by up to
+0.006 because the exploratory scripts clip probabilities at 1e-12 and the records do not. The
+analyses' printed `.txt` files round four-decimal values again to three, so some printed values
+differ by 0.001 from the records. Intervals come from different bootstrap draws and differ.
 
 `docs/tools/confirmation_check.py` checks that the frozen study files still have their recorded
 SHA-256, that the shipped temperature heads hold exactly the confirmed temperatures, and that the

@@ -256,7 +256,7 @@ the per-family averages and paired differences above from the snapshot.
 
 Each pack now ships a second calibration option next to H2: one temperature per question type,
 applied to the probabilities after they are averaged over the option orders, fitted on the same
-train items. It never changes which answer is on top, so its accuracy is the raw accuracy. The
+train items as H2 (6,300 general and 14,783 stance items). It never changes which answer is on top, so its accuracy is the raw accuracy. The
 idea came from exploratory analyses of the 0.1.0 readouts, which read the final tier again, so
 the two options were compared on a new tier that nothing had read: five general families never
 used before (2,500 items) and ClimateCheck for stance (1,780 items), read once, with criteria
@@ -271,7 +271,10 @@ below +0.01, ECE below +0.02). The temperature met them in three of four cases:
 | qwen3-4b-q8 | stance (1,780) | 0.568 / 0.526 | 0.106 / 0.183 | 0.581 / 0.612 | confirmed | temperature |
 
 `Engine.load(pack)` uses the default shown; `calibration="h2"`, `"temperature"` or `"raw"`
-chooses for every format. The tables above are for H2. Both options on every tier, the paired
+chooses for every format. A confirmed case means "at least as good as H2 by these criteria on this
+tier", not better everywhere: the confirm tier has a single stance source, Qwen3-4B's
+general accuracy gain comes from one of its five families, and on the stance final tier
+(Check-COVID) H2 was the better calibrated of the two in both packs. The tables above are for H2. Both options on every tier, the paired
 intervals and how each number came to be are in
 [Calibration options](https://github.com/judgly/judgly/blob/v0.1.0/docs/calibration-options.md).
 

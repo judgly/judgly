@@ -17,6 +17,7 @@ work. The results are in [Results](#results), from the committed snapshot in
 - [Evaluation](#evaluation)
 - [Bars](#bars)
 - [Results](#results)
+- [The calibration comparison](#the-calibration-comparison)
 - [Negative and null results](#negative-and-null-results)
 - [What the evaluation can and cannot show](#what-the-evaluation-can-and-cannot-show)
 - [Related work](#related-work)
@@ -209,9 +210,9 @@ Tier sizes: general 9,000 fit (6,300 train, 1,350 validation, 1,350 test), 4,500
 task), 7,879 final (1,000 per task, 1,005 for BLiMP, 500 each for the two ETHICS subsets, 874
 for CEFR-SP; 6,803 resampling groups), 1,000 final-flagged (Stanford Politeness), 10,300
 final-seen and 2,231 bench items (all 2,000 typed-decisions test decisions and all 231
-JevBench public items); stance 21,000 fit (4,500 each from MNLI and VitaminC, 4,000 from FEVER,
+JevBench public items), and, added after 0.1.0, 2,500 confirm items (500 per family); stance 21,000 fit (4,500 each from MNLI and VitaminC, 4,000 from FEVER,
 SUPPORTS and REFUTES only, 3,000 each from SNLI and WANLI, 2,000 from SciNLI), 2,100 dev, 1,343
-final (Check-COVID, on 315 abstracts), 749 final-flagged (HealthFC) and 2,100 final-seen items. The fit tier is split by a hash of the
+final (Check-COVID, on 315 abstracts), 749 final-flagged (HealthFC), 2,100 final-seen and, added after 0.1.0, 1,780 confirm items (ClimateCheck, 70 linked groups). The fit tier is split by a hash of the
 passage, or of a recorded group (the evidence page for FEVER and VitaminC, the prompt for
 HelpSteer2), so items that share one stay in one split. Some sources are sampled evenly: by
 label (the stance fit sources other than MNLI and VitaminC, HelpSteer2, Circa, ESCI, CEFR-SP,
@@ -293,7 +294,7 @@ later tier when it matches an earlier one:
   similarity of at least 0.6 with a text of an earlier tier (both of at least six distinct
   words; candidates from MinHash banding, then the exact Jaccard).
 
-final-seen and dev are built with the exact check only; the bench tier drops nothing for overlap (a benchmark is scored as published). Check-COVID items are checked with their whole
+final-seen and dev are built with the exact check only; the bench tier drops nothing for overlap (a benchmark is scored as published). The confirm tier, added after 0.1.0, is built after all of them and dropped against every other tier with all four checks (its passage check counting boilerplate 8-grams too); for stance also against the texts of every evaluation source as a whole ([below](#the-pre-registered-confirmation)). Check-COVID items are checked with their whole
 abstract, not only the sentences shown, so that every claim on an abstract that HealthVer or
 COVID-Fact also uses is left out. FEVER claims whose evidence page is also an evidence article of
 Climate-FEVER (dev) are left out (7,606 of the SUPPORTS and REFUTES claims). Exact duplicates
@@ -317,7 +318,8 @@ failing, bench items matching other evaluation tiers, the fresh tiers of each fo
 the fit tier of the other format, and dev and final-seen items that overlap a reserved source
 (in the current build 8 dev items share a sentence, 52 texts a passage and 17 are near
 duplicates, nearly all Climate-FEVER against ClimateCheck; Climate-FEVER is a dev-tier source,
-so ClimateCheck must drop them before it becomes a final tier). The test suite plants each kind of
+so ClimateCheck had to drop them before it could become an evaluation tier, which it did when it
+became the stance confirm tier, [below](#the-pre-registered-confirmation)). The test suite plants each kind of
 leak and checks that the checker catches it. The checker runs at the start of every pipeline
 run, and its output is saved with the results.
 
@@ -422,11 +424,12 @@ each `pack.json`; features for fitting are extracted with the same settings):
 ### Calibration options
 
 The numbers in the rest of this section are those of the 0.1.0 release: raw against H2. The
-per-type temperature, added later as a second option, is reported against both on every tier,
-with the order in which its analyses read which tier, in
-[calibration-options.md](calibration-options.md#both-options-on-every-tier). On the confirm tier,
-which no analysis had read, it met the pre-registered criteria against H2 in three of four cases
-(Gemma 4 12B stance, Qwen3-4B general and stance) and not for Gemma 4 12B general.
+per-type temperature, added later as a second option, is reported against both on every tier in
+[calibration-options.md](calibration-options.md#both-options-on-every-tier); how it came about,
+which tiers its analyses read, and its pre-registered confirmation are described
+[below](#the-calibration-comparison). On the confirm tier, which no analysis had read, it met the
+pre-registered criteria against H2 in three of four cases (Gemma 4 12B stance, Qwen3-4B general
+and stance) and not for Gemma 4 12B general.
 
 ### Tiers and contamination
 
@@ -541,9 +544,250 @@ well above 0.05. Both stance heads ship, because they are far better calibrated 
 0.142 → 0.048 and 0.187 → 0.052), and they are marked as having missed the dev bar in the README
 and the model cards.
 
+## The calibration comparison
+
+After the 0.1.0 release a second calibration option, one temperature per question type, was
+studied and compared with the released H2 heads. Everything in this section ran on the CPU from
+the letter scores cached by the release runs, except that the confirm tier was built new and read
+once by each model. The order in which things were done is part of what the numbers mean, so it
+is stated here. The scripts, protocols and outputs are committed unchanged in
+[results/calibration-study](results/calibration-study/README.md), each with a README; rerun from
+the repository (`rerun.py`), all four reproduced their committed output byte for byte.
+[calibration-options.md](calibration-options.md) has both options on every tier and how to choose
+between them.
+
+### The two options
+
+- **H2** ([above](#the-heads)) acts on each option order's letter scores before the orders are
+  averaged, and can change the top answer.
+- **The per-type temperature** reads each order without a head, averages the orders into the raw
+  readout p, then applies p_T[k] = softmax_k(log(max(p[k], 1e-12)) / T), with one T per question
+  type (choice, yes/no, score). It keeps the raw readout's ranking, so its accuracy is the raw
+  accuracy.
+
+Both are fitted on the same items: the fit tier's train split (general 6,300 items: 4,156
+choice, 1,093 yes/no, 1,051 score; stance 14,783 choice items). The temperature minimises the
+mean log loss of the train items, each counted once and unweighted; the validation split
+(general 1,350: 892, 232, 226; stance 3,072) is used only for the fallback verdict (none fell
+back). The shipped values, rounded to three decimals, are those frozen before the confirmation:
+
+| pack | format | choice | yes/no | score |
+|---|---|---|---|---|
+| gemma4-12b-q8 | general | 3.461 | 7.491 | 6.538 |
+| gemma4-12b-q8 | stance | 7.151 | 1 (no items) | 1 (no items) |
+| qwen3-4b-q8 | general | 6.846 | 13.36 | 24.22 |
+| qwen3-4b-q8 | stance | 12.391 | 1 (no items) | 1 (no items) |
+
+They were fitted by an exploratory script (Nelder-Mead in log T); `s1-train --head temperature`
+fits the same objective (bisection on its derivative, which is monotone in 1/T), and all eight of
+its unrounded optima round to the same three decimals (`train-temperature.log` in each results
+directory).
+
+### Exploratory analyses
+
+Three exploratory analyses came first, all on 2026-09-29 after the release:
+
+| analysis | protocol | fitted on | chosen on | tiers read | finding |
+|---|---|---|---|---|---|
+| 0, temperature-only variants and pooling the two packs | none | the fit tier's test split | no choice; every variant reported | test, dev, final, final-seen | a temperature per type had a lower log loss than H2 in 7 of 12 cases; pooling gave no gain worth running two models |
+| 1, T1, Ttype, TBtype against H2 | choice rule in the script's docstring before any result | train split | validation log loss | train, validation, dev, final, final-flagged, final-seen, bench | the rule chose H2 in all 4 cases; on held-out tiers Ttype matched or beat H2 in most comparisons |
+| 2, refinements on top of Ttype, and an own-data temperature | `PROTOCOL.md`, frozen by SHA-256 at 09:09 | train split | dev log loss (ties within 0.002 to fewer parameters) | train, dev, final, final-flagged, final-seen, bench | no refinement beat Ttype reliably; a temperature fitted on a family's own items helped from about 50 to 100 items |
+
+**Analysis 0.** Weights of a log-linear pool (p proportional to the product of each source's
+probabilities raised to its weight; one weight is a temperature) were fitted by Nelder-Mead on the
+fit tier's test split (1,350 general, 3,145 stance items), which after this analysis is no longer
+an unused in-distribution check for these variants. Compared by log loss on dev, final and
+final-seen, the per-type temperature beat H2 in 7 of the 12 pack, format and tier cases. Pooling
+Gemma 4 12B with Qwen3-4B was never more than 0.0022 more accurate than Gemma 4 12B alone (general
+dev; less accurate in the other five format and tier cases); the best pooled variant's log loss
+differed from the best Gemma-only variant's by at most 0.030, lower in four of six cases and
+higher in two. That comparison is of the best of several variants after seeing the results, and
+pooling needs both models at run time; it was not pursued.
+
+**Analysis 1.** Fitted on the train split by L-BFGS: T1 (one temperature), Ttype (one per
+question type) and TBtype (per type a temperature and a bias per option position). The rule fixed
+in the docstring, lowest log loss on the validation split, chose H2 in all four pack and format
+cases; validation is in-distribution, and H2's penalty strength had itself been chosen on it. On
+the 18 held-out comparisons (dev, final, final-flagged, final-seen and bench, per pack and
+format), Ttype's accuracy was at least H2's in 15, and its log loss, ECE and Brier score were
+each lower in 11. In 6 of the 18 the 95% interval of the paired difference showed Ttype worse
+than H2 on at least one of accuracy, ECE and Brier, among them the stance final tier
+(Check-COVID) of both packs. TBtype was better than Ttype on train and validation (general) but
+had a higher log loss in 13 of the 18 held-out comparisons.
+
+**Analysis 2.** Four refinements, each fitted per question type on the train split and applied
+to Ttype's output: a temperature that grows with the disagreement between option orders
+(T = exp(alpha + beta d)), Platt scaling of the top probability, isotonic regression and 10-bin
+histogram binning. The frozen rule chose Platt, Ttype, H2 and isotonic regression in the four
+cases. Against Ttype over the 18 held-out comparisons, counting intervals of the paired log loss
+difference wholly below or above zero: Platt better in 9, worse in 6; order disagreement better
+in 2, worse in 5; isotonic better in 2, worse in 12; histogram better in 1, worse in 8. None was
+taken further. Three bugs in the analysis script were found and fixed during this run; the
+frozen protocol was not changed, and the committed script is the one that produced the committed
+output.
+
+**Own-data temperature (analysis 2's sub-study).** For each held-out family of dev and final,
+items were split into halves A and B by a hash of their group; one temperature fitted on the first
+n items of A was judged on B against the shipped per-type temperature. Mean log loss over
+families was lower than the shipped temperature's in 6 of the 8 pack, format and tier rows at
+n = 25, 7 of 8 at n = 50 and 8 of 8 at n = 100 (for example Gemma 4 12B general final: 0.628,
+0.614, 0.592 against 0.597; Qwen3-4B general final: 0.779, 0.777, 0.771 against 0.788). Per
+family it was more mixed (Gemma 4 12B stance dev: lower mean, better in one of three families).
+The full table is in the analysis README. This was exploratory and was not confirmed.
+
+**How often each tier was read.** The fresh final tier and final-seen were read by the 0.1.0
+release run and then by all three analyses; final-flagged and bench by the release run and by
+analyses 1 and 2; dev during development and by all three analyses; the fit tier's test split by
+the release run and, for fitting, by analysis 0. The per-type temperature and the decision to
+test it came from these analyses, so for the comparison of the two options none of these tiers
+is untouched, and their numbers for the temperature are supporting evidence, not a held-out
+result.
+
+### The pre-registered confirmation
+
+**Protocol.** `CONFIRM.md` was written and frozen before any confirmation data existed, with the
+temperatures under test (`temperatures.json`, analysis 2's Ttype fit rounded to three decimals).
+Amendment 1 was added after the tier was built and reviewed and before any model read it, and the
+file was re-frozen at 10:38; the scorer `score_confirm.py` was frozen at 10:40 after a smoke test
+on the 0.1.0 dev tier only. `CONFIRM.sha256` records the SHA-256 of the three files and these
+times; the SHA-256 of the protocol before the amendment was not kept, so the amendment's text is
+the record of what changed. The claim: on task families that nothing in judgly was fitted, tuned
+or chosen on, the per-type temperature is at least as good as the 0.1.0 H2 head, with nothing
+refitted and the release engine settings (up to four option orders, no content-free pass).
+
+**Amendment 1.** (1) Stance intervals resample linked groups (claims joined by a shared abstract,
+70 groups) because items sharing an abstract are not independent; the 175 claim groups are a
+secondary analysis. (2) The tier review had flagged argument_quality and humour as possible
+relatives of used rating families, and code_outcome as having a language shortcut (the verdict
+goes with the programming language); the endpoints stay on all five families, and the result is
+also reported with each of the three left out, without a criterion. (3) Nothing else changed.
+
+**Data: the confirm tier.** Built after every other tier (judgly commits `ad8c91a` and `dbf1a9f`)
+from sources never used in this project, with licences that allow evaluation
+([licences.md](licences.md)), and frozen by SHA-256 in `data/tiers-confirm.sha256`:
+
+| format | family | source | type | items | resampling groups |
+|---|---|---|---|---|---|
+| general | kinship | CLUTRR | choice (17 relations, hop counts 2 to 10 balanced) | 500 | 500 |
+| general | code_outcome | CodeMMLU execution prediction (Project CodeNet programs) | choice (4 verdicts, 125 each) | 500 | 500 |
+| general | spatial | SpartQA-YN | yes/no (250 each) | 500 | 500 |
+| general | argument_quality | IBM Argument Quality 30k | score (3 levels) | 500 | 15 (topics) |
+| general | humour | Humicroedit | score (3 levels) | 500 | 417 |
+| stance | confirm_climate | ClimateCheck test split (reserved in 0.1.0) | choice (707 supports, 253 contradicts, 820 no bearing) | 1,780 | 70 (largest 837 items) |
+
+`scripts/prep_tiers.py` builds the tier last and drops every item that matches any other tier
+(fit, dev, final, final-flagged, final-seen, bench) as an exact text, a shared sentence, a shared
+passage (8-gram shingles, boilerplate included) or a near duplicate; for stance it also checks
+against the texts of every evaluation source as a whole (36,951 texts). The first build had 1,785
+ClimateCheck items; the review dropped five that quote IPCC text also held by Climate-FEVER (a dev
+source), and replaced one code_outcome item whose program was shorter than 20 characters, before
+any model read the tier. `scripts/check_contamination.py` checks the same conditions at the start
+of every pipeline run. The 0.1.0 tier files are byte-identical to `data/tiers.sha256`. Each pack
+then extracted the tier once (`s1-features`, 11:31 to 13:12), and the frozen scorer read the
+per-item output once (13:13).
+
+**Criteria**, per pack and format, on the paired difference temperature minus H2 over the same
+items, 95% percentile interval from 1,000 bootstrap resamples of the groups (seed 20260929):
+accuracy, lower bound above -0.01; Brier score, upper bound below +0.01; ECE, upper bound below
++0.02. A case is confirmed when all three hold. Only confirmed cases switch.
+
+**Result: confirmed in 3 of 4 cases.** The scorer's values (`result-confirm.txt`; it rounds to four
+decimals, then prints three):
+
+| pack | format | items (groups) | accuracy T / H2 | ECE T / H2 | Brier T / H2 | log loss T / H2 | T - H2 accuracy | T - H2 ECE | T - H2 Brier | T - H2 log loss (no criterion) | verdict |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| gemma4-12b-q8 | general | 2,500 (1,932) | 0.509 / 0.509 | 0.087 / 0.051 | 0.579 / 0.562 | 0.959 / 0.933 | +0.000 [-0.014, +0.015] | +0.037 [+0.015, +0.048] | +0.017 [+0.010, +0.024] | +0.026 [+0.017, +0.037] | not confirmed |
+| gemma4-12b-q8 | stance | 1,780 (70) | 0.655 / 0.629 | 0.052 / 0.078 | 0.476 / 0.490 | 0.823 / 0.812 | +0.026 [+0.011, +0.049] | -0.026 [-0.045, +0.007] | -0.014 [-0.044, -0.001] | +0.012 [-0.036, +0.033] | confirmed |
+| qwen3-4b-q8 | general | 2,500 (1,932) | 0.484 / 0.463 | 0.047 / 0.076 | 0.597 / 0.624 | 1.009 / 1.041 | +0.022 [+0.008, +0.036] | -0.029 [-0.049, -0.014] | -0.027 [-0.035, -0.020] | -0.032 [-0.043, -0.023] | confirmed |
+| qwen3-4b-q8 | stance | 1,780 (70) | 0.568 / 0.526 | 0.106 / 0.183 | 0.581 / 0.612 | 0.966 / 0.989 | +0.042 [+0.023, +0.090] | -0.078 [-0.097, -0.054] | -0.031 [-0.065, -0.018] | -0.023 [-0.070, -0.001] | confirmed |
+
+For Gemma 4 12B general all three criteria were missed: equal accuracy, and H2 better
+calibrated. The raw readout was far worse than either option in every case (ECE 0.300 to 0.406).
+
+Per family (no criterion; paired intervals resample the family's own groups):
+
+| pack | family | items (groups) | accuracy T / H2 | ECE T / H2 | Brier T / H2 | T - H2 accuracy | T - H2 ECE | T - H2 Brier |
+|---|---|---|---|---|---|---|---|---|
+| gemma4-12b-q8 | argument_quality | 500 (15) | 0.444 / 0.458 | 0.105 / 0.079 | 0.633 / 0.624 | -0.014 [-0.034, +0.007] | +0.026 [-0.019, +0.053] | +0.009 [+0.002, +0.018] |
+| gemma4-12b-q8 | code_outcome | 500 (500) | 0.624 / 0.608 | 0.069 / 0.057 | 0.510 / 0.500 | +0.016 [-0.018, +0.050] | +0.012 [-0.041, +0.053] | +0.010 [-0.011, +0.031] |
+| gemma4-12b-q8 | humour | 500 (417) | 0.404 / 0.374 | 0.123 / 0.132 | 0.668 / 0.671 | +0.030 [+0.008, +0.056] | -0.009 [-0.036, +0.015] | -0.003 [-0.012, +0.006] |
+| gemma4-12b-q8 | kinship | 500 (500) | 0.538 / 0.526 | 0.061 / 0.031 | 0.586 / 0.566 | +0.012 [-0.012, +0.036] | +0.029 [-0.017, +0.061] | +0.020 [+0.009, +0.032] |
+| gemma4-12b-q8 | spatial | 500 (500) | 0.536 / 0.580 | 0.144 / 0.081 | 0.499 / 0.452 | -0.044 [-0.088, -0.002] | +0.063 [+0.012, +0.109] | +0.047 [+0.025, +0.068] |
+| gemma4-12b-q8 | confirm_climate | 1,780 (70) | 0.655 / 0.629 | 0.052 / 0.078 | 0.476 / 0.490 | +0.026 [+0.011, +0.049] | -0.026 [-0.045, +0.007] | -0.014 [-0.044, -0.001] |
+| qwen3-4b-q8 | argument_quality | 500 (15) | 0.426 / 0.422 | 0.025 / 0.088 | 0.641 / 0.651 | +0.004 [-0.004, +0.011] | -0.064 [-0.072, -0.009] | -0.011 [-0.023, +0.001] |
+| qwen3-4b-q8 | code_outcome | 500 (500) | 0.514 / 0.510 | 0.073 / 0.072 | 0.592 / 0.599 | +0.004 [-0.034, +0.044] | +0.002 [-0.056, +0.044] | -0.007 [-0.019, +0.005] |
+| qwen3-4b-q8 | humour | 500 (417) | 0.368 / 0.374 | 0.110 / 0.178 | 0.679 / 0.712 | -0.006 [-0.014, +0.000] | -0.068 [-0.088, -0.058] | -0.033 [-0.043, -0.023] |
+| qwen3-4b-q8 | kinship | 500 (500) | 0.502 / 0.520 | 0.078 / 0.058 | 0.602 / 0.598 | -0.018 [-0.038, +0.004] | +0.020 [-0.024, +0.056] | +0.004 [-0.007, +0.014] |
+| qwen3-4b-q8 | spatial | 500 (500) | 0.612 / 0.488 | 0.055 / 0.154 | 0.471 / 0.559 | +0.124 [+0.076, +0.176] | -0.099 [-0.143, -0.043] | -0.088 [-0.119, -0.058] |
+| qwen3-4b-q8 | confirm_climate | 1,780 (70) | 0.568 / 0.526 | 0.106 / 0.183 | 0.581 / 0.612 | +0.042 [+0.023, +0.090] | -0.078 [-0.097, -0.054] | -0.031 [-0.065, -0.018] |
+
+The largest single difference is spatial (SpartQA yes/no), where H2 lowered Qwen3-4B's accuracy
+from 0.612 to 0.488. The five families have 500 items each, so the overall accuracy difference is
+the mean of the five: for Qwen3-4B, +0.022 overall, and -0.004 as the mean of the four families
+other than spatial (post hoc arithmetic, no interval). spatial was not among the families the
+amendment leaves out in turn, and the protocol specified no analysis without it.
+
+Secondary analyses (Amendment 1, no criterion):
+
+| pack | analysis | items (groups) | T - H2 accuracy | T - H2 ECE | T - H2 Brier | all three criteria |
+|---|---|---|---|---|---|---|
+| gemma4-12b-q8 | general, without argument_quality | 2,000 (1,917) | +0.004 [-0.012, +0.020] | +0.038 [+0.012, +0.051] | +0.018 [+0.011, +0.026] | not met |
+| gemma4-12b-q8 | general, without humour | 2,000 (1,515) | -0.007 [-0.024, +0.008] | +0.038 [+0.008, +0.057] | +0.022 [+0.013, +0.030] | not met |
+| gemma4-12b-q8 | general, without code_outcome | 2,000 (1,432) | -0.004 [-0.020, +0.010] | +0.032 [+0.011, +0.048] | +0.018 [+0.012, +0.026] | not met |
+| gemma4-12b-q8 | stance, resampling the 175 claim groups | 1,780 (175) | +0.026 [+0.008, +0.045] | -0.026 [-0.048, -0.006] | -0.014 [-0.030, +0.001] | met |
+| qwen3-4b-q8 | general, without argument_quality | 2,000 (1,917) | +0.026 [+0.010, +0.043] | -0.030 [-0.051, -0.008] | -0.031 [-0.041, -0.022] | met |
+| qwen3-4b-q8 | general, without humour | 2,000 (1,515) | +0.029 [+0.011, +0.047] | -0.022 [-0.046, -0.004] | -0.026 [-0.035, -0.016] | met |
+| qwen3-4b-q8 | general, without code_outcome | 2,000 (1,432) | +0.026 [+0.013, +0.041] | -0.042 [-0.058, -0.022] | -0.032 [-0.042, -0.024] | met |
+| qwen3-4b-q8 | stance, resampling the 175 claim groups | 1,780 (175) | +0.042 [+0.023, +0.063] | -0.078 [-0.098, -0.053] | -0.031 [-0.050, -0.013] | met |
+
+**Checks of the shipped option against the confirmation.** The shipped temperature files hold
+exactly the values of `temperatures.json`; on the confirm and dev tiers the engine's per-item
+temperature output equals the frozen scorer's applied to the raw dumps (largest difference
+2.2e-16); every point value of `result-confirm.json` equals the calibration record's rounded to
+four decimals; and every committed per-item dump (both packs, both formats, every tier, raw, H2
+and temperature) is reproduced byte for byte by `s1-eval` from the committed code
+(`docs/tools/confirmation_check.py`, [reproduce.md](reproduce.md)).
+
+### What was decided
+
+Per the protocol, only confirmed cases switch. Each pack ships both options per format, and the
+default (`Engine.load(pack)`) is:
+
+| pack | general | stance |
+|---|---|---|
+| gemma4-12b-q8 | H2 (not confirmed) | temperature (confirmed) |
+| qwen3-4b-q8 | temperature (confirmed) | temperature (confirmed) |
+
+`calibration="h2"`, `"temperature"` or `"raw"` chooses one for every format.
+
+### Negative and null results of the comparison
+
+- **Gemma 4 12B general was not confirmed.** Equal accuracy (0.509), and H2 better calibrated on
+  the confirm tier (ECE 0.051 against 0.087 in the scorer's output, Brier 0.562 against 0.579).
+  This is not evidence that H2 is better in general; the confirmation tested only the other
+  direction.
+- **H2 was better calibrated on the stance final tier** (Check-COVID) in both packs (ECE 0.048
+  and 0.052 against 0.087 and 0.093), although the temperature is now the stance default. On the
+  stance confirm tier (ClimateCheck) the temperature was better in both. Stance calibration
+  depends strongly on the kind of claims and evidence.
+- **The exploratory choice rule chose H2 everywhere.** Validation-split log loss favoured H2 in
+  all four cases; the temperature was taken further on held-out results, which is why it needed
+  the confirmation.
+- **No refinement beat the plain temperature reliably** (order disagreement, Platt scaling,
+  isotonic regression, histogram binning; analysis 2), and **pooling the two packs** gave no gain
+  worth running two models (analysis 0).
+- **Position biases did not transfer** (TBtype, analysis 1).
+- **The confirmation is small.** One stance source with 70 resampling groups (wide intervals),
+  and five general families, one of which (spatial) carries the Qwen3-4B general accuracy gain:
+  without it the mean accuracy difference of the other four is -0.004 (post hoc).
+  A confirmed case means "at least as good as H2 by these three criteria on this tier", not that
+  the temperature is better.
+
 ## Negative and null results
 
-These are the results that did not meet their bar or went against the head.
+These are the results that did not meet their bar or went against the head. Those of the later
+comparison of the two calibration options are listed
+[with it](#negative-and-null-results-of-the-comparison).
 
 - **The general heads cost accuracy on the fresh final tier** (paired -0.023 [-0.031, -0.016]
   and -0.017 [-0.024, -0.011], [above](#paired-differences-and-per-family-averages)). The largest
@@ -599,7 +843,10 @@ These are the results that did not meet their bar or went against the head.
   settings, so it is not an independent test set and its figures may be somewhat optimistic;
   it is reported separately for that reason. The fresh final tier was frozen before any head
   was scored on it and is read once per release run; a tier that has been read is spent, and
-  the next untouched one (ClimateCheck, reserved) is kept for later.
+  the next untouched one, ClimateCheck, reserved in 0.1.0, has since been read once as the stance
+part of the confirm tier ([The calibration comparison](#the-calibration-comparison)). After the
+release the final tier was read again by three exploratory analyses of the calibration options,
+so for comparing the two options it is no longer untouched.
 - **Clustered items.** The final-seen stance tier's 2,100 HealthVer pairs share 289
   abstracts (tier file `data/tiers/stance/final-seen.jsonl`, SHA-256 `315d67a0...`, listed in
   [INPUTS.sha256](results/INPUTS.sha256); built by `make data`, not committed). Check-COVID claims come in variants of one news item that share an abstract, and

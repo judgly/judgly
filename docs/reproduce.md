@@ -247,7 +247,11 @@ when complete, so a file that exists is a file that finished.
 
 `docs/results/calibration-study/` holds the exploratory analyses and the pre-registered
 confirmation behind the temperature option, as they were run
-([its README](results/calibration-study/README.md)).
+([its README](results/calibration-study/README.md), with one README per analysis).
+`uv run --no-project --with numpy --with scipy --with scikit-learn python
+docs/results/calibration-study/rerun.py all` reruns the unchanged scripts in a scratch workspace
+(after `make data tools` and a finished pack run in `results/`) and compares their output with the
+committed files.
 
 `docs/results/MANIFEST` has the SHA-256 of every file in the snapshot, and
 `docs/results/INPUTS.sha256` those of the large inputs that are not committed. The snapshot and
@@ -257,7 +261,8 @@ the figures made from it are under CC-BY-4.0 ([licences.md](licences.md#5-result
 
 - `make licences`: every card matches the registry and the policy holds.
 - `make check`: `PASS contamination` for both formats.
-- `make verify-data`: the tiers equal `data/tiers.sha256`.
+- `make verify-data`: the tiers equal `data/tiers.sha256`; the confirm tier equals
+  `data/tiers-confirm.sha256` (`cd data/tiers && shasum -a 256 -c ../tiers-confirm.sha256`).
 - The self-test gate: all checks within tolerance ([methods.md](methods.md#engine-self-tests)),
   except T6 (the independent CPU reference), which the pipeline does not run: its output says
   `SKIP T6`, and the difference between this hardware and others is therefore not checked.

@@ -57,6 +57,7 @@ def frozen_files() -> None:
 def scorer():
     """The frozen scorer as a module (it reads four command-line arguments when imported)."""
     argv, sys.argv = sys.argv, ["score_confirm.py", str(ROOT), "-", "-", "-"]
+    sys.dont_write_bytecode = True   # no __pycache__ inside the committed study directory
     try:
         spec = importlib.util.spec_from_file_location("score_confirm", STUDY / "confirmation" / "score_confirm.py")
         module = importlib.util.module_from_spec(spec)

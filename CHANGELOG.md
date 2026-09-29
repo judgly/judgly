@@ -26,6 +26,16 @@ All notable changes to judgly. The format follows
 - The confirm tier (five general families never used before and ClimateCheck for stance) in the
   pipeline and the calibration records; `make calibrate` fits and scores the temperature from
   cached features on the CPU; `docs/tools/confirmation_check.py`.
+- The five confirm-tier sources (CLUTRR, CodeMMLU execution prediction, SpartQA-YN, IBM Argument
+  Quality 30k, Humicroedit) in the data registry and `docs/licences.md`, evaluation only;
+  ClimateCheck moved from the reserved tier to the stance confirm tier.
+- A README per analysis in `docs/results/calibration-study/` (what it is, when it ran, what data
+  it read, exploratory or confirmatory, how to rerun it) and `rerun.py`, which reruns the
+  unchanged analysis scripts from a checkout and compares their output with the committed files.
+- A section "The calibration comparison" in `docs/methods.md` (the exploratory analyses and the
+  tiers they read, the protocol and its amendment, the confirm tier's construction, per-family
+  and secondary results, and the negative results), temperature rows for every tier in the model
+  cards, and a diagram of both options in `docs/calibration-options.md`.
 
 ### Changed
 
@@ -34,6 +44,9 @@ All notable changes to judgly. The format follows
   The H2 head files, and every raw and H2 number and per-item dump, are unchanged.
 - `pack.json` schema 2 (per format, the options and the default); schema 1 packs still load.
   Calibration records are schema 3 (the `temperature` option, the condition and the confirm tier).
+- The fresh final tier is no longer untouched for comparisons involving the temperature: after
+  the 0.1.0 release run it was read again by the three exploratory analyses of the calibration
+  study.
 
 ## 0.1.0 - 2026-09-28
 
