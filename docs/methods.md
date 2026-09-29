@@ -851,9 +851,7 @@ hashes are in [ENVIRONMENT.md](results/external-comparison/ENVIRONMENT.md).
 
 The protocol ([PROTOCOL.md](results/external-comparison/PROTOCOL.md)), the runner and the scorer
 were written on 2026-09-29 and frozen at 16:47 with their SHA-256 in `PROTOCOL.sha256`, before any
-external model answered a test item (a smoke test before freezing used three dev items only). The
-protocol was amended once before it was frozen; only the amended text is kept, and what the
-amendment changed was not recorded. It fixes the
+external model answered a test item (a smoke test before freezing used three dev items only).  The protocol was amended once before it was frozen, and only the amended text is kept. The amendment changed how items too long for Tev1's 2,050-token context are handled: the first version flagged them (by input tokens or an error) and reported results for all items and for the items that fit; a smoke test on three dev items then showed that Ollama refuses such prompts with an error instead of truncating them, so the amended version reports refused items as coverage, scores each model on the items it answered, and scores all models together on the items every model answered. The amendment was made before any external model answered a test item; no other part of the protocol changed. The protocol fixes the
 systems, the items and their order, how each item becomes a request (a choice question with the
 item's options in the tier file's order; a yes/no question as Ollama's `noul` type; a score
 question with the levels as criteria and the scale's meaning in the instructions, as judgly gives

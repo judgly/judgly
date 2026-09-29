@@ -66,7 +66,7 @@ kept as the protocol fixed it.
 
 | file | what |
 |---|---|
-| `PROTOCOL.md` | the protocol, written before any external model answered a test item and amended once before it was frozen (what the amendment changed was not recorded) |
+| `PROTOCOL.md` | the protocol, written before any external model answered a test item and amended once before it was frozen: the handling of items too long for Tev1's context changed from flagging them to reporting them as coverage, after a smoke test on three dev items showed that Ollama refuses such prompts instead of truncating them |
 | `PROTOCOL.sha256` | SHA-256 of `PROTOCOL.md`, `run_external.py` and `score_external.py`, and the time they were frozen (2026-09-29 16:47) |
 | `NOTES.md` | the one decision taken after freezing, at 16:54, while the `tev1:4b` run (started 16:47) was in progress and before any of its answers were looked at: every model is tested only through `/v1/systemone` |
 | `run_external.py` | the frozen runner: one request per item, answers appended to `answers/<model>/<format>-<tier>.jsonl` |

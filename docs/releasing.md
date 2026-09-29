@@ -5,7 +5,7 @@ accepts the upload through [trusted publishing](https://docs.pypi.org/trusted-pu
 GitHub hands the job a short-lived OpenID Connect token and PyPI checks it against the
 publisher you register once. No PyPI API token is stored in the repository or its secrets.
 
-What gets built: the sdist (with the llama.cpp sources needed to build libjudgly), about 12 MB,
+What gets built: the sdist (with the llama.cpp sources needed to build libjudgly), about 24 MB,
 and one wheel, `judgly-<version>-py3-none-macosx_14_0_arm64.whl`, about 3.3 MB (15 MB unpacked),
 for Apple silicon on macOS 14 or later. The wheel carries libjudgly, both packs' heads and
 calibration records, the packs' LICENSE files, LICENSE, NOTICE and LICENSES/. There are no Linux,
