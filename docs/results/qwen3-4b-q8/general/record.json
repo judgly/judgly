@@ -332,8 +332,8 @@
   }
  },
  "software": {
-  "judgly_commit": "dbf1a9fe61f6d660957dc15dd6c8535455157200",
-  "judgly_dirty": true,
+  "judgly_commit": "4e19d642725b5f8cb3ddfba197e11f538606e191",
+  "judgly_dirty": false,
   "llama_cpp_commit": "6f41ac59e0a49a00483a316a22ada6b04edd2950"
  },
  "platform": {
@@ -4204,7 +4204,7 @@
    }
   },
   "confirm": {
-   "note": "untouched families (general) and ClimateCheck (stance), built after every other tier and read once, after both calibration options were frozen, for the pre-registered comparison of the temperature with H2 (docs/calibration.md); `caveats` lists the families the review flagged",
+   "note": "untouched families (general) and ClimateCheck (stance), built after every other tier; each model read it once, after both calibration options were frozen, for the pre-registered comparison of the temperature with H2 (docs/calibration-options.md), and the numbers here are recomputed from those readouts after the confirmatory result; `caveats` lists the families the review flagged",
    "conditions": {
     "raw": {
      "items": 2500,

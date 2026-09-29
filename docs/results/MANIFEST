@@ -1,7 +1,7 @@
-edb51a05c3613617d07a7e3fa2a76db44c588ba42e3545d6e8d2a2e3ab7296bc  calibration-study/README.md
+d7dcb7db3e71e66a913d01285a1ffee170fec90ba2c6b44a52b1b20c75d1e3d3  calibration-study/README.md
 392019ab092e6eeec297967d6b1a83668c7be3587337c2dcc85f0ad24e317863  calibration-study/confirmation/CONFIRM.md
 9319bc05640e112df86b45bce3fc9420f87ebf48b976c92288b9f6e130c48554  calibration-study/confirmation/CONFIRM.sha256
-42e02768f9f85a03cbead020c745031729f0d879719fa9bf626d62534d274c66  calibration-study/confirmation/README.md
+07379b7eddb750d5ce2a0cdf03af4fae6870146ac44c40c05a0b179ca7558310  calibration-study/confirmation/README.md
 7725bb3635726ee59809a5cef95585e1c321de5fcbbde5fd5fe72ec145e911a2  calibration-study/confirmation/result-confirm.json
 cb05f3da0cc31aad1a51cc4dbd19824ae950b0ce69f5d2721078ad135e88841a  calibration-study/confirmation/result-confirm.txt
 0914d7dd6dcd77b6a36f2abcf313938eab7d8ebcd5823da83a7af536d5ac67d4  calibration-study/confirmation/score_confirm.py
@@ -47,8 +47,8 @@ fe8aa572d1a949fe99ebee6c1f79f9495e6f53218a9e44c91f1b08ae9b21c285  gemma4-12b-q8/
 24ad83f5d805b0b2cb94130f9f30e37d81be0e654f9c93e8b5df165e998f5dcd  gemma4-12b-q8/general/names-final-seen.tsv.gz
 01d2c1e4608c3053b2fafb3f39b200179bf7ad49da9f3e5c17da97ac4c880655  gemma4-12b-q8/general/names-final.tsv.gz
 57e69879ac0e4726a43e3baa0677cc007011a3b8cf4e4b9a16105cdf9a57510a  gemma4-12b-q8/general/names-fitdev.tsv.gz
-66e28bdbe9587aece8ecc27121ecfc542f8cfe16fe87da3e872191ee7ae8d2b7  gemma4-12b-q8/general/record.json
-788780553896848e2951692462b9835f1f8dbba7608203773e113cf84ff85808  gemma4-12b-q8/general/tables.md
+c05ac635072664edb38c261493ce66cc5caee691d573743f5f037ea2f402c504  gemma4-12b-q8/general/record.json
+d689ef6c48e7726957766a61697070ae03ff4063b5004f32665e9e2607dd3064  gemma4-12b-q8/general/tables.md
 14ab8e70e9289885fa1b5a54aa6533df2a9357b3ba6b9c9d2855a0706ac6c46c  gemma4-12b-q8/general/train-h2.log
 0c2a0966484272f8d8381da1408a86917623ae6be3533c76969b9c657abdef05  gemma4-12b-q8/general/train-temperature.log
 af80421d67a966808cd0a955c5f0a61b1df572f3416709f5763240b46276f1b3  gemma4-12b-q8/selftest.txt
@@ -75,8 +75,8 @@ bd1f27492459ebcd8ba2e455785e582c0bac7426ba0231657496b9f4ec71f8f4  gemma4-12b-q8/
 b56e792246f4bc13e03c797e358b09fce5a95fcba42e2e7cdc915686cefc0f2f  gemma4-12b-q8/stance/names-final-seen.tsv.gz
 bb4cad3d93fc39e9f139a255782689246db5dcf81682dc88473dd4e06553f7a2  gemma4-12b-q8/stance/names-final.tsv.gz
 72291928df44196a537f9a37270263bda77cd88e923d414228ddc61182bf4f74  gemma4-12b-q8/stance/names-fitdev.tsv.gz
-91f348064bdfd8df12dda39882db2cf5ab11c107aeb8a0555e2fc85e535c5e73  gemma4-12b-q8/stance/record.json
-33a3d12917713dec3e88f1eb9f20aeb3a6a676a5af62af9096b28e2ff879614a  gemma4-12b-q8/stance/tables.md
+d64c241b11ea1ea38c0c3f1b2ceb7fd0122d06e96b6f16b8b209cbfc6ffebef9  gemma4-12b-q8/stance/record.json
+97193bf9c5832d87baf2ec99b16a84442c4921cd7b561eb88b7ab61901920879  gemma4-12b-q8/stance/tables.md
 ab7e152b16b47eff4ed4f01b3739db405b226d002fab8d04945ae27ae6aee07e  gemma4-12b-q8/stance/train-h2.log
 de15326fde60eca4cbf22ffc0eaff23e760f8131d2567e91d8ae9fb4f7af717d  gemma4-12b-q8/stance/train-temperature.log
 9058a3389dfd405015fd9081f07738209c271cb18dbcb347ca65c7dbda020424  qwen3-4b-q8/general/items-h2-bench.tsv.gz
@@ -106,8 +106,8 @@ fe8aa572d1a949fe99ebee6c1f79f9495e6f53218a9e44c91f1b08ae9b21c285  qwen3-4b-q8/ge
 24ad83f5d805b0b2cb94130f9f30e37d81be0e654f9c93e8b5df165e998f5dcd  qwen3-4b-q8/general/names-final-seen.tsv.gz
 01d2c1e4608c3053b2fafb3f39b200179bf7ad49da9f3e5c17da97ac4c880655  qwen3-4b-q8/general/names-final.tsv.gz
 57e69879ac0e4726a43e3baa0677cc007011a3b8cf4e4b9a16105cdf9a57510a  qwen3-4b-q8/general/names-fitdev.tsv.gz
-101f9870790edc16c4c706729148f73ce3bb6ed6ba8afe9d5647359cef179523  qwen3-4b-q8/general/record.json
-99d79f7eca67251f8f860dfbf493812aa40bc2383acd79a756d501d2c27fbe52  qwen3-4b-q8/general/tables.md
+ba2b23231bead090239542661bc28c91e965ff5a8dbb9c14b75c500f4cb56663  qwen3-4b-q8/general/record.json
+ef6b9a51c2fbca46cfdb35254786704d27e2d68e331f9b65a90098d165b80b1f  qwen3-4b-q8/general/tables.md
 64d36cef73ce8d13075788e3de9cafe10ca33e64d5b01eb5e15175856fdd0c6f  qwen3-4b-q8/general/train-h2.log
 ae82131df837c25837956c5bd5d8515bf3b126109f61724bc61595d0db50d7d1  qwen3-4b-q8/general/train-temperature.log
 cbae5274586dade4cc3933a394b4f1cfc0fb7ac80a547d9479b455d0aa269872  qwen3-4b-q8/selftest.txt
@@ -134,7 +134,7 @@ bd1f27492459ebcd8ba2e455785e582c0bac7426ba0231657496b9f4ec71f8f4  qwen3-4b-q8/st
 b56e792246f4bc13e03c797e358b09fce5a95fcba42e2e7cdc915686cefc0f2f  qwen3-4b-q8/stance/names-final-seen.tsv.gz
 bb4cad3d93fc39e9f139a255782689246db5dcf81682dc88473dd4e06553f7a2  qwen3-4b-q8/stance/names-final.tsv.gz
 72291928df44196a537f9a37270263bda77cd88e923d414228ddc61182bf4f74  qwen3-4b-q8/stance/names-fitdev.tsv.gz
-a1f499b491949225d5774ba5ce063f7043683540a84688de68abd66365bd02df  qwen3-4b-q8/stance/record.json
-d5792d669243270129981df5af55e46129b3193fbce5beb3aba6a4dd6e28aaac  qwen3-4b-q8/stance/tables.md
+9f4e4b651b94fb0bf4a31ed34dcdb4d6887d391848209d5ebb49f4279f785a6d  qwen3-4b-q8/stance/record.json
+baab951ab06c4dde997e78147ea108dccb1b86aa3cb2f14d4b156c51977bf629  qwen3-4b-q8/stance/tables.md
 71864491ff147e84013a9b05db7ff4d4f9bbd29494b9377a7a0117ee8c23581a  qwen3-4b-q8/stance/train-h2.log
 a4b84cc372d44609df85a74a4f8245e36257aa2edd2bbcf26a574cfdce425f00  qwen3-4b-q8/stance/train-temperature.log

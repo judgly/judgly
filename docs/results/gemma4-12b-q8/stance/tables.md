@@ -27,10 +27,11 @@ Held out like the final tier and read with it, but not pooled into its numbers a
 | final-flagged | 749 (749 groups) | h2 | 0.634 [0.597, 0.668] | 0.809 [0.762, 0.856] | 0.123 [0.093, 0.158] |
 | final-flagged | 749 (749 groups) | temperature | 0.750 [0.717, 0.782] | 0.670 [0.625, 0.720] | 0.069 [0.057, 0.104] |
 
-## Confirmation tier (confirm): untouched families, read once
+## Confirmation tier (confirm): untouched families, read once by each model
 
-Built after every other tier and read once, by both calibration options, after both were frozen
-(the pre-registered comparison in docs/calibration.md). Families the review flagged:
+Built after every other tier and read once by each model, after both calibration options were
+frozen (the pre-registered comparison in docs/calibration-options.md); these rows are recomputed
+from those readouts after the confirmatory result. Families the review flagged:
 
 
 | tier | items | condition | accuracy | log loss | ECE |

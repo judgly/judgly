@@ -27,10 +27,11 @@ Held out like the final tier and read with it, but not pooled into its numbers a
 | final-flagged | 1000 (1000 groups) | h2 | 0.487 [0.456, 0.519] | 1.032 [1.002, 1.064] | 0.046 [0.030, 0.080] |
 | final-flagged | 1000 (1000 groups) | temperature | 0.492 [0.461, 0.523] | 1.025 [1.005, 1.046] | 0.037 [0.024, 0.068] |
 
-## Confirmation tier (confirm): untouched families, read once
+## Confirmation tier (confirm): untouched families, read once by each model
 
-Built after every other tier and read once, by both calibration options, after both were frozen
-(the pre-registered comparison in docs/calibration.md). Families the review flagged:
+Built after every other tier and read once by each model, after both calibration options were
+frozen (the pre-registered comparison in docs/calibration-options.md); these rows are recomputed
+from those readouts after the confirmatory result. Families the review flagged:
 
 - argument_quality: A crowd quality rating of a short text on a score scale, the kind of task of the fit family helpfulness (HelpSteer2, score), whose star-rating relative (Yelp, final-seen family rating) the registry already counts as a relative. Never used and in no other tier, so it meets the confirmation's rule; the general result is reported with and without it.
 - code_outcome: Inspected, by a person and not by a model, as a final-tier candidate on 2026-09-27 and left out then; and the verdict goes with the language (about 119 of the 125 compile_error items are Java, and most Java items are compile_error), so a model can score above chance without reading the program. Whether it stays is the person's decision; the general result is reported with and without it.
