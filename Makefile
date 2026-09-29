@@ -294,14 +294,16 @@ install-pack:
 # ---- figures -----------------------------------------------------------------------------
 
 # From the committed snapshot only (docs/results, made by scripts/snapshot_results.py); every
-# plotted number is checked against record.json. Reruns give byte-identical files.
+# plotted number is checked against record.json. Reruns give byte-identical files. Both figure
+# targets use the figures group only (the locked matplotlib and numpy): the scripts never import
+# judgly, so the native package is not built and the llama.cpp submodule is not needed.
 figures:
-	uv run --group figures python scripts/make_figures.py
+	uv run --only-group figures python scripts/make_figures.py
 
 # The external-comparison figures (docs/results/external-comparison); needs the tier files from
 # make data, rescores every item and checks every plotted number against the record's results.
 compare-figures:
-	uv run --group figures python scripts/make_compare_figures.py
+	uv run --only-group figures python scripts/make_compare_figures.py
 
 # ---- external comparison ---------------------------------------------------------------------
 
@@ -311,8 +313,10 @@ compare-figures:
 # each equals the committed one, byte for byte. compare-run asks the models again (Ollama >= 0.35.0
 # with nimble:9b, tev1:4b and tev1:0.8b pulled; tags can move, so the model IDs are compared with
 # the recorded ones) and writes answers and results to COMPARE_OUT, never into the record.
+# numpy and Python are pinned to the versions the byte-for-byte check was made with: the scorer's
+# bootstrap uses numpy's default_rng, whose draws numpy does not promise to keep across versions.
 COMPARE_OUT ?= results-compare
-COMPARE     = uv run --no-project --with numpy python docs/results/external-comparison/reproduce.py
+COMPARE     = uv run --no-project --python 3.13 --with numpy==2.5.3 python docs/results/external-comparison/reproduce.py
 
 compare-score:
 	$(COMPARE) score

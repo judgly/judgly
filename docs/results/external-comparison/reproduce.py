@@ -18,10 +18,17 @@ score   rescore the committed answers (answers/<model>/*.jsonl.gz) with the froz
 run     ask the Ollama models again (needs Ollama >= 0.35.0 and the models pulled by the
         recorded tags), with a copy of the frozen runner in OUT (default: results-compare/),
         then score OUT's answers the same way into OUT/final/ and compare them with the record.
-        Never writes into this directory.
+        Never writes into this directory. The frozen runner treats every line it has written as
+        done, including a failed request; before each resume this wrapper moves lines whose
+        error is not an HTTP 400 refusal (a connection error, a timeout, a server error) to
+        <format>-<tier>.transient.jsonl next to the answers, so that those items are asked again.
 
-    uv run --no-project --with numpy python docs/results/external-comparison/reproduce.py score
-    uv run --no-project --with numpy python docs/results/external-comparison/reproduce.py run [--out DIR]
+    uv run --no-project --python 3.13 --with numpy==2.5.3 python docs/results/external-comparison/reproduce.py score
+    uv run --no-project --python 3.13 --with numpy==2.5.3 python docs/results/external-comparison/reproduce.py run [--out DIR]
+
+The byte-for-byte check was made with numpy 2.5.3 on Python 3.13 (the versions above, which the
+Makefile pins). The scorer's bootstrap uses numpy's default_rng, whose draws numpy does not
+promise to keep across versions, so another numpy may give other intervals and fail the check.
 """
 
 import argparse
@@ -123,6 +130,8 @@ def score_all(answers: Path, work: Path, root: Path) -> dict[str, tuple[bytes, b
         for m in runs[name]:
             src = answers / m.replace(":", "_")
             for f in sorted(src.glob("*.jsonl*")):
+                if ".transient." in f.name:
+                    continue
                 dst = d / "answers" / src.name / f.name.removesuffix(".gz")
                 if f.suffix == ".gz":
                     gunzip(f, dst)
@@ -159,7 +168,35 @@ def cmd_score(a) -> int:
     root = build_root(work)
     ok = compare(score_all(HERE / "answers", work, root), None)
     print("all rebuilt results identical to the committed ones" if ok else "some results differ (see above)")
+    if a.work is None:
+        if ok:
+            shutil.rmtree(work)  # a temporary workspace is removed; one given with --work is kept
+        else:
+            print(f"workspace kept for inspection: {work}")
     return 0 if ok else 1
+
+
+def set_aside_transient(answers: Path) -> int:
+    """Move answer lines that record a failed request other than an HTTP 400 refusal (for example
+    a connection error or a timeout) to <format>-<tier>.transient.jsonl, so that the frozen runner,
+    which skips every id it has written, asks those items again. Returns how many were moved."""
+    moved = 0
+    for f in sorted(answers.glob("*/*.jsonl")):
+        if f.name.endswith(".transient.jsonl"):
+            continue
+        keep, aside = [], []
+        for line in f.read_text().splitlines(keepends=True):
+            if not line.strip():
+                continue
+            err = json.loads(line).get("error")
+            (aside if err is not None and not err.startswith("HTTP 400") else keep).append(line)
+        if aside:
+            with open(f.with_suffix(".transient.jsonl"), "a") as g:
+                g.writelines(aside)
+            f.write_text("".join(keep))
+            moved += len(aside)
+            print(f"  {f}: {len(aside)} failed request(s) set aside, to be asked again")
+    return moved
 
 
 def ollama_ids() -> dict[str, str]:
@@ -199,7 +236,14 @@ def cmd_run(a) -> int:
     runner = out / "run_external.py"
     shutil.copy2(frozen("run_external.py"), runner)
     for m in MODELS:  # resumable: items already in OUT/answers are skipped
+        set_aside_transient(out / "answers")
         subprocess.run([sys.executable, str(runner), str(REPO), m], check=True)
+    left = sum(1 for f in (out / "answers").glob("*/*.jsonl") if not f.name.endswith(".transient.jsonl")
+               for line in f.read_text().splitlines()
+               if line.strip() and (e := json.loads(line).get("error")) and not e.startswith("HTTP 400"))
+    if left:
+        print(f"WARNING: {left} request(s) failed other than by an HTTP 400 refusal; "
+              "run make compare-run again to ask them again before comparing")
     work = out / "work"
     root = build_root(work)
     (out / "final").mkdir(exist_ok=True)

@@ -1,0 +1,2496 @@
+{
+ "general/confirm": {
+  "n_items": 2500,
+  "n_common": 2500,
+  "units": 1932,
+  "errors": {
+   "nimble:9b": 0
+  },
+  "missing": {
+   "nimble:9b": 0
+  },
+  "systems": {
+   "nimble:9b": {
+    "accuracy": [
+     0.4808,
+     0.4608,
+     0.5009
+    ],
+    "ece": [
+     0.229,
+     0.2097,
+     0.2489
+    ],
+    "brier": [
+     0.7015,
+     0.6744,
+     0.7282
+    ],
+    "log_loss": [
+     1.2505,
+     1.1987,
+     1.3049
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.0284,
+      -0.0526,
+      -0.005
+     ],
+     "ece": [
+      0.1785,
+      0.1508,
+      0.196
+     ],
+     "brier": [
+      0.1391,
+      0.117,
+      0.1616
+     ],
+     "log_loss": [
+      0.3178,
+      0.2756,
+      0.3594
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      -0.0036,
+      -0.0246,
+      0.016
+     ],
+     "ece": [
+      0.1818,
+      0.1589,
+      0.2019
+     ],
+     "brier": [
+      0.1047,
+      0.0847,
+      0.126
+     ],
+     "log_loss": [
+      0.2418,
+      0.1975,
+      0.2873
+     ]
+    },
+    "items_over_context": 0,
+    "latency_s": {
+     "median": 0.564,
+     "p95": 1.138
+    }
+   },
+   "judgly-gemma-raw": {
+    "accuracy": [
+     0.5092,
+     0.4889,
+     0.5311
+    ],
+    "ece": [
+     0.3726,
+     0.3511,
+     0.3932
+    ],
+    "brier": [
+     0.8338,
+     0.7988,
+     0.8675
+    ],
+    "log_loss": [
+     2.2381,
+     2.1157,
+     2.3657
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      0.0,
+      -0.0137,
+      0.0145
+     ],
+     "ece": [
+      0.3221,
+      0.297,
+      0.3354
+     ],
+     "brier": [
+      0.2714,
+      0.2458,
+      0.2947
+     ],
+     "log_loss": [
+      1.3055,
+      1.2009,
+      1.4171
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0248,
+      0.0003,
+      0.0508
+     ],
+     "ece": [
+      0.3255,
+      0.2952,
+      0.3503
+     ],
+     "brier": [
+      0.237,
+      0.2029,
+      0.2676
+     ],
+     "log_loss": [
+      1.2294,
+      1.1124,
+      1.3531
+     ]
+    }
+   },
+   "judgly-gemma-h2": {
+    "accuracy": [
+     0.5092,
+     0.4884,
+     0.5297
+    ],
+    "ece": [
+     0.0505,
+     0.0407,
+     0.072
+    ],
+    "brier": [
+     0.5624,
+     0.5468,
+     0.5775
+    ],
+    "log_loss": [
+     0.9326,
+     0.9071,
+     0.9568
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "ece": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "brier": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "log_loss": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0248,
+      0.0004,
+      0.0517
+     ],
+     "ece": [
+      0.0034,
+      -0.0176,
+      0.0294
+     ],
+     "brier": [
+      -0.0344,
+      -0.0478,
+      -0.0208
+     ],
+     "log_loss": [
+      -0.076,
+      -0.0987,
+      -0.0545
+     ]
+    }
+   },
+   "judgly-gemma-temperature": {
+    "accuracy": [
+     0.5092,
+     0.4889,
+     0.5311
+    ],
+    "ece": [
+     0.0872,
+     0.0694,
+     0.1057
+    ],
+    "brier": [
+     0.5791,
+     0.563,
+     0.595
+    ],
+    "log_loss": [
+     0.9588,
+     0.9338,
+     0.9834
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      0.0,
+      -0.0137,
+      0.0145
+     ],
+     "ece": [
+      0.0368,
+      0.0148,
+      0.0481
+     ],
+     "brier": [
+      0.0167,
+      0.0101,
+      0.0237
+     ],
+     "log_loss": [
+      0.0262,
+      0.0167,
+      0.0366
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0248,
+      0.0003,
+      0.0508
+     ],
+     "ece": [
+      0.0401,
+      0.0138,
+      0.0647
+     ],
+     "brier": [
+      -0.0177,
+      -0.0328,
+      -0.0027
+     ],
+     "log_loss": [
+      -0.0498,
+      -0.0727,
+      -0.0268
+     ]
+    }
+   },
+   "judgly-gemma-default": {
+    "accuracy": [
+     0.5092,
+     0.4884,
+     0.5297
+    ],
+    "ece": [
+     0.0505,
+     0.0407,
+     0.072
+    ],
+    "brier": [
+     0.5624,
+     0.5468,
+     0.5775
+    ],
+    "log_loss": [
+     0.9326,
+     0.9071,
+     0.9568
+    ],
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0248,
+      0.0004,
+      0.0517
+     ],
+     "ece": [
+      0.0034,
+      -0.0176,
+      0.0294
+     ],
+     "brier": [
+      -0.0344,
+      -0.0478,
+      -0.0208
+     ],
+     "log_loss": [
+      -0.076,
+      -0.0987,
+      -0.0545
+     ]
+    }
+   },
+   "judgly-qwen-raw": {
+    "accuracy": [
+     0.4844,
+     0.4655,
+     0.5063
+    ],
+    "ece": [
+     0.406,
+     0.3818,
+     0.4281
+    ],
+    "brier": [
+     0.8884,
+     0.8459,
+     0.9276
+    ],
+    "log_loss": [
+     4.6742,
+     4.294,
+     5.072
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.0248,
+      -0.0517,
+      -0.0004
+     ],
+     "ece": [
+      0.3555,
+      0.3228,
+      0.3754
+     ],
+     "brier": [
+      0.326,
+      0.2876,
+      0.3599
+     ],
+     "log_loss": [
+      3.7415,
+      3.3718,
+      4.1178
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "ece": [
+      0.3589,
+      0.3349,
+      0.3754
+     ],
+     "brier": [
+      0.2916,
+      0.2589,
+      0.3203
+     ],
+     "log_loss": [
+      3.6655,
+      3.2988,
+      4.0336
+     ]
+    }
+   },
+   "judgly-qwen-h2": {
+    "accuracy": [
+     0.4628,
+     0.4424,
+     0.4834
+    ],
+    "ece": [
+     0.0763,
+     0.0617,
+     0.1009
+    ],
+    "brier": [
+     0.624,
+     0.6092,
+     0.6393
+    ],
+    "log_loss": [
+     1.041,
+     1.0165,
+     1.0656
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.0464,
+      -0.0722,
+      -0.0212
+     ],
+     "ece": [
+      0.0259,
+      0.0019,
+      0.0485
+     ],
+     "brier": [
+      0.0615,
+      0.0455,
+      0.0777
+     ],
+     "log_loss": [
+      0.1084,
+      0.0841,
+      0.1336
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      -0.0216,
+      -0.0361,
+      -0.0083
+     ],
+     "ece": [
+      0.0292,
+      0.0144,
+      0.0485
+     ],
+     "brier": [
+      0.0271,
+      0.0199,
+      0.035
+     ],
+     "log_loss": [
+      0.0324,
+      0.0232,
+      0.0432
+     ]
+    }
+   },
+   "judgly-qwen-temperature": {
+    "accuracy": [
+     0.4844,
+     0.4655,
+     0.5063
+    ],
+    "ece": [
+     0.0471,
+     0.0316,
+     0.0678
+    ],
+    "brier": [
+     0.5968,
+     0.5838,
+     0.6106
+    ],
+    "log_loss": [
+     1.0086,
+     0.987,
+     1.0312
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.0248,
+      -0.0517,
+      -0.0004
+     ],
+     "ece": [
+      -0.0034,
+      -0.0294,
+      0.0176
+     ],
+     "brier": [
+      0.0344,
+      0.0208,
+      0.0478
+     ],
+     "log_loss": [
+      0.076,
+      0.0545,
+      0.0987
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "ece": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "brier": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "log_loss": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "judgly-qwen-default": {
+    "accuracy": [
+     0.4844,
+     0.4655,
+     0.5063
+    ],
+    "ece": [
+     0.0471,
+     0.0316,
+     0.0678
+    ],
+    "brier": [
+     0.5968,
+     0.5838,
+     0.6106
+    ],
+    "log_loss": [
+     1.0086,
+     0.987,
+     1.0312
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.0248,
+      -0.0517,
+      -0.0004
+     ],
+     "ece": [
+      -0.0034,
+      -0.0294,
+      0.0176
+     ],
+     "brier": [
+      0.0344,
+      0.0208,
+      0.0478
+     ],
+     "log_loss": [
+      0.076,
+      0.0545,
+      0.0987
+     ]
+    }
+   }
+  },
+  "by_family": {
+   "argument_quality": {
+    "nimble:9b": {
+     "accuracy": 0.422,
+     "ece": 0.2453,
+     "brier": 0.763,
+     "log_loss": 1.4327
+    },
+    "judgly-gemma-raw": {
+     "accuracy": 0.444,
+     "ece": 0.4535,
+     "brier": 0.9644,
+     "log_loss": 2.8505
+    },
+    "judgly-gemma-h2": {
+     "accuracy": 0.458,
+     "ece": 0.0792,
+     "brier": 0.6235,
+     "log_loss": 1.0297
+    },
+    "judgly-gemma-temperature": {
+     "accuracy": 0.444,
+     "ece": 0.1053,
+     "brier": 0.6329,
+     "log_loss": 1.0381
+    },
+    "judgly-gemma-default": {
+     "accuracy": 0.458,
+     "ece": 0.0792,
+     "brier": 0.6235,
+     "log_loss": 1.0297
+    },
+    "judgly-qwen-raw": {
+     "accuracy": 0.426,
+     "ece": 0.5202,
+     "brier": 1.0705,
+     "log_loss": 6.1969
+    },
+    "judgly-qwen-h2": {
+     "accuracy": 0.422,
+     "ece": 0.0884,
+     "brier": 0.6515,
+     "log_loss": 1.0689
+    },
+    "judgly-qwen-temperature": {
+     "accuracy": 0.426,
+     "ece": 0.0249,
+     "brier": 0.6408,
+     "log_loss": 1.0574
+    },
+    "judgly-qwen-default": {
+     "accuracy": 0.426,
+     "ece": 0.0249,
+     "brier": 0.6408,
+     "log_loss": 1.0574
+    }
+   },
+   "code_outcome": {
+    "nimble:9b": {
+     "accuracy": 0.514,
+     "ece": 0.224,
+     "brier": 0.7042,
+     "log_loss": 1.2438
+    },
+    "judgly-gemma-raw": {
+     "accuracy": 0.624,
+     "ece": 0.2591,
+     "brier": 0.6266,
+     "log_loss": 1.7225
+    },
+    "judgly-gemma-h2": {
+     "accuracy": 0.608,
+     "ece": 0.057,
+     "brier": 0.5,
+     "log_loss": 0.8705
+    },
+    "judgly-gemma-temperature": {
+     "accuracy": 0.624,
+     "ece": 0.0691,
+     "brier": 0.5096,
+     "log_loss": 0.9039
+    },
+    "judgly-gemma-default": {
+     "accuracy": 0.608,
+     "ece": 0.057,
+     "brier": 0.5,
+     "log_loss": 0.8705
+    },
+    "judgly-qwen-raw": {
+     "accuracy": 0.514,
+     "ece": 0.2958,
+     "brier": 0.7361,
+     "log_loss": 2.4326
+    },
+    "judgly-qwen-h2": {
+     "accuracy": 0.51,
+     "ece": 0.0717,
+     "brier": 0.5994,
+     "log_loss": 1.0836
+    },
+    "judgly-qwen-temperature": {
+     "accuracy": 0.514,
+     "ece": 0.0733,
+     "brier": 0.5923,
+     "log_loss": 1.0632
+    },
+    "judgly-qwen-default": {
+     "accuracy": 0.514,
+     "ece": 0.0733,
+     "brier": 0.5923,
+     "log_loss": 1.0632
+    }
+   },
+   "humour": {
+    "nimble:9b": {
+     "accuracy": 0.356,
+     "ece": 0.3502,
+     "brier": 0.8839,
+     "log_loss": 1.6438
+    },
+    "judgly-gemma-raw": {
+     "accuracy": 0.404,
+     "ece": 0.4899,
+     "brier": 1.045,
+     "log_loss": 2.8984
+    },
+    "judgly-gemma-h2": {
+     "accuracy": 0.374,
+     "ece": 0.1318,
+     "brier": 0.6708,
+     "log_loss": 1.1048
+    },
+    "judgly-gemma-temperature": {
+     "accuracy": 0.404,
+     "ece": 0.1231,
+     "brier": 0.6678,
+     "log_loss": 1.0936
+    },
+    "judgly-gemma-default": {
+     "accuracy": 0.374,
+     "ece": 0.1318,
+     "brier": 0.6708,
+     "log_loss": 1.1048
+    },
+    "judgly-qwen-raw": {
+     "accuracy": 0.368,
+     "ece": 0.6061,
+     "brier": 1.2201,
+     "log_loss": 9.0452
+    },
+    "judgly-qwen-h2": {
+     "accuracy": 0.374,
+     "ece": 0.1776,
+     "brier": 0.7117,
+     "log_loss": 1.1745
+    },
+    "judgly-qwen-temperature": {
+     "accuracy": 0.368,
+     "ece": 0.1097,
+     "brier": 0.6788,
+     "log_loss": 1.1188
+    },
+    "judgly-qwen-default": {
+     "accuracy": 0.368,
+     "ece": 0.1097,
+     "brier": 0.6788,
+     "log_loss": 1.1188
+    }
+   },
+   "kinship": {
+    "nimble:9b": {
+     "accuracy": 0.536,
+     "ece": 0.1273,
+     "brier": 0.6112,
+     "log_loss": 1.1407
+    },
+    "judgly-gemma-raw": {
+     "accuracy": 0.538,
+     "ece": 0.2593,
+     "brier": 0.7037,
+     "log_loss": 1.6159
+    },
+    "judgly-gemma-h2": {
+     "accuracy": 0.526,
+     "ece": 0.0314,
+     "brier": 0.5661,
+     "log_loss": 1.0188
+    },
+    "judgly-gemma-temperature": {
+     "accuracy": 0.538,
+     "ece": 0.0606,
+     "brier": 0.5864,
+     "log_loss": 1.0685
+    },
+    "judgly-gemma-default": {
+     "accuracy": 0.526,
+     "ece": 0.0314,
+     "brier": 0.5661,
+     "log_loss": 1.0188
+    },
+    "judgly-qwen-raw": {
+     "accuracy": 0.502,
+     "ece": 0.3326,
+     "brier": 0.7704,
+     "log_loss": 3.5405
+    },
+    "judgly-qwen-h2": {
+     "accuracy": 0.52,
+     "ece": 0.0577,
+     "brier": 0.598,
+     "log_loss": 1.1216
+    },
+    "judgly-qwen-temperature": {
+     "accuracy": 0.502,
+     "ece": 0.0778,
+     "brier": 0.6015,
+     "log_loss": 1.1399
+    },
+    "judgly-qwen-default": {
+     "accuracy": 0.502,
+     "ece": 0.0778,
+     "brier": 0.6015,
+     "log_loss": 1.1399
+    }
+   },
+   "spatial": {
+    "nimble:9b": {
+     "accuracy": 0.576,
+     "ece": 0.233,
+     "brier": 0.5455,
+     "log_loss": 0.7912
+    },
+    "judgly-gemma-raw": {
+     "accuracy": 0.536,
+     "ece": 0.407,
+     "brier": 0.8293,
+     "log_loss": 2.103
+    },
+    "judgly-gemma-h2": {
+     "accuracy": 0.58,
+     "ece": 0.0812,
+     "brier": 0.4517,
+     "log_loss": 0.6393
+    },
+    "judgly-gemma-temperature": {
+     "accuracy": 0.536,
+     "ece": 0.1445,
+     "brier": 0.4989,
+     "log_loss": 0.6901
+    },
+    "judgly-gemma-default": {
+     "accuracy": 0.58,
+     "ece": 0.0812,
+     "brier": 0.4517,
+     "log_loss": 0.6393
+    },
+    "judgly-qwen-raw": {
+     "accuracy": 0.612,
+     "ece": 0.2775,
+     "brier": 0.645,
+     "log_loss": 2.1556
+    },
+    "judgly-qwen-h2": {
+     "accuracy": 0.488,
+     "ece": 0.1538,
+     "brier": 0.5592,
+     "log_loss": 0.7566
+    },
+    "judgly-qwen-temperature": {
+     "accuracy": 0.612,
+     "ece": 0.055,
+     "brier": 0.4707,
+     "log_loss": 0.6639
+    },
+    "judgly-qwen-default": {
+     "accuracy": 0.612,
+     "ece": 0.055,
+     "brier": 0.4707,
+     "log_loss": 0.6639
+    }
+   }
+  }
+ },
+ "stance/confirm": {
+  "n_items": 1780,
+  "n_common": 1780,
+  "units": 70,
+  "errors": {
+   "nimble:9b": 0
+  },
+  "missing": {
+   "nimble:9b": 0
+  },
+  "systems": {
+   "nimble:9b": {
+    "accuracy": [
+     0.5949,
+     0.5533,
+     0.6405
+    ],
+    "ece": [
+     0.2639,
+     0.2114,
+     0.2963
+    ],
+    "brier": [
+     0.657,
+     0.588,
+     0.7208
+    ],
+    "log_loss": [
+     1.4914,
+     1.3232,
+     1.6305
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.0601,
+      -0.0808,
+      -0.0445
+     ],
+     "ece": [
+      0.2123,
+      0.1657,
+      0.2268
+     ],
+     "brier": [
+      0.1806,
+      0.1595,
+      0.2241
+     ],
+     "log_loss": [
+      0.6683,
+      0.5783,
+      0.7643
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.027,
+      0.0081,
+      0.0602
+     ],
+     "ece": [
+      0.1582,
+      0.104,
+      0.1812
+     ],
+     "brier": [
+      0.0761,
+      0.0231,
+      0.1027
+     ],
+     "log_loss": [
+      0.5251,
+      0.3845,
+      0.6108
+     ]
+    },
+    "items_over_context": 0,
+    "latency_s": {
+     "median": 0.924,
+     "p95": 1.441
+    }
+   },
+   "judgly-gemma-raw": {
+    "accuracy": [
+     0.6551,
+     0.617,
+     0.6984
+    ],
+    "ece": [
+     0.2999,
+     0.2554,
+     0.3326
+    ],
+    "brier": [
+     0.6305,
+     0.5408,
+     0.6884
+    ],
+    "log_loss": [
+     3.223,
+     2.5878,
+     3.5141
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "ece": [
+      0.2482,
+      0.2102,
+      0.2598
+     ],
+     "brier": [
+      0.1542,
+      0.1199,
+      0.1822
+     ],
+     "log_loss": [
+      2.3999,
+      1.8577,
+      2.6455
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0871,
+      0.0667,
+      0.1255
+     ],
+     "ece": [
+      0.1941,
+      0.143,
+      0.2141
+     ],
+     "brier": [
+      0.0496,
+      -0.0294,
+      0.0845
+     ],
+     "log_loss": [
+      2.2567,
+      1.646,
+      2.5244
+     ]
+    }
+   },
+   "judgly-gemma-h2": {
+    "accuracy": [
+     0.6292,
+     0.5899,
+     0.6703
+    ],
+    "ece": [
+     0.0777,
+     0.0456,
+     0.1039
+    ],
+    "brier": [
+     0.4905,
+     0.4455,
+     0.5304
+    ],
+    "log_loss": [
+     0.8116,
+     0.7408,
+     0.8706
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.0258,
+      -0.0525,
+      -0.0108
+     ],
+     "ece": [
+      0.0261,
+      -0.004,
+      0.047
+     ],
+     "brier": [
+      0.0142,
+      0.0008,
+      0.0424
+     ],
+     "log_loss": [
+      -0.0116,
+      -0.0336,
+      0.0336
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0612,
+      0.0321,
+      0.0962
+     ],
+     "ece": [
+      -0.028,
+      -0.0762,
+      -0.0069
+     ],
+     "brier": [
+      -0.0904,
+      -0.1337,
+      -0.0704
+     ],
+     "log_loss": [
+      -0.1548,
+      -0.2197,
+      -0.1229
+     ]
+    }
+   },
+   "judgly-gemma-temperature": {
+    "accuracy": [
+     0.6551,
+     0.617,
+     0.6984
+    ],
+    "ece": [
+     0.0517,
+     0.028,
+     0.0794
+    ],
+    "brier": [
+     0.4764,
+     0.4161,
+     0.5109
+    ],
+    "log_loss": [
+     0.8231,
+     0.7331,
+     0.8727
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "ece": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "brier": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "log_loss": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0871,
+      0.0667,
+      0.1255
+     ],
+     "ece": [
+      -0.0541,
+      -0.0988,
+      -0.0269
+     ],
+     "brier": [
+      -0.1046,
+      -0.1592,
+      -0.0828
+     ],
+     "log_loss": [
+      -0.1432,
+      -0.2239,
+      -0.1108
+     ]
+    }
+   },
+   "judgly-gemma-default": {
+    "accuracy": [
+     0.6551,
+     0.617,
+     0.6984
+    ],
+    "ece": [
+     0.0517,
+     0.028,
+     0.0794
+    ],
+    "brier": [
+     0.4764,
+     0.4161,
+     0.5109
+    ],
+    "log_loss": [
+     0.8231,
+     0.7331,
+     0.8727
+    ],
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0871,
+      0.0667,
+      0.1255
+     ],
+     "ece": [
+      -0.0541,
+      -0.0988,
+      -0.0269
+     ],
+     "brier": [
+      -0.1046,
+      -0.1592,
+      -0.0828
+     ],
+     "log_loss": [
+      -0.1432,
+      -0.2239,
+      -0.1108
+     ]
+    }
+   },
+   "judgly-qwen-raw": {
+    "accuracy": [
+     0.568,
+     0.5258,
+     0.6068
+    ],
+    "ece": [
+     0.3834,
+     0.3463,
+     0.4229
+    ],
+    "brier": [
+     0.8089,
+     0.7351,
+     0.8833
+    ],
+    "log_loss": [
+     6.4918,
+     5.7849,
+     7.2576
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.0871,
+      -0.1255,
+      -0.0667
+     ],
+     "ece": [
+      0.3317,
+      0.2991,
+      0.3697
+     ],
+     "brier": [
+      0.3326,
+      0.2955,
+      0.4078
+     ],
+     "log_loss": [
+      5.6687,
+      5.0351,
+      6.4123
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "ece": [
+      0.2776,
+      0.2465,
+      0.2911
+     ],
+     "brier": [
+      0.228,
+      0.1893,
+      0.2575
+     ],
+     "log_loss": [
+      5.5255,
+      4.8616,
+      6.2189
+     ]
+    }
+   },
+   "judgly-qwen-h2": {
+    "accuracy": [
+     0.5258,
+     0.46,
+     0.5558
+    ],
+    "ece": [
+     0.1834,
+     0.1517,
+     0.2255
+    ],
+    "brier": [
+     0.6116,
+     0.5787,
+     0.683
+    ],
+    "log_loss": [
+     0.9889,
+     0.9388,
+     1.0849
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.1292,
+      -0.1989,
+      -0.1004
+     ],
+     "ece": [
+      0.1317,
+      0.1032,
+      0.171
+     ],
+     "brier": [
+      0.1352,
+      0.1055,
+      0.2075
+     ],
+     "log_loss": [
+      0.1658,
+      0.1257,
+      0.2658
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      -0.0421,
+      -0.0889,
+      -0.0238
+     ],
+     "ece": [
+      0.0776,
+      0.0502,
+      0.0959
+     ],
+     "brier": [
+      0.0307,
+      0.0169,
+      0.0651
+     ],
+     "log_loss": [
+      0.0226,
+      -0.0003,
+      0.0704
+     ]
+    }
+   },
+   "judgly-qwen-temperature": {
+    "accuracy": [
+     0.568,
+     0.5258,
+     0.6068
+    ],
+    "ece": [
+     0.1058,
+     0.0777,
+     0.1511
+    ],
+    "brier": [
+     0.5809,
+     0.5444,
+     0.6304
+    ],
+    "log_loss": [
+     0.9664,
+     0.9141,
+     1.0352
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.0871,
+      -0.1255,
+      -0.0667
+     ],
+     "ece": [
+      0.0541,
+      0.0269,
+      0.0988
+     ],
+     "brier": [
+      0.1046,
+      0.0828,
+      0.1592
+     ],
+     "log_loss": [
+      0.1432,
+      0.1108,
+      0.2239
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "ece": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "brier": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "log_loss": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "judgly-qwen-default": {
+    "accuracy": [
+     0.568,
+     0.5258,
+     0.6068
+    ],
+    "ece": [
+     0.1058,
+     0.0777,
+     0.1511
+    ],
+    "brier": [
+     0.5809,
+     0.5444,
+     0.6304
+    ],
+    "log_loss": [
+     0.9664,
+     0.9141,
+     1.0352
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.0871,
+      -0.1255,
+      -0.0667
+     ],
+     "ece": [
+      0.0541,
+      0.0269,
+      0.0988
+     ],
+     "brier": [
+      0.1046,
+      0.0828,
+      0.1592
+     ],
+     "log_loss": [
+      0.1432,
+      0.1108,
+      0.2239
+     ]
+    }
+   }
+  },
+  "by_family": {
+   "confirm_climate": {
+    "nimble:9b": {
+     "accuracy": 0.5949,
+     "ece": 0.2639,
+     "brier": 0.657,
+     "log_loss": 1.4914
+    },
+    "judgly-gemma-raw": {
+     "accuracy": 0.6551,
+     "ece": 0.2999,
+     "brier": 0.6305,
+     "log_loss": 3.223
+    },
+    "judgly-gemma-h2": {
+     "accuracy": 0.6292,
+     "ece": 0.0777,
+     "brier": 0.4905,
+     "log_loss": 0.8116
+    },
+    "judgly-gemma-temperature": {
+     "accuracy": 0.6551,
+     "ece": 0.0517,
+     "brier": 0.4764,
+     "log_loss": 0.8231
+    },
+    "judgly-gemma-default": {
+     "accuracy": 0.6551,
+     "ece": 0.0517,
+     "brier": 0.4764,
+     "log_loss": 0.8231
+    },
+    "judgly-qwen-raw": {
+     "accuracy": 0.568,
+     "ece": 0.3834,
+     "brier": 0.8089,
+     "log_loss": 6.4918
+    },
+    "judgly-qwen-h2": {
+     "accuracy": 0.5258,
+     "ece": 0.1834,
+     "brier": 0.6116,
+     "log_loss": 0.9889
+    },
+    "judgly-qwen-temperature": {
+     "accuracy": 0.568,
+     "ece": 0.1058,
+     "brier": 0.5809,
+     "log_loss": 0.9664
+    },
+    "judgly-qwen-default": {
+     "accuracy": 0.568,
+     "ece": 0.1058,
+     "brier": 0.5809,
+     "log_loss": 0.9664
+    }
+   }
+  }
+ },
+ "general/final": {
+  "n_items": 7879,
+  "n_common": 7424,
+  "units": 6524,
+  "errors": {
+   "nimble:9b": 0
+  },
+  "missing": {
+   "nimble:9b": 455
+  },
+  "systems": {
+   "nimble:9b": {
+    "accuracy": [
+     0.6647,
+     0.6541,
+     0.6754
+    ],
+    "ece": [
+     0.1342,
+     0.1241,
+     0.1439
+    ],
+    "brier": [
+     0.4616,
+     0.4471,
+     0.4754
+    ],
+    "log_loss": [
+     0.904,
+     0.8729,
+     0.9358
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.066,
+      -0.0776,
+      -0.0544
+     ],
+     "ece": [
+      0.1128,
+      0.0982,
+      0.1222
+     ],
+     "brier": [
+      0.107,
+      0.0939,
+      0.12
+     ],
+     "log_loss": [
+      0.2578,
+      0.2292,
+      0.2832
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0127,
+      0.0007,
+      0.0227
+     ],
+     "ece": [
+      0.1003,
+      0.0855,
+      0.1104
+     ],
+     "brier": [
+      0.0167,
+      0.0049,
+      0.0279
+     ],
+     "log_loss": [
+      0.1051,
+      0.0766,
+      0.1326
+     ]
+    },
+    "items_over_context": 0,
+    "latency_s": {
+     "median": 0.453,
+     "p95": 0.844
+    }
+   },
+   "judgly-gemma-raw": {
+    "accuracy": [
+     0.7547,
+     0.744,
+     0.7649
+    ],
+    "ece": [
+     0.1986,
+     0.1896,
+     0.2094
+    ],
+    "brier": [
+     0.44,
+     0.4215,
+     0.4596
+    ],
+    "log_loss": [
+     1.5925,
+     1.519,
+     1.674
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      0.024,
+      0.0163,
+      0.0315
+     ],
+     "ece": [
+      0.1772,
+      0.1633,
+      0.1875
+     ],
+     "brier": [
+      0.0855,
+      0.0738,
+      0.0975
+     ],
+     "log_loss": [
+      0.9464,
+      0.8849,
+      1.0132
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.1026,
+      0.0906,
+      0.1143
+     ],
+     "ece": [
+      0.1647,
+      0.1503,
+      0.1754
+     ],
+     "brier": [
+      -0.0049,
+      -0.0207,
+      0.0106
+     ],
+     "log_loss": [
+      0.7936,
+      0.7256,
+      0.8678
+     ]
+    }
+   },
+   "judgly-gemma-h2": {
+    "accuracy": [
+     0.7307,
+     0.7201,
+     0.7407
+    ],
+    "ece": [
+     0.0214,
+     0.0159,
+     0.0315
+    ],
+    "brier": [
+     0.3545,
+     0.3444,
+     0.3655
+    ],
+    "log_loss": [
+     0.6461,
+     0.6274,
+     0.6663
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "ece": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "brier": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "log_loss": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0787,
+      0.0665,
+      0.0911
+     ],
+     "ece": [
+      -0.0125,
+      -0.0231,
+      -0.001
+     ],
+     "brier": [
+      -0.0904,
+      -0.1,
+      -0.0811
+     ],
+     "log_loss": [
+      -0.1527,
+      -0.1681,
+      -0.1369
+     ]
+    }
+   },
+   "judgly-gemma-temperature": {
+    "accuracy": [
+     0.7547,
+     0.744,
+     0.7649
+    ],
+    "ece": [
+     0.0164,
+     0.0141,
+     0.0268
+    ],
+    "brier": [
+     0.3303,
+     0.3196,
+     0.3412
+    ],
+    "log_loss": [
+     0.6091,
+     0.5907,
+     0.6294
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      0.024,
+      0.0163,
+      0.0315
+     ],
+     "ece": [
+      -0.0051,
+      -0.0127,
+      0.0057
+     ],
+     "brier": [
+      -0.0242,
+      -0.03,
+      -0.0186
+     ],
+     "log_loss": [
+      -0.037,
+      -0.046,
+      -0.0286
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.1026,
+      0.0906,
+      0.1143
+     ],
+     "ece": [
+      -0.0176,
+      -0.026,
+      -0.0051
+     ],
+     "brier": [
+      -0.1146,
+      -0.1243,
+      -0.105
+     ],
+     "log_loss": [
+      -0.1897,
+      -0.2048,
+      -0.1741
+     ]
+    }
+   },
+   "judgly-gemma-default": {
+    "accuracy": [
+     0.7307,
+     0.7201,
+     0.7407
+    ],
+    "ece": [
+     0.0214,
+     0.0159,
+     0.0315
+    ],
+    "brier": [
+     0.3545,
+     0.3444,
+     0.3655
+    ],
+    "log_loss": [
+     0.6461,
+     0.6274,
+     0.6663
+    ],
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0787,
+      0.0665,
+      0.0911
+     ],
+     "ece": [
+      -0.0125,
+      -0.0231,
+      -0.001
+     ],
+     "brier": [
+      -0.0904,
+      -0.1,
+      -0.0811
+     ],
+     "log_loss": [
+      -0.1527,
+      -0.1681,
+      -0.1369
+     ]
+    }
+   },
+   "judgly-qwen-raw": {
+    "accuracy": [
+     0.6521,
+     0.6404,
+     0.664
+    ],
+    "ece": [
+     0.2717,
+     0.2604,
+     0.2829
+    ],
+    "brier": [
+     0.6099,
+     0.5888,
+     0.6307
+    ],
+    "log_loss": [
+     3.5475,
+     3.3894,
+     3.7097
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.0787,
+      -0.0911,
+      -0.0665
+     ],
+     "ece": [
+      0.2503,
+      0.234,
+      0.2615
+     ],
+     "brier": [
+      0.2553,
+      0.2386,
+      0.2726
+     ],
+     "log_loss": [
+      2.9014,
+      2.7528,
+      3.0607
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "ece": [
+      0.2378,
+      0.2204,
+      0.2509
+     ],
+     "brier": [
+      0.165,
+      0.1527,
+      0.1765
+     ],
+     "log_loss": [
+      2.7487,
+      2.6056,
+      2.8946
+     ]
+    }
+   },
+   "judgly-qwen-h2": {
+    "accuracy": [
+     0.6346,
+     0.6216,
+     0.6456
+    ],
+    "ece": [
+     0.0322,
+     0.0272,
+     0.0439
+    ],
+    "brier": [
+     0.4554,
+     0.4442,
+     0.4662
+    ],
+    "log_loss": [
+     0.8128,
+     0.793,
+     0.8326
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.0962,
+      -0.1087,
+      -0.0844
+     ],
+     "ece": [
+      0.0108,
+      -0.0007,
+      0.023
+     ],
+     "brier": [
+      0.1008,
+      0.0915,
+      0.11
+     ],
+     "log_loss": [
+      0.1667,
+      0.1518,
+      0.1813
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      -0.0175,
+      -0.0246,
+      -0.0114
+     ],
+     "ece": [
+      -0.0017,
+      -0.0117,
+      0.0111
+     ],
+     "brier": [
+      0.0105,
+      0.0066,
+      0.0142
+     ],
+     "log_loss": [
+      0.014,
+      0.0076,
+      0.0204
+     ]
+    }
+   },
+   "judgly-qwen-temperature": {
+    "accuracy": [
+     0.6521,
+     0.6404,
+     0.664
+    ],
+    "ece": [
+     0.0339,
+     0.0278,
+     0.0448
+    ],
+    "brier": [
+     0.4449,
+     0.4339,
+     0.4557
+    ],
+    "log_loss": [
+     0.7988,
+     0.7797,
+     0.8193
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.0787,
+      -0.0911,
+      -0.0665
+     ],
+     "ece": [
+      0.0125,
+      0.001,
+      0.0231
+     ],
+     "brier": [
+      0.0904,
+      0.0811,
+      0.1
+     ],
+     "log_loss": [
+      0.1527,
+      0.1369,
+      0.1681
+     ]
+    },
+    "minus_judgly-qwen-default": {
+     "accuracy": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "ece": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "brier": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "log_loss": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "judgly-qwen-default": {
+    "accuracy": [
+     0.6521,
+     0.6404,
+     0.664
+    ],
+    "ece": [
+     0.0339,
+     0.0278,
+     0.0448
+    ],
+    "brier": [
+     0.4449,
+     0.4339,
+     0.4557
+    ],
+    "log_loss": [
+     0.7988,
+     0.7797,
+     0.8193
+    ],
+    "minus_judgly-gemma-default": {
+     "accuracy": [
+      -0.0787,
+      -0.0911,
+      -0.0665
+     ],
+     "ece": [
+      0.0125,
+      0.001,
+      0.0231
+     ],
+     "brier": [
+      0.0904,
+      0.0811,
+      0.1
+     ],
+     "log_loss": [
+      0.1527,
+      0.1369,
+      0.1681
+     ]
+    }
+   }
+  },
+  "by_family": {
+   "difficulty": {
+    "nimble:9b": {
+     "accuracy": 0.3169,
+     "ece": 0.1475,
+     "brier": 0.7958,
+     "log_loss": 1.5878
+    },
+    "judgly-gemma-raw": {
+     "accuracy": 0.3833,
+     "ece": 0.5346,
+     "brier": 1.1232,
+     "log_loss": 3.8847
+    },
+    "judgly-gemma-h2": {
+     "accuracy": 0.3902,
+     "ece": 0.0401,
+     "brier": 0.7302,
+     "log_loss": 1.4726
+    },
+    "judgly-gemma-temperature": {
+     "accuracy": 0.3833,
+     "ece": 0.0478,
+     "brier": 0.7212,
+     "log_loss": 1.4341
+    },
+    "judgly-gemma-default": {
+     "accuracy": 0.3902,
+     "ece": 0.0401,
+     "brier": 0.7302,
+     "log_loss": 1.4726
+    },
+    "judgly-qwen-raw": {
+     "accuracy": 0.2872,
+     "ece": 0.6264,
+     "brier": 1.296,
+     "log_loss": 7.9045
+    },
+    "judgly-qwen-h2": {
+     "accuracy": 0.2529,
+     "ece": 0.0844,
+     "brier": 0.8175,
+     "log_loss": 1.7493
+    },
+    "judgly-qwen-temperature": {
+     "accuracy": 0.2872,
+     "ece": 0.0298,
+     "brier": 0.7967,
+     "log_loss": 1.6829
+    },
+    "judgly-qwen-default": {
+     "accuracy": 0.2872,
+     "ece": 0.0298,
+     "brier": 0.7967,
+     "log_loss": 1.6829
+    }
+   },
+   "ethics": {
+    "nimble:9b": {
+     "accuracy": 0.679,
+     "ece": 0.1858,
+     "brier": 0.4525,
+     "log_loss": 0.6952
+    },
+    "judgly-gemma-raw": {
+     "accuracy": 0.794,
+     "ece": 0.1759,
+     "brier": 0.364,
+     "log_loss": 1.2123
+    },
+    "judgly-gemma-h2": {
+     "accuracy": 0.733,
+     "ece": 0.0672,
+     "brier": 0.3754,
+     "log_loss": 0.5832
+    },
+    "judgly-gemma-temperature": {
+     "accuracy": 0.794,
+     "ece": 0.0645,
+     "brier": 0.2822,
+     "log_loss": 0.4461
+    },
+    "judgly-gemma-default": {
+     "accuracy": 0.733,
+     "ece": 0.0672,
+     "brier": 0.3754,
+     "log_loss": 0.5832
+    },
+    "judgly-qwen-raw": {
+     "accuracy": 0.682,
+     "ece": 0.2661,
+     "brier": 0.5787,
+     "log_loss": 3.6607
+    },
+    "judgly-qwen-h2": {
+     "accuracy": 0.667,
+     "ece": 0.114,
+     "brier": 0.4411,
+     "log_loss": 0.6538
+    },
+    "judgly-qwen-temperature": {
+     "accuracy": 0.682,
+     "ece": 0.0414,
+     "brier": 0.4199,
+     "log_loss": 0.61
+    },
+    "judgly-qwen-default": {
+     "accuracy": 0.682,
+     "ece": 0.0414,
+     "brier": 0.4199,
+     "log_loss": 0.61
+    }
+   },
+   "figurative": {
+    "nimble:9b": {
+     "accuracy": 0.842,
+     "ece": 0.1129,
+     "brier": 0.2687,
+     "log_loss": 0.623
+    },
+    "judgly-gemma-raw": {
+     "accuracy": 0.891,
+     "ece": 0.0942,
+     "brier": 0.2012,
+     "log_loss": 0.8642
+    },
+    "judgly-gemma-h2": {
+     "accuracy": 0.882,
+     "ece": 0.0371,
+     "brier": 0.172,
+     "log_loss": 0.3139
+    },
+    "judgly-gemma-temperature": {
+     "accuracy": 0.891,
+     "ece": 0.0557,
+     "brier": 0.1759,
+     "log_loss": 0.3159
+    },
+    "judgly-gemma-default": {
+     "accuracy": 0.882,
+     "ece": 0.0371,
+     "brier": 0.172,
+     "log_loss": 0.3139
+    },
+    "judgly-qwen-raw": {
+     "accuracy": 0.802,
+     "ece": 0.1568,
+     "brier": 0.3542,
+     "log_loss": 3.205
+    },
+    "judgly-qwen-h2": {
+     "accuracy": 0.809,
+     "ece": 0.0981,
+     "brier": 0.3123,
+     "log_loss": 0.5196
+    },
+    "judgly-qwen-temperature": {
+     "accuracy": 0.802,
+     "ece": 0.113,
+     "brier": 0.3206,
+     "log_loss": 0.5735
+    },
+    "judgly-qwen-default": {
+     "accuracy": 0.802,
+     "ece": 0.113,
+     "brier": 0.3206,
+     "log_loss": 0.5735
+    }
+   },
+   "grammar": {
+    "nimble:9b": {
+     "accuracy": 0.7224,
+     "ece": 0.0349,
+     "brier": 0.3547,
+     "log_loss": 0.5225
+    },
+    "judgly-gemma-raw": {
+     "accuracy": 0.8478,
+     "ece": 0.0826,
+     "brier": 0.2422,
+     "log_loss": 0.5254
+    },
+    "judgly-gemma-h2": {
+     "accuracy": 0.7672,
+     "ece": 0.0502,
+     "brier": 0.2669,
+     "log_loss": 0.3973
+    },
+    "judgly-gemma-temperature": {
+     "accuracy": 0.8478,
+     "ece": 0.025,
+     "brier": 0.2187,
+     "log_loss": 0.3404
+    },
+    "judgly-gemma-default": {
+     "accuracy": 0.7672,
+     "ece": 0.0502,
+     "brier": 0.2669,
+     "log_loss": 0.3973
+    },
+    "judgly-qwen-raw": {
+     "accuracy": 0.7174,
+     "ece": 0.1318,
+     "brier": 0.4144,
+     "log_loss": 1.1679
+    },
+    "judgly-qwen-h2": {
+     "accuracy": 0.6348,
+     "ece": 0.0658,
+     "brier": 0.4047,
+     "log_loss": 0.5865
+    },
+    "judgly-qwen-temperature": {
+     "accuracy": 0.7174,
+     "ece": 0.0284,
+     "brier": 0.3545,
+     "log_loss": 0.5193
+    },
+    "judgly-qwen-default": {
+     "accuracy": 0.7174,
+     "ece": 0.0284,
+     "brier": 0.3545,
+     "log_loss": 0.5193
+    }
+   },
+   "pragmatics": {
+    "nimble:9b": {
+     "accuracy": 0.77,
+     "ece": 0.1248,
+     "brier": 0.3544,
+     "log_loss": 0.7076
+    },
+    "judgly-gemma-raw": {
+     "accuracy": 0.791,
+     "ece": 0.1471,
+     "brier": 0.3584,
+     "log_loss": 1.2456
+    },
+    "judgly-gemma-h2": {
+     "accuracy": 0.765,
+     "ece": 0.0471,
+     "brier": 0.3211,
+     "log_loss": 0.6263
+    },
+    "judgly-gemma-temperature": {
+     "accuracy": 0.791,
+     "ece": 0.0165,
+     "brier": 0.3101,
+     "log_loss": 0.6134
+    },
+    "judgly-gemma-default": {
+     "accuracy": 0.765,
+     "ece": 0.0471,
+     "brier": 0.3211,
+     "log_loss": 0.6263
+    },
+    "judgly-qwen-raw": {
+     "accuracy": 0.685,
+     "ece": 0.2217,
+     "brier": 0.5109,
+     "log_loss": 2.4551
+    },
+    "judgly-qwen-h2": {
+     "accuracy": 0.68,
+     "ece": 0.0722,
+     "brier": 0.442,
+     "log_loss": 0.8453
+    },
+    "judgly-qwen-temperature": {
+     "accuracy": 0.685,
+     "ece": 0.0546,
+     "brier": 0.4335,
+     "log_loss": 0.833
+    },
+    "judgly-qwen-default": {
+     "accuracy": 0.685,
+     "ece": 0.0546,
+     "brier": 0.4335,
+     "log_loss": 0.833
+    }
+   },
+   "relevance": {
+    "nimble:9b": {
+     "accuracy": 0.47,
+     "ece": 0.2685,
+     "brier": 0.7631,
+     "log_loss": 1.709
+    },
+    "judgly-gemma-raw": {
+     "accuracy": 0.579,
+     "ece": 0.3791,
+     "brier": 0.7823,
+     "log_loss": 3.4431
+    },
+    "judgly-gemma-h2": {
+     "accuracy": 0.569,
+     "ece": 0.0341,
+     "brier": 0.5809,
+     "log_loss": 1.1071
+    },
+    "judgly-gemma-temperature": {
+     "accuracy": 0.579,
+     "ece": 0.0624,
+     "brier": 0.5644,
+     "log_loss": 1.0776
+    },
+    "judgly-gemma-default": {
+     "accuracy": 0.569,
+     "ece": 0.0341,
+     "brier": 0.5809,
+     "log_loss": 1.1071
+    },
+    "judgly-qwen-raw": {
+     "accuracy": 0.442,
+     "ece": 0.5016,
+     "brier": 1.036,
+     "log_loss": 6.5397
+    },
+    "judgly-qwen-h2": {
+     "accuracy": 0.447,
+     "ece": 0.064,
+     "brier": 0.6658,
+     "log_loss": 1.229
+    },
+    "judgly-qwen-temperature": {
+     "accuracy": 0.442,
+     "ece": 0.0766,
+     "brier": 0.6827,
+     "log_loss": 1.2632
+    },
+    "judgly-qwen-default": {
+     "accuracy": 0.442,
+     "ece": 0.0766,
+     "brier": 0.6827,
+     "log_loss": 1.2632
+    }
+   },
+   "social_bias": {
+    "nimble:9b": {
+     "accuracy": 0.723,
+     "ece": 0.1215,
+     "brier": 0.4013,
+     "log_loss": 0.8397
+    },
+    "judgly-gemma-raw": {
+     "accuracy": 0.909,
+     "ece": 0.0825,
+     "brier": 0.1705,
+     "log_loss": 0.6399
+    },
+    "judgly-gemma-h2": {
+     "accuracy": 0.927,
+     "ece": 0.0728,
+     "brier": 0.1289,
+     "log_loss": 0.2556
+    },
+    "judgly-gemma-temperature": {
+     "accuracy": 0.909,
+     "ece": 0.0319,
+     "brier": 0.1429,
+     "log_loss": 0.2684
+    },
+    "judgly-gemma-default": {
+     "accuracy": 0.927,
+     "ece": 0.0728,
+     "brier": 0.1289,
+     "log_loss": 0.2556
+    },
+    "judgly-qwen-raw": {
+     "accuracy": 0.866,
+     "ece": 0.0953,
+     "brier": 0.2292,
+     "log_loss": 1.1626
+    },
+    "judgly-qwen-h2": {
+     "accuracy": 0.873,
+     "ece": 0.0765,
+     "brier": 0.196,
+     "log_loss": 0.3721
+    },
+    "judgly-qwen-temperature": {
+     "accuracy": 0.866,
+     "ece": 0.0306,
+     "brier": 0.1962,
+     "log_loss": 0.3638
+    },
+    "judgly-qwen-default": {
+     "accuracy": 0.866,
+     "ece": 0.0306,
+     "brier": 0.1962,
+     "log_loss": 0.3638
+    }
+   },
+   "tables": {
+    "nimble:9b": {
+     "accuracy": 0.822,
+     "ece": 0.0494,
+     "brier": 0.247,
+     "log_loss": 0.4105
+    },
+    "judgly-gemma-raw": {
+     "accuracy": 0.8294,
+     "ece": 0.1404,
+     "brier": 0.3031,
+     "log_loss": 0.9069
+    },
+    "judgly-gemma-h2": {
+     "accuracy": 0.8018,
+     "ece": 0.07,
+     "brier": 0.2702,
+     "log_loss": 0.4117
+    },
+    "judgly-gemma-temperature": {
+     "accuracy": 0.8294,
+     "ece": 0.0721,
+     "brier": 0.2326,
+     "log_loss": 0.3766
+    },
+    "judgly-gemma-default": {
+     "accuracy": 0.8018,
+     "ece": 0.07,
+     "brier": 0.2702,
+     "log_loss": 0.4117
+    },
+    "judgly-qwen-raw": {
+     "accuracy": 0.7193,
+     "ece": 0.222,
+     "brier": 0.4946,
+     "log_loss": 2.2595
+    },
+    "judgly-qwen-h2": {
+     "accuracy": 0.6899,
+     "ece": 0.0437,
+     "brier": 0.3709,
+     "log_loss": 0.5435
+    },
+    "judgly-qwen-temperature": {
+     "accuracy": 0.7193,
+     "ece": 0.0443,
+     "brier": 0.3621,
+     "log_loss": 0.54
+    },
+    "judgly-qwen-default": {
+     "accuracy": 0.7193,
+     "ece": 0.0443,
+     "brier": 0.3621,
+     "log_loss": 0.54
+    }
+   }
+  }
+ }
+}

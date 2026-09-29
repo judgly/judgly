@@ -88,10 +88,12 @@ docs/results/external-comparison/ holds the answers (item ids, probabilities,
 token counts and timings) of three decision models run through Ollama 0.35.0
 (https://github.com/ollama/ollama, MIT License):
 
-  Nimble 9B            Bespoke Labs, https://huggingface.co/bespokelabs/Bespoke-Nimble-9B
+  Nimble 9B            Bespoke Labs and Maheswaran Sathiamoorthy,
+                       https://huggingface.co/bespokelabs/Bespoke-Nimble-9B
                        (weights: Apache License 2.0, as stated on the model card)
   Tev1 4B, Tev1 0.8B   Together AI, https://github.com/togethercomputer/tev1
-                       (code: MIT License; the model cards describe the weights'
+                       (code: MIT License, Copyright (c) 2026 open-jev
+                       contributors; the model cards describe the weights'
                        licence as being finalized)
 
 No weights of these models are included in judgly or in this repository; judgly

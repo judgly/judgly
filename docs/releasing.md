@@ -122,7 +122,11 @@ X.Y.(Z+1), never re-uploaded.
 1. Set the version in `pyproject.toml` (`[project] version`; the C library and
    `judgly.__version__` read it from there), set the same `version` and the release date as
    `date-released` in `CITATION.cff`, move the CHANGELOG's Unreleased entries under the new
-   version, and commit.
+   version, rewrite every absolute link to this repository at the old tag
+   (`github.com/judgly/judgly/blob/vOLD/`, `.../tree/vOLD/`, `raw.githubusercontent.com/judgly/judgly/vOLD/`)
+   to the new tag `vX.Y.Z` in the README and the docs (not in the CHANGELOG's earlier entries),
+   and commit. `docs/tools/check_docs.py` fails while any such link names another tag than
+   `v` plus the version in `pyproject.toml`.
 2. Steps 1, 2 and 5 to 9 above.
 
 ## CI

@@ -401,11 +401,18 @@ the worst). The bench numbers are therefore scored a little differently from the
 scoring in [Results](https://github.com/judgly/judgly/blob/v0.1.0/README.md#results) above: judgly Gemma 4 12B's JevBench accuracy is
 0.844 here and 0.840 there, where score questions count by their rounded expected level, and
 Brier there is against each benchmark's own soft gold. Each external model is scored on the
-items it answered and judgly on the same items. Tev1 answered every item except 36 JevBench items
-longer than its 2,050-token context, which Ollama refused; the JevBench table also gives judgly on
-Tev1's 195 items.
+items it answered and judgly on every item. The two differ only on JevBench: Tev1 answered every
+item except 36 JevBench items longer than its 2,050-token context, which Ollama refused, so the
+JevBench table also gives judgly on Tev1's 195 items, and in Figure 3 the Tev1 and judgly points
+in the JevBench panel are on different item sets.
 
-**confirm, general (untouched)**
+On the confirm tiers, judgly's default rows are not untouched in one respect: each pack's default
+was set by the pre-registered rule from judgly's one read of this same tier (the temperature
+became the default where that read confirmed it). H2, the 0.1.0 default, was fixed before that
+read, so its rows are given beside the defaults; for Gemma 4 12B on general questions, where the
+temperature was not confirmed, the default is H2.
+
+**confirm, general**
 
 | system | items | accuracy | ECE | Brier |
 |---|---|---|---|---|
@@ -414,8 +421,9 @@ Tev1's 195 items.
 | Tev1 0.8B | 2,500 | 0.378 | 0.154 | 0.701 |
 | judgly Gemma 4 12B (default) | 2,500 | 0.509 | 0.051 | 0.562 |
 | judgly Qwen3-4B (default) | 2,500 | 0.484 | 0.047 | 0.597 |
+| judgly Qwen3-4B, H2 (0.1.0 default) | 2,500 | 0.463 | 0.076 | 0.624 |
 
-**confirm, stance (untouched; ClimateCheck)**
+**confirm, stance (ClimateCheck)**
 
 | system | items | accuracy | ECE | Brier |
 |---|---|---|---|---|
@@ -424,6 +432,8 @@ Tev1's 195 items.
 | Tev1 0.8B | 1,780 | 0.451 | 0.304 | 0.794 |
 | judgly Gemma 4 12B (default) | 1,780 | 0.655 | 0.052 | 0.476 |
 | judgly Qwen3-4B (default) | 1,780 | 0.568 | 0.106 | 0.581 |
+| judgly Gemma 4 12B, H2 (0.1.0 default) | 1,780 | 0.629 | 0.078 | 0.490 |
+| judgly Qwen3-4B, H2 (0.1.0 default) | 1,780 | 0.526 | 0.183 | 0.612 |
 
 **final, general (8 families)**
 
@@ -468,8 +478,10 @@ Tev1's 195 items.
 | judgly Qwen3-4B (default), on Tev1's items | 195 | 0.759 | 0.092 | 0.333 |
 
 On the final-flagged tier (politeness and HealthFC, fresh families with known caveats), judgly's
-defaults were the more accurate: 0.512 and 0.492 against 0.339 to 0.421 on general questions, and
-0.750 and 0.718 against 0.474 to 0.689 on stance
+defaults were the more accurate on general questions (0.512 and 0.492 against 0.339 to 0.421). On
+stance (HealthFC) judgly Gemma 4 12B's default was the more accurate (0.750 against 0.474 to
+0.689); judgly Qwen3-4B's (0.718) was ahead of Nimble 9B and Tev1 0.8B and level with Tev1 4B
+(0.689; paired difference -0.029, interval -0.059 to +0.000)
 ([docs/methods.md](https://github.com/judgly/judgly/blob/v0.1.0/docs/methods.md#comparison-with-dedicated-decision-models)).
 
 <!-- RESULTS:FIGURE-3 -->
@@ -479,7 +491,10 @@ defaults were the more accurate: 0.512 and 0.492 against 0.339 to 0.421 on gener
 (y) against its ECE (x), with 95% bootstrap intervals over groups of related items; judgly's
 defaults are filled, judgly without calibration (raw) is hollow and faint. *How to read it:* up
 and to the left is better; points whose intervals overlap are not clearly different (the paired
-differences in docs/methods.md are the sharper test). *What it says:* judgly Gemma 4 12B is the
+differences in docs/methods.md are the sharper test). In the JevBench panel, Tev1's points are on
+the 195 items it answered and judgly's on all 231 (on Tev1's items judgly Gemma 4 12B's accuracy
+is 0.882; see the JevBench table). On the confirm tiers judgly's defaults are the ones selected
+from this same read (above). *What it says:* judgly Gemma 4 12B is the
 most accurate or level with the most accurate on every set. With calibration, judgly's defaults
 have the lowest ECE on the confirm and general final tiers; on stance final and typed-decisions
 Tev1 4B is as well or better calibrated. Without its calibration judgly is among the worst
@@ -489,19 +504,24 @@ it to the left.
 <!-- RESULTS:FIGURE-4 -->
 <p align="center"><img src="https://raw.githubusercontent.com/judgly/judgly/v0.1.0/docs/assets/results/compare-reliability.svg" alt="Reliability diagrams on the two confirm tiers for Nimble 9B, Tev1 4B and judgly's two defaults" width="860"></p>
 
-**Figure 4. Reliability on the untouched confirm tiers.** *What it shows:* for ten bins of the top
+**Figure 4. Reliability on the confirm tiers.** *What it shows:* for ten bins of the top
 probability, the mean confidence (x) against the share of correct answers (y), with 95% Wilson
 intervals, on the general (2,500 items) and stance (1,780) confirm tiers. *How to read it:* on the
 dotted diagonal, confidence equals accuracy; points below it are overconfident. On stance the
 items come in 70 linked groups, so the Wilson intervals, which treat items as independent, are
-too narrow. *What it says:* Nimble 9B and Tev1 4B, as served, are overconfident on these tiers
-(ECE 0.229 and 0.142 on general, 0.264 and 0.185 on stance); judgly's defaults lie closer to the
-diagonal (0.051 and 0.047 on general, 0.052 and 0.106 on stance), with Qwen3-4B still
-overconfident on stance above 0.5.
+too narrow. judgly's defaults are the ones selected from this same read (above); with H2, the
+0.1.0 default, ECE was 0.076 (Qwen3-4B) on general and 0.078 (Gemma 4 12B) and 0.183 (Qwen3-4B)
+on stance. *What it says:* Nimble 9B and Tev1 4B, as served, are overconfident on these tiers
+(ECE 0.229 and 0.142 on general, 0.264 and 0.185 on stance). judgly's defaults lie closer to the
+diagonal (0.051 and 0.047 on general, 0.052 and 0.106 on stance), but both are overconfident on
+stance above 0.5 (Gemma 4 12B by 0.03 to 0.13 per bin, Qwen3-4B by 0.09 to 0.14), and Gemma 4
+12B is overconfident on general questions in the 0.5 to 0.6 bin (by 0.12, 796 items).
 
 **Single-request latency** (`final/timing.json`): 100 items (the first 50 of each confirm tier by
 the SHA-256 of their id), one question per request, one request at a time, after one warm-up
-request per system that was not counted, on an Apple M3 Max (64 GB).
+request per system that was not counted (the warm-up item is the first of the 100 and was
+timed again), on an Apple M3 Max (64 GB). The 95th percentile is the 96th of the 100 sorted times,
+without interpolation.
 
 | system | median (s) | 95th percentile (s) | mean (s) |
 |---|---|---|---|
@@ -521,7 +541,10 @@ split of its fit tier only: 6,300 general and 14,783 stance items from the sourc
 [data/registry.yaml](https://github.com/judgly/judgly/blob/v0.1.0/data/registry.yaml). None of the test sets above was used for fitting.
 The **confirm** tiers (five general families never used before, and ClimateCheck for stance) were
 built after everything else; each judgly model read them once, for the pre-registered
-confirmation of the temperature, and this comparison rescored those committed answers. The
+confirmation of the temperature, and each pack's default was then set from that read by the
+pre-registered rule (the temperature where it was confirmed, H2 otherwise); this comparison
+rescored those committed answers. So nothing was fitted on the confirm tiers, but the default
+rows there were chosen by their own result, and H2's rows are the comparator fixed beforehand. The
 **final** tiers were fresh at the 0.1.0 release; they were read once by the release run and again
 by the exploratory calibration analyses that led to the temperature option, so they are not
 untouched for the temperature defaults. **typed-decisions** (2,000 decisions over 400 cases, whose
@@ -533,8 +556,10 @@ tiers were read as often as bench. The external models read every item once, in 
 the confirm, final or final-flagged items is in either model's fine-tuning data. Nimble is a LoRA
 fine-tune of Qwen3.5-9B; the checkpoint Ollama serves appears to be release v3-12026, whose
 training components include public banking77, multinli, boolq, ag_news, dbpedia and trec, as well
-as local components that are not documented and cannot be checked. Bespoke Labs registers JevBench
-as "reporting_only" in the model's schema configuration. Tev1 is a fine-tune of Qwen3.5-4B and
+as local components that are not documented and cannot be checked. Nimble's schema configuration
+lists a registered evaluation "jevbench-eval" (534 items; judgly uses the 231 public JevBench
+items) and marks its own "bespoke-eval" set as "reporting_only"; whether JevBench items informed
+training or model selection is not stated. Tev1 is a fine-tune of Qwen3.5-4B and
 Qwen3.5-0.8B on the train splits of MultiNLI, BoolQ, Banking77, AG News and SST-5 plus synthetic
 policy, routing and research data, and its authors state that no Jev data and no JevBench items
 were used. typed-decisions is not named in either model's documented data.
@@ -543,30 +568,55 @@ were used. typed-decisions is not named in either model's documented data.
 
 - **The test sets are ours.** judgly's tiers were chosen and built by us, for judgly.
 - **Calibration.** judgly's calibration was fitted by us on question types similar to those in
-  the tiers; the external models were run as served, with no calibration fitted by us. Fitting a
-  temperature for them would likely lower their ECE. We did not, because it would need running
-  them on judgly's training data.
+  the tiers; the external models were run as served, with no calibration fitted by us, and their
+  providers do not present these probabilities as calibrated. Tev1's README says "Logprobs are
+  model preferences, not calibrated confidence", and its model card says that calibration, among
+  other things, has "not been comprehensively evaluated". Nimble's model card says "This
+  checkpoint has not had a separate temperature fit" (its scorer defaults to T = 1.0; Bespoke
+  Labs' hosted serving of an earlier revision divided by a fitted temperature, 2.179). Fitting a
+  temperature for them would likely lower their ECE. We did not; it would need no new runs (a
+  temperature cross-fitted on the committed answers would do), but it was not in the frozen
+  protocol and has not been done. The comparison of judgly's calibrated defaults with the models
+  as served therefore largely measures whether a calibration step was applied at all. Without
+  calibration, judgly's ECE was higher than that of every external model on every set, with two
+  exceptions: on stance final-flagged Nimble 9B's (0.404) was higher than both judgly models'
+  (0.201 and 0.227), and on stance confirm Tev1 0.8B's (0.304) was about the same as judgly Gemma
+  4 12B's (0.300).
+- **Option orders.** judgly averages each question over up to four option orders, a test-time
+  ensemble that is known to improve both accuracy and calibration; the external models read each
+  question once, in one order.
+- **Model size.** judgly's Gemma 4 12B has more parameters than any of the external models (9B,
+  4B and 0.8B). The like-for-like comparison by size is judgly Qwen3-4B against Tev1 4B.
 - **Tev1's prompt.** Ollama's `/v1/systemone` sends a `{"context", "schema"}` prompt, while Tev1
   was trained on `{"state", "question", "options"}`. Tev1 is measured as Ollama serves it, which
-  may understate what it does with its own format; a run with its native format was considered and
-  declined before any Tev1 result was seen.
+  may understate what it does with its own format. A run with its native format was considered
+  and declined at 16:54, while the Tev1 4B run (started at 16:47) was in progress and before any
+  of its answers were looked at.
 - **Tev1's context.** 36 JevBench items were refused as too long; judgly and Nimble answered them.
 - **Timing** was measured differently in kind (in-process against HTTP, up to four option orders
   against one).
 
-**In short.** On these test sets judgly Gemma 4 12B was the most accurate system almost
-everywhere: clearly so on general questions and JevBench, and level with the best dedicated model
-on stance (Tev1 4B) and typed-decisions (Nimble 9B), where the paired intervals include zero.
-Among the models of 4 to 9B, the dedicated models were level with judgly Qwen3-4B on general
-questions (Nimble 9B slightly ahead on the general final tier) and more accurate on stance and on
-typed-decisions; on JevBench Nimble 9B was ahead and Tev1 4B level. judgly's defaults were the best
-calibrated on most sets. The exceptions: on stance final Tev1 4B had the lowest ECE (0.041 against
-0.087 and 0.093); on typed-decisions Tev1 4B and Nimble 9B were better calibrated than judgly
-Qwen3-4B and level with judgly Gemma 4 12B; on JevBench every interval overlaps; and on the
-flagged tiers Tev1 0.8B was level with judgly Gemma 4 12B. judgly Gemma 4 12B was the slowest per request (median 0.96 s); Tev1 0.8B was the
-fastest (0.08 s) but far behind in accuracy. These are the numbers on judgly's own test sets, with
-its calibration fitted by us and theirs as served; on other data, or with a temperature fitted for
-the dedicated models, the picture may differ.
+**In short.** On these test sets judgly Gemma 4 12B, the largest model compared, was the most
+accurate system almost everywhere: clearly so on general questions and JevBench, and level with
+the best dedicated model on stance (Tev1 4B) and typed-decisions (Nimble 9B), where the paired
+intervals include zero. Among the models of 4 to 9B, the dedicated models were level with judgly
+Qwen3-4B's default on general questions (Nimble 9B slightly ahead on the general final tier);
+against H2, the 0.1.0 default fixed before the confirm tier was read, Nimble 9B (0.481) and Tev1
+4B (0.479) were ahead of Qwen3-4B (0.463) on general confirm in point value (the record has no
+paired interval against H2). On the confirm and final stance tiers and on typed-decisions the
+dedicated models were more accurate than judgly Qwen3-4B; on the flagged stance tier (HealthFC)
+judgly Qwen3-4B was ahead of Nimble 9B and level with Tev1 4B. On JevBench Nimble 9B was ahead of
+judgly Qwen3-4B and Tev1 4B level. judgly's defaults were the best calibrated on most sets, which
+mostly shows that a calibration step was applied: without it, judgly was worse calibrated than
+the dedicated models almost everywhere. The exceptions: on stance final Tev1 4B had the lowest
+ECE (0.041 against 0.087 and 0.093); on typed-decisions Tev1 4B and Nimble 9B were better
+calibrated than judgly Qwen3-4B and level with judgly Gemma 4 12B; on JevBench every interval
+overlaps; on stance confirm Tev1 4B's ECE (0.185) was about the same as judgly Qwen3-4B's with
+H2 (0.183); and on the flagged tiers Tev1 0.8B was level with judgly Gemma 4 12B. judgly Gemma 4
+12B was the slowest per request (median 0.96 s); Tev1 0.8B was the fastest (0.08 s) but far
+behind in accuracy. These are the numbers on judgly's own test sets, with its calibration fitted
+by us and theirs as served, and with judgly averaging over up to four option orders; on other
+data, or with a temperature fitted for the dedicated models, the picture may differ.
 
 ## Limitations
 
@@ -580,7 +630,9 @@ Please read these before using judgly for anything that matters.
   (ECE 0.126 with H2 and 0.137 with the temperature, against 0.062 to 0.118)
   ([How judgly compares](https://github.com/judgly/judgly/blob/v0.1.0/README.md#how-judgly-compares)).
   On judgly's own test tiers, the dedicated decision models Nimble 9B and Tev1 4B, run as served,
-  were more accurate than judgly's Qwen3-4B on stance and on typed-decisions
+  were more accurate than judgly's Qwen3-4B on the confirm and final stance tiers and on
+  typed-decisions (on the flagged HealthFC stance tier judgly's Qwen3-4B was ahead of Nimble 9B
+  and level with Tev1 4B)
   ([Comparison with dedicated decision models](https://github.com/judgly/judgly/blob/v0.1.0/README.md#comparison-with-dedicated-decision-models)).
 - **Accuracy is modest, and calibration does not raise it.** On the fresh final tier, accuracy
   with H2 was 0.737 (Gemma 4 12B) and 0.639 (Qwen3-4B) on general questions and 0.812 and 0.773
@@ -614,7 +666,8 @@ Please read these before using judgly for anything that matters.
   over all tiers) for Gemma 4 12B in the batched release runs on an M3 Max, with up to four
   option orders per question (about 375 tokens per second read). Single requests took a median of
   0.96 s (Gemma 4 12B) and 0.32 s (Qwen3-4B) on 100 items, against 0.08 to 0.53 s for the Ollama
-  decision models
+  decision models (judgly asks up to four option orders per question, in process; they read one,
+  over HTTP)
   ([Comparison with dedicated decision models](https://github.com/judgly/judgly/blob/v0.1.0/README.md#comparison-with-dedicated-decision-models)).
 - **Weak spots:** score questions such as sentence difficulty (CEFR-SP, six levels: 0.390 and
   0.253 accuracy with H2) and similarity ratings, word sense (the heads lowered WiC accuracy
@@ -719,11 +772,16 @@ judgly is built on other people's work. Thank you to:
   trained on about 91 million examples and aimed at agent decisions and verification. Its model
   card reports parity with Jev on computer-use, gaming and tool-calling tasks; I have not run
   it on judgly's benchmark (see [docs/methods.md](https://github.com/judgly/judgly/blob/v0.1.0/docs/methods.md#related-work)).
-- **Nimble** by Bespoke Labs ([bespokelabs/Bespoke-Nimble-9B](https://huggingface.co/bespokelabs/Bespoke-Nimble-9B),
-  weights Apache-2.0; [bespokelabsai/nimble](https://github.com/bespokelabsai/nimble)) and **Tev1**
-  by Together AI ([togethercomputer/Tev1-4B-experimental](https://huggingface.co/togethercomputer/Tev1-4B-experimental),
-  code MIT at [togethercomputer/tev1](https://github.com/togethercomputer/tev1), the weights'
-  licence described as being finalized), open decision models that were run on judgly's test
+- **Nimble** by Bespoke Labs and Maheswaran Sathiamoorthy
+  ([bespokelabs/Bespoke-Nimble-9B](https://huggingface.co/bespokelabs/Bespoke-Nimble-9B),
+  weights Apache-2.0; [bespokelabsai/nimble](https://github.com/bespokelabsai/nimble); the
+  revision Ollama serves appears to be release v3-12026) and **Tev1** by Together AI
+  ([togethercomputer/Tev1-4B-experimental](https://huggingface.co/togethercomputer/Tev1-4B-experimental),
+  [togethercomputer/Tev1-0.8B-experimental](https://huggingface.co/togethercomputer/Tev1-0.8B-experimental);
+  code MIT, copyright the open-jev contributors, at
+  [togethercomputer/tev1](https://github.com/togethercomputer/tev1); the weights' licence
+  described as being finalized; introduced in Together AI's blog post by Hassan El Mghari), open
+  decision models that were run on judgly's test
   tiers for the comparison above, and **Ollama** ([ollama/ollama](https://github.com/ollama/ollama),
   MIT), which served them. Their weights are not redistributed here; only their answers
   (probabilities) are committed, in docs/results/external-comparison. Both models are fine-tunes

@@ -62,8 +62,8 @@ NAMES = ("accuracy", "ece", "brier", "log_loss")
 SEED, SOURCE_SEED, DRAWS = 20260929, 20260930, 1000
 
 # The test sets of the figures: (label, format/tier in the record, bench source or None).
-SETS = [("confirm, general (untouched)", "general/confirm", None),
-        ("confirm, stance (untouched)", "stance/confirm", None),
+SETS = [("confirm, general", "general/confirm", None),
+        ("confirm, stance", "stance/confirm", None),
         ("final, general", "general/final", None),
         ("final, stance", "stance/final", None),
         ("typed-decisions", "general/bench", "typed_decisions"),
@@ -440,8 +440,13 @@ def captions(results: dict, by_source: dict) -> str:
         "(score_external.py); for typed-decisions and JevBench, which the record reports together as",
         "bench with point values per source, each source was resampled on its own by this script (seed",
         "20260930; compare-by-source.json). Each external model is scored on the items it answered and",
-        "judgly on every item: Tev1 refused 36 JevBench items longer than its context, so its JevBench",
-        f"points are on {jev} of the 231 items. *How to read it:* up and to the left is better; points",
+        "judgly on every item: Tev1 refused 36 JevBench items longer than its context, so in the JevBench",
+        f"panel the Tev1 points are on {jev} of the 231 items and judgly's on all 231, different item sets",
+        f"(the README and docs/methods.md also give judgly on Tev1's {jev} items, where judgly Gemma 4 12B",
+        "is more accurate than on all 231). On the confirm tiers, judgly's defaults are the ones the",
+        "pre-registered confirmation selected from its read of this same tier (the temperature where it was",
+        "confirmed; H2, the 0.1.0 default, for Gemma 4 12B on general questions). *How to read it:* up and",
+        "to the left is better; points",
         "whose intervals overlap are not clearly different, and the paired differences in",
         "docs/methods.md are the sharper test. ECE is never negative, so its intervals lean upward near",
         "0. *What it says:* judgly Gemma 4 12B is the most accurate or level with the most accurate on",
@@ -450,14 +455,19 @@ def captions(results: dict, by_source: dict) -> str:
         "calibration judgly is among the worst calibrated on every set. The numbers: "
         + ". ".join(sets) + ".", "",
         "## compare-reliability.svg", "",
-        "*What it shows:* reliability diagrams on the two untouched confirm tiers for Nimble 9B, Tev1 4B",
-        "and judgly's two packs with their default calibration: for ten equal-width bins of the top",
+        "*What it shows:* reliability diagrams on the two confirm tiers for Nimble 9B, Tev1 4B and",
+        "judgly's two packs with their default calibration: for ten equal-width bins of the top",
         "probability, the mean confidence (x) against the share of correct answers (y), with 95% Wilson",
         "intervals; empty bins are left out. *How to read it:* on the dotted diagonal, confidence equals",
         "accuracy; points below it are overconfident. The Wilson intervals treat items as independent,",
-        "which on stance (1,780 items in 70 linked groups) makes them too narrow. *What it says:* Nimble",
-        "9B and Tev1 4B, as served, are overconfident on these tiers; judgly's defaults lie closer to the",
-        "diagonal, with Qwen3-4B still overconfident on stance above 0.5. ECE: " + "; ".join(rel) + ".", "",
+        "which on stance (1,780 items in 70 linked groups) makes them too narrow. judgly's defaults here",
+        "were selected by the pre-registered confirmation from its read of this same tier (H2, the 0.1.0",
+        "default, stayed for Gemma 4 12B on general questions); nothing was fitted on it. With H2 instead,",
+        "ECE was 0.076 (Qwen3-4B) on general and 0.078 (Gemma 4 12B) and 0.183 (Qwen3-4B) on stance.",
+        "*What it says:* Nimble 9B and Tev1 4B, as served, are overconfident on these tiers. judgly's",
+        "defaults lie closer to the diagonal, but both are overconfident on stance above 0.5 (Gemma 4 12B",
+        "by 0.03 to 0.13 per bin, Qwen3-4B by 0.09 to 0.14), and Gemma 4 12B on general questions in the",
+        "0.5 to 0.6 bin (by 0.12, 796 items). ECE: " + "; ".join(rel) + ".", "",
     ])
 
 

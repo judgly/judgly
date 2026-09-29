@@ -10,7 +10,7 @@ Times are local (UTC+8).
 | OS | macOS 27.0 (`macOS-27.0-arm64-arm-64bit-Mach-O`, as recorded in `final/timing.json`) |
 | Ollama | 0.35.0 (`ollama --version`: `ollama version is 0.35.0`), serving `http://localhost:11434/v1/systemone` |
 | judgly | branch `calibration-options`, commit `3e76204` (packs `gemma4-12b-q8` and `qwen3-4b-q8`) |
-| Python | 3.13; the scorer ran with `uv run --no-project --with numpy` (numpy 2.5.3 when the record was rescored on 2026-09-30 and found identical) |
+| Python | 3.13; the scorer ran with `uv run --no-project --with numpy` (numpy unpinned; the version used at 21:58 on 2026-09-29 was not recorded. The rescoring on 2026-09-30 used numpy 2.5.3 and found every file identical; `make compare-score` pins numpy 2.5.3 and Python 3.13, since another numpy may draw other bootstrap resamples) |
 
 ## External models
 
@@ -60,6 +60,9 @@ uv run --no-project --with numpy python score_external.py /Users/timo/code/judgl
 uv run --no-project --with numpy python score_external.py /Users/timo/code/judgly tev1:0.8b
 uv run --no-project --with numpy python score_external.py /Users/timo/code/judgly nimble:9b tev1:4b tev1:0.8b
 ```
+
+These are the commands as run, with numpy unpinned. To rescore, use `make compare-score`, which
+pins `--python 3.13 --with numpy==2.5.3`.
 
 The timings:
 

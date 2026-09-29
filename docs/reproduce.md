@@ -172,12 +172,12 @@ git status docs/assets/results                   # unchanged: the figures are by
 
 The second check needs the run outputs in `results/` and the built tiers. `make figures` checks
 every plotted number against `record.json` and `tables.md`; byte-identical figures were checked
-with the matplotlib version in `uv.lock` on macOS. To redraw the figures without building the
-native library, run the script with the figures group only:
+with the matplotlib version in `uv.lock` on macOS. `make figures` runs the script with the
+figures group only (`uv run --only-group figures`), so it neither builds the native library nor
+needs the llama.cpp submodule. The paired differences and per-family ECE come from:
 
 ```bash
-uv run --only-group figures python scripts/make_figures.py
-uv run --only-group figures python docs/tools/final_tier_stats.py   # paired differences, per-family ECE
+uv run --only-group figures python docs/tools/final_tier_stats.py
 ```
 
 **7. Install the pack** after reading its tables:
@@ -277,7 +277,10 @@ make compare-score
 It runs the frozen scorer on the committed answers and on judgly's committed per-item dumps,
 once per model and once with all three, and checks that every `final/result-*.json` and
 `final/score-*.txt` it rebuilds equals the committed one byte for byte (`reproduce.py score`;
-`tests/test_external_comparison.py` runs the same check and skips without the tier files).
+`tests/test_external_comparison.py` runs the same check and skips without the tier files). It
+runs with numpy 2.5.3 on Python 3.13, the versions the check was made with: the scorer's bootstrap
+uses numpy's `default_rng`, whose draws numpy does not promise to keep across versions, so
+another numpy may give other intervals.
 
 **Rerun the models (Ollama, about five hours on an Apple M3 Max).** Needs Ollama 0.35.0 or later
 and the three models pulled by the recorded tags:
@@ -290,10 +293,15 @@ make compare-run                  # COMPARE_OUT=DIR to write elsewhere than resu
 It compares the pulled models' IDs with the recorded ones and reports any difference (Ollama
 tags can move, so a tag pulled later may name other weights), asks every item through the frozen
 runner (resumable), scores the new answers into `COMPARE_OUT/final/` and reports whether they
-equal the record. No tolerance has been set for what counts as the same result on other hardware
+equal the record. The frozen runner counts every line it has written as done, a failed request
+included; before each resume the wrapper therefore moves lines whose error is not an HTTP 400
+refusal (a connection error, a timeout, a server error) to `<format>-<tier>.transient.jsonl`, so
+that those items are asked again, and it warns if any are left at the end. Run it again until no
+warning is printed before comparing with the record. No tolerance has been set for what counts as the same result on other hardware
 or Ollama versions.
 
-**Figures (CPU, under a minute).** Needs the tier files (`make data`):
+**Figures (CPU, under a minute).** Needs the tier files (`make data`); it runs with the figures
+group only, so it neither builds the native library nor needs the llama.cpp submodule:
 
 ```bash
 make compare-figures
@@ -317,6 +325,10 @@ intervals for bench split by source, and writes `docs/assets/results/compare-tie
 - `scripts/calibration_record.py` stops if its recomputed metrics differ from the evaluator's.
 - `docs/tools/confirmation_check.py`: the shipped temperatures are the confirmed ones, and the
   engine's temperature output equals the frozen confirmation scorer's.
+- `make compare-score`: all 8 rebuilt result files of the external comparison are identical to
+  the committed ones.
+- `make compare-figures`: the four result files are reproduced, and the figures, `compare-by-source.json`
+  and `CAPTIONS.md` are byte-identical to the committed ones (`git status docs/assets/results`).
 
 ## Data sources
 

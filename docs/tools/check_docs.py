@@ -6,6 +6,8 @@
    Markdown files with #anchors, to a heading). Absolute links into this repository at the
    release tag (github.com/judgly/judgly/{blob,tree}/vX, raw.githubusercontent.com) are checked
    the same way against the checkout, and the README (shown on PyPI) has no relative links.
+   Their tag must be "v" plus the version in pyproject.toml (the CHANGELOG, which may link to
+   earlier releases, excepted), so that the links resolve once that version's tag is pushed.
 2. Every examples/*.py runs to exit 0 against JUDGLY_PACK (default: the QUICK smoke pack
    results-quick/qwen3-4b-q8/pack), or is marked "# judgly-example: needs-full-pack" and
    compiles. The README quickstart runs too, with its pack swapped for JUDGLY_PACK.
@@ -22,12 +24,15 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+import tomllib
+
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+TAG = "v" + tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
 PACK = os.environ.get("JUDGLY_PACK", str(ROOT / "results-quick" / "qwen3-4b-q8" / "pack"))
 OWN = re.compile(r"^https://(?:github\.com/judgly/judgly/(?:blob|tree)|"
-                 r"raw\.githubusercontent\.com/judgly/judgly)/v[0-9][^/]*/(.*)$")
+                 r"raw\.githubusercontent\.com/judgly/judgly)/(v[0-9][^/]*)/(.*)$")
 LINK = re.compile(r"!?\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)|(?:src|href)=\"([^\"]+)\"")
 failures: list[str] = []
 
@@ -61,7 +66,9 @@ def check_links() -> None:
             target = m.group(1) or m.group(2)
             own = OWN.match(target)
             if own:
-                path, _, anchor = own.group(1).partition("#")
+                if own.group(1) != TAG and md.name != "CHANGELOG.md":
+                    fail(f"{md.relative_to(ROOT)}: link to tag {own.group(1)}, not {TAG} (pyproject.toml): {target}")
+                path, _, anchor = own.group(2).partition("#")
                 dest = ROOT / path
             elif re.match(r"^[a-z]+:", target):
                 continue
