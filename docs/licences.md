@@ -26,7 +26,7 @@ I am not a lawyer; this records what the sources say, not legal advice.
 | `judgly/*.py`, `py.typed` | judgly | Apache-2.0 | `.dist-info/licenses/LICENSE` |
 | `judgly/packs/*/pack.json`, `template.tpl` | judgly | Apache-2.0 | `LICENSE`; `packs/*/LICENSE` |
 | `judgly/packs/*/LICENSE` | judgly | describes the pack's files | itself |
-| `judgly/packs/*/heads/` | judgly: the two calibration options fitted in the release runs, H2 heads (`h2.bin`, `h2-stance.bin`) and per-type temperatures (`temperature.bin`, `temperature-stance.bin`), each with its trainer sidecar (`*.bin.json`) | Apache-2.0 (general), CC BY-SA 4.0 (stance) | `packs/*/LICENSE`, `LICENSES/CC-BY-SA-4.0.txt` |
+| `judgly/packs/*/heads/` | judgly: the two calibration options, H2 heads (`h2.bin`, `h2-stance.bin`) fitted in the 0.1.0 release runs, and per-type temperatures (`temperature.bin`, `temperature-stance.bin`) fitted after the release on the same train items (values frozen for the confirmation), each with its trainer sidecar (`*.bin.json`) | Apache-2.0 (general), CC BY-SA 4.0 (stance) | `packs/*/LICENSE`, `LICENSES/CC-BY-SA-4.0.txt` |
 | `judgly/libjudgly.dylib` | judgly `csrc/` + llama.cpp/ggml (static, Metal library embedded) + yyjson | Apache-2.0; MIT (ggml, llama.cpp, llamafile sgemm, YaRN RoPE, yyjson) | `LICENSES/llama.cpp-ggml-MIT.txt`, `llamafile-sgemm-MIT.txt`, `yarn-rope-MIT.txt`, `yyjson-MIT.txt`; `NOTICE` |
 | `.dist-info/licenses/` | LICENSE, NOTICE, LICENSES/* | | via `license-files` in pyproject.toml |
 

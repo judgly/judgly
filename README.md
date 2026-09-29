@@ -9,8 +9,9 @@ those probabilities, aiming for answers given with 0.8 to be right about 80% of 
 eight task families that no head was fitted on, the released heads (H2) brought the pooled
 calibration error (ECE) from 0.194 to 0.020 (Gemma 4 12B) and from 0.268 to 0.030 (Qwen3-4B), at
 a cost of about 2 accuracy points. A second, simpler option, one temperature per question type,
-keeps the raw accuracy; it is the default where a pre-registered comparison on untouched data
-confirmed it ([Two calibration options](https://github.com/judgly/judgly/blob/v0.1.0/README.md#two-calibration-options)).
+keeps the raw top-answer accuracy; it is the default where a pre-registered comparison on
+untouched data confirmed it (Qwen3-4B, and stance questions in both packs), so the H2 numbers
+above are not what those defaults give ([Two calibration options](https://github.com/judgly/judgly/blob/v0.1.0/README.md#two-calibration-options)).
 Every accuracy and calibration number for judgly in this README can be recomputed from the
 per-item results committed in docs/results/.
 
@@ -127,8 +128,10 @@ data). [docs/usage.md](https://github.com/judgly/judgly/blob/v0.1.0/docs/usage.m
 | score | `Score(instructions=..., levels=5)`, 2 to 9 levels | `probs` per level, `mean`, `top` |
 
 A question may name a `format`, which selects a calibration head. `"stance"` (does the evidence
-support the claim, contradict it, or neither?) has its own head, which is around its calibration
-bar on the final tier and misses it on the dev tier (see Results below). A question with `format` unset, or with a format the pack has no head
+support the claim, contradict it, or neither?) has its own calibration. By default that is the
+per-type temperature, whose ECE on the final tier (Check-COVID) was 0.087 (Gemma 4 12B) and 0.093
+(Qwen3-4B), well above the 0.05 bar; the H2 stance heads were around the bar there (0.048 and
+0.052) and missed the dev-tier bar (see Results below). A question with `format` unset, or with a format the pack has no head
 for, uses the general head (the pack's heads entry `"*"`); "general" in this page means exactly
 that. See [docs/question-formats.md](https://github.com/judgly/judgly/blob/v0.1.0/docs/question-formats.md).
 
@@ -159,6 +162,11 @@ claim, a table, a template or a query are resampled together); n is the number o
 (expected calibration error) is the average gap between confidence and accuracy over ten bins; 0 is
 perfect. The stance head's bar is a final-tier ECE below 0.05.
 
+**These tables compare raw with H2**, the head released in 0.1.0 ("head" in the tables). H2 is
+the default only for Gemma 4 12B general questions. Qwen3-4B (general and stance) and Gemma 4 12B
+stance use the per-type temperature by default; its numbers on the same tier are under
+[Two calibration options](https://github.com/judgly/judgly/blob/v0.1.0/README.md#two-calibration-options) below.
+
 | pack | format (fresh final tier) | n | condition | accuracy | log loss | ECE |
 |---|---|---|---|---|---|---|
 | gemma4-12b-q8 | general (8 families) | 7,879 (6,803 groups) | raw | 0.760 [0.751, 0.770] | 1.553 [1.478, 1.636] | 0.194 [0.186, 0.204] |
@@ -171,12 +179,13 @@ perfect. The stance head's bar is a final-tier ECE below 0.05.
 | | | | head | 0.773 [0.749, 0.795] | 0.594 [0.562, 0.628] | 0.052 [0.034, 0.077] (bar 0.05 missed, narrowly) |
 
 "raw" is the letter probabilities averaged over option orders (score questions are read once,
-levels in their natural order), with no head; "head" is the fitted head the pack ships. The
+levels in their natural order), with no head; "head" is H2, the fitted head released in 0.1.0 (the packs now also ship the
+per-type temperature, below). The
 general families are social bias (BBQ), grammar (BLiMP), figurative language (Fig-QA), indirect
 answers (Circa), ethics (ETHICS deontology and justice), tables (TabFact), search relevance (ESCI)
 and sentence difficulty (CEFR-SP).
 
-In short: the heads cut the pooled ECE about ninefold on general questions (0.194 to 0.020 and
+In short: the H2 heads cut the pooled ECE about ninefold on general questions (0.194 to 0.020 and
 0.268 to 0.030) and about threefold on stance (0.142 to 0.048 and 0.187 to 0.052) and lowered log
 loss, at some cost in accuracy on these fresh families. Paired over the same items, head minus raw
 accuracy was -0.023 [-0.031, -0.016] (Gemma 4 12B) and -0.017 [-0.024, -0.011] (Qwen3-4B) on
@@ -228,7 +237,7 @@ in [How judgly compares](https://github.com/judgly/judgly/blob/v0.1.0/README.md#
 **Figure 1. Reliability on the fresh final tier.** *What it shows:* for each pack and format,
 answers are grouped into ten bins by their top probability; each point is a bin's mean confidence
 (x) against the share of its answers that were right (y), with 95% Wilson intervals, raw and with
-the head. *How to read it:* on the dotted diagonal, confidence equals accuracy; points below it
+the H2 head. *How to read it:* on the dotted diagonal, confidence equals accuracy; points below it
 are overconfident. *What it says:* raw answers sit far below the diagonal at high confidence (ECE
 0.142 to 0.268); with the heads the points lie close to it (general ECE 0.020 and 0.030, n = 7,879
 each; stance 0.048 and 0.052, n = 1,343 each).
@@ -240,9 +249,9 @@ each; stance 0.048 and 0.052, n = 1,343 each).
 (y) against the share answered (x), as the threshold on the top probability rises; markers are
 the thresholds 0.5, 0.6, 0.7, 0.8, 0.9, 0.95 and 0.99; curves stop where fewer than 50
 questions are left. *How to read it:* moving left trades coverage for accuracy. *What it
-says:* with the Gemma 4 12B general head, answering only above 0.9 kept 38% of the 7,879
+says:* with the Gemma 4 12B general H2 head, answering only above 0.9 kept 38% of the 7,879
 questions at 0.95 accuracy, against 0.737 for all of them; on stance, above 0.9 kept 32% of 1,343
-at 0.95. The Qwen3-4B general head is less trustworthy at the top: above 0.95 it kept 11% at
+at 0.95. The Qwen3-4B general H2 head is less trustworthy at the top: above 0.95 it kept 11% at
 0.90 accuracy. The raw curves cannot go far left, because without a head many answers get a top
 probability above 0.999.
 
@@ -256,7 +265,7 @@ the per-family averages and paired differences above from the snapshot.
 
 Each pack now ships a second calibration option next to H2: one temperature per question type,
 applied to the probabilities after they are averaged over the option orders, fitted on the same
-train items as H2 (6,300 general and 14,783 stance items). It never changes which answer is on top, so its accuracy is the raw accuracy. The
+train items as H2 (6,300 general and 14,783 stance items). It never changes which answer is on top, so its top-answer accuracy is the raw accuracy. The
 idea came from exploratory analyses of the 0.1.0 readouts, which read the final tier again, so
 the two options were compared on a new tier that nothing had read: five general families never
 used before (2,500 items) and ClimateCheck for stance (1,780 items), read once, with criteria
@@ -271,11 +280,25 @@ below +0.01, ECE below +0.02). The temperature met them in three of four cases:
 | qwen3-4b-q8 | stance (1,780) | 0.568 / 0.526 | 0.106 / 0.183 | 0.581 / 0.612 | confirmed | temperature |
 
 `Engine.load(pack)` uses the default shown; `calibration="h2"`, `"temperature"` or `"raw"`
-chooses for every format. A confirmed case means "at least as good as H2 by these criteria on this
-tier", not better everywhere: the confirm tier has a single stance source, Qwen3-4B's
-general accuracy gain comes from one of its five families, and on the stance final tier
-(Check-COVID) H2 was the better calibrated of the two in both packs. The tables above are for H2. Both options on every tier, the paired
-intervals and how each number came to be are in
+chooses for every format. A confirmed case means "not worse than H2 beyond these margins on this
+tier", not better everywhere: the confirm tier has a single stance source, Qwen3-4B's general
+accuracy gain comes mostly from one of its five families, on the stance final tier (Check-COVID)
+H2 was the better calibrated of the two in both packs by ECE and log loss (Brier favoured the
+temperature for Gemma 4 12B), and for Qwen3-4B general H2 had the lower ECE on the dev, final,
+final-seen and bench tiers. For Gemma 4 12B general, which keeps H2, H2 was better calibrated
+than the temperature on the confirm tier.
+
+The Results tables above are for H2. With the defaults that use the temperature, the numbers on
+the fresh final tier, and on typed-decisions for Qwen3-4B, are:
+
+| pack | format | tier | n | accuracy | log loss or Brier | ECE |
+|---|---|---|---|---|---|---|
+| gemma4-12b-q8 | stance | final (Check-COVID) | 1,343 (315 groups) | 0.827 [0.807, 0.848] | log loss 0.536 [0.504, 0.571] | 0.087 [0.068, 0.108] (bar 0.05 missed) |
+| qwen3-4b-q8 | general | final (8 families) | 7,879 (6,803 groups) | 0.656 [0.646, 0.668] | log loss 0.783 [0.765, 0.802] | 0.034 [0.027, 0.042] |
+| qwen3-4b-q8 | stance | final (Check-COVID) | 1,343 (315 groups) | 0.778 [0.754, 0.802] | log loss 0.650 [0.617, 0.682] | 0.093 [0.068, 0.116] (bar 0.05 missed) |
+| qwen3-4b-q8 | general | typed-decisions (bench) | 2,000 (400 cases) | 0.576 [0.552, 0.600] | Brier 0.210 [0.194, 0.226] | 0.137 [0.123, 0.158] |
+
+Both options on every tier, the paired intervals and how each number came to be are in
 [Calibration options](https://github.com/judgly/judgly/blob/v0.1.0/docs/calibration-options.md).
 
 The weak spots (where the heads cost accuracy, bars that were missed, and families that stay
@@ -297,32 +320,34 @@ measured on its 1,600 train and test cases, as 0.735):
 | open-alternative-jev, Qwen3.6-27B (8-bit), two option orders / one | frozen LLM, letter logits, no training | 0.755 / 0.737 | the project itself |
 | Jev 1.13.0 | hosted, commercial | 0.727 | the dataset card's authors, through TypeSafe's API |
 | Featherless Simple Jev | hosted demo endpoint (model id `Qwen3.6-35B-A3B-classifier`) | 0.716 | listed on the dataset card (measurer not stated) |
-| **judgly, Gemma 4 12B with head** | frozen LLM, letter logits, fitted heads | **0.700** | this repository |
+| **judgly, Gemma 4 12B with H2** (its default for these questions) | frozen LLM, letter logits, fitted heads | **0.700** | this repository |
 | ModernBERT-base specialist | frozen encoder, classifiers fitted on the train split of the same workflows | 0.646 | the dataset card's authors |
 | open-alternative-jev, Qwen3.5-4B, two option orders / one | frozen LLM, letter logits, no training | 0.595 / 0.593 | the project itself |
-| **judgly, Qwen3-4B with head** | frozen LLM, letter logits, fitted heads | **0.591** | this repository |
+| **judgly, Qwen3-4B with H2** | frozen LLM, letter logits, fitted heads | **0.591** | this repository |
 | MiniLM-L6 specialist (22M) | frozen encoder, classifiers fitted on the train split of the same workflows | 0.587 | the dataset card's authors |
+| **judgly, Qwen3-4B with its default, the temperature** | frozen LLM, letter logits, one temperature per question type | **0.576** | this repository |
 
 Calibration is harder to compare. judgly's accuracy and ECE use the same definitions as the
 third-party scorer from Luni/laya-jev-benchmark, which open-alternative-jev uses (by
 open-alternative-jev's check, it reproduces Laya's published numbers to within 0.003). Applied to
 judgly's per-item results, those definitions give judgly's values. By that measure open-alternative-jev's 27B reports ECE 0.020 with one option order and 0.0075
 with two (judgly averages up to four orders, so the two-order figure is the closer comparison),
-against 0.028 for judgly's Gemma head; at about 4B, open-alternative-jev's Qwen3.5-4B reports ECE
-0.118 with one order and 0.062 with two, against 0.126 for judgly's Qwen3-4B head. The dataset card gives Jev ECE 0.144 but publishes
+against 0.028 for judgly's Gemma H2; at about 4B, open-alternative-jev's Qwen3.5-4B reports ECE
+0.118 with one order and 0.062 with two, against 0.126 for judgly's Qwen3-4B with H2 and 0.137
+with its default, the temperature. The dataset card gives Jev ECE 0.144 but publishes
 no scorer, and warns that on this benchmark ECE rewards a baseline that ignores the input (ECE
 0.088), so Brier is the better guide. judgly's Brier counts every decision, as the card's rows
-appear to (its Uniform row is reproduced only that way): 0.117 for the Gemma head against the
+appear to (its Uniform row is reproduced only that way): 0.117 for the Gemma H2 against the
 card's 0.148 for Jev and 0.052 for meraGPT Decider 1. That scorer leaves the 800 score questions
-out of Brier; counted that way, judgly's Gemma head reaches 0.113, the same as
+out of Brier; counted that way, judgly's Gemma H2 reaches 0.113, the same as
 open-alternative-jev's 27B with one option order (its two-order Brier is not reported), and
-judgly's Qwen3-4B head 0.238, worse than open-alternative-jev's Qwen3.5-4B (0.164).
+judgly's Qwen3-4B H2 0.238, worse than open-alternative-jev's Qwen3.5-4B (0.164).
 
 The closest design is **Cygnet** ([blockbrain-ai/cygnet-recipe](https://github.com/blockbrain-ai/cygnet-recipe),
 MIT): the same Gemma-4-12B-it, frozen (bf16 served with vLLM there, 8-bit through llama.cpp
 here), with its letter probabilities and one temperature fitted on 241 items its authors
 generated. It reports 203 of the 231 public JevBench items (0.879, scored with JevBench's own
-tool; one near-tie item can make it 204); judgly's Gemma head scores 0.840 on the same items with
+tool; one near-tie item can make it 204); judgly's Gemma H2 scores 0.840 on the same items with
 judgly's scorer, which has not been checked against JevBench's tool. On the live JevBench board
 (v1.5.0, as of 29 September 2026) Cygnet (73.7) and Winnow-12B Q8 (73.2) are joint leaders, in a
 statistical tie, ahead of Jev 1.13.0 (72.1); the board calls 75 of its 88 neighbouring pairs
@@ -354,39 +379,49 @@ sources.
 
 Please read these before using judgly for anything that matters.
 
-- **Not the most accurate option.** On typed-decisions, judgly's Gemma 4 12B head (0.700) is
+- **Not the most accurate option.** On typed-decisions, judgly's Gemma 4 12B with H2 (0.700) is
   below Featherless Simple Jev (0.716), Jev (0.727), open-alternative-jev's 27B (0.737 to
   0.755), Laya fine-tuned on the benchmark (0.766) and meraGPT Decider 1 (0.768); at about 4B,
-  judgly's Qwen3-4B head (0.591) matches open-alternative-jev's untrained Qwen3.5-4B (0.593 to
-  0.595) in accuracy and is worse calibrated (ECE 0.126 against 0.062 to 0.118)
+  judgly's Qwen3-4B (0.591 with H2, 0.576 with its default, the temperature) is at or below
+  open-alternative-jev's untrained Qwen3.5-4B (0.593 to 0.595) in accuracy and worse calibrated
+  (ECE 0.126 with H2 and 0.137 with the temperature, against 0.062 to 0.118)
   ([How judgly compares](https://github.com/judgly/judgly/blob/v0.1.0/README.md#how-judgly-compares)).
-- **Accuracy is modest, and the head does not raise it.** On the fresh final tier, accuracy with
-  the head was 0.737 (Gemma 4 12B) and 0.639 (Qwen3-4B) on general questions and 0.812 and 0.773
-  on stance, slightly below the raw readout (Results above). Calibration tells you *when* to
-  trust an answer; it does not make the model know more. The general heads cost 1.7 to 2.3
-  points there and changed accuracy by -2.2 to +1.5 points on typed-decisions, JevBench and the
-  final-seen tier; the stance heads cost 0.5 to 2.3 points on Check-COVID and HealthVer and 12 to
-  18 on HealthFC.
-- **Calibration is uneven.** Answers the Gemma 4 12B head gives at about 0.85 were right about
-  85% of the time on the fresh final tier and more often on typed-decisions, but the Qwen3-4B head
-  is overconfident on typed-decisions (answers at about 0.85 were right 61% of the time), and
-  both stance heads are overconfident on HealthVer and HealthFC. The pooled numbers hide weaker
-  families (Results above), and some stay poorly calibrated: financial tweets with the Qwen3-4B
-  head (ECE 0.253), WiC with either head (0.325 Gemma 4 12B, 0.259 Qwen3-4B) and legal reasoning with the Gemma 4 12B head (0.151),
-  on the final-seen and dev tiers.
-- **Stance calibration is borderline.** On Check-COVID the Gemma 4 12B head meets the 0.05 ECE bar
-  only narrowly (0.048, interval up to 0.072) and the Qwen3-4B head misses it (0.052); both miss
-  the dev-tier bar (0.122 and 0.209 against 0.08), worst on scientific abstracts. On HealthVer the
-  Qwen3-4B head reaches 0.100. On HealthFC (reported apart because its evidence often states the
-  verdict) head ECE was 0.123 and 0.150.
+- **Accuracy is modest, and calibration does not raise it.** On the fresh final tier, accuracy
+  with H2 was 0.737 (Gemma 4 12B) and 0.639 (Qwen3-4B) on general questions and 0.812 and 0.773
+  on stance, slightly below the raw readout (Results above); the temperature leaves the top
+  answer, and so the accuracy, at the raw readout's (0.760, 0.656, 0.827, 0.778). Calibration
+  tells you *when* to trust an answer; it does not make the model know more. The general H2
+  heads cost 1.7 to 2.3 points there and changed accuracy by -2.2 to +1.5 points on
+  typed-decisions, JevBench and the final-seen tier; the stance H2 heads cost 0.5 to 2.3 points
+  on Check-COVID and HealthVer and 12 to 18 on HealthFC.
+- **Calibration is uneven.** Answers the Gemma 4 12B H2 head gives at about 0.85 were right about
+  85% of the time on the fresh final tier and more often on typed-decisions, but the Qwen3-4B H2
+  head is overconfident on typed-decisions (answers at about 0.85 were right 61% of the time; ECE
+  0.126, and 0.137 with Qwen3-4B's default, the temperature), and both stance H2 heads are
+  overconfident on HealthVer and HealthFC. The pooled numbers hide weaker families (Results
+  above), and some stay poorly calibrated: financial tweets with the Qwen3-4B H2 head (ECE
+  0.253), WiC with either H2 head (0.325 Gemma 4 12B, 0.259 Qwen3-4B) and legal reasoning with
+  the Gemma 4 12B H2 head (0.151), on the final-seen and dev tiers. The per-family tables of
+  the calibration records (`tables.md` in
+  [docs/results/](https://github.com/judgly/judgly/tree/v0.1.0/docs/results)) give the
+  temperature's numbers for the same families.
+- **Stance calibration misses its bar with the default option.** With the default stance
+  calibration, the per-type temperature, ECE on Check-COVID was 0.087 (Gemma 4 12B) and 0.093
+  (Qwen3-4B), well above the 0.05 bar. H2 met the bar only narrowly for Gemma 4 12B (0.048,
+  interval up to 0.072) and missed it for Qwen3-4B (0.052); both H2 heads miss the dev-tier bar
+  (0.122 and 0.209 against 0.08), worst on scientific abstracts; the temperature's dev-tier ECE
+  was 0.069 and 0.109. On the untouched ClimateCheck tier the temperature was the better calibrated
+  (0.052 and 0.106 against H2's 0.078 and 0.183). On HealthVer ECE was 0.067 and 0.100 with H2
+  and 0.076 and 0.058 with the temperature; on HealthFC (reported apart because its evidence
+  often states the verdict) 0.123 and 0.150 with H2 and 0.069 and 0.052 with the temperature.
 - **Slow.** 0.34 to 1.37 s per question depending on the tier (1.15 s on the bench tier, 0.83 s
   over all tiers) for Gemma 4 12B in the batched release runs on an M3 Max, with up to four
   option orders per question (about 375 tokens per second read); single-request latency has not
   been measured.
 - **Weak spots:** score questions such as sentence difficulty (CEFR-SP, six levels: 0.390 and
-  0.253 accuracy with the head) and similarity ratings, word sense (the heads lowered WiC accuracy
+  0.253 accuracy with H2) and similarity ratings, word sense (the heads lowered WiC accuracy
   on the dev tier), legal reasoning (CaseHOLD near chance), stance on scientific abstracts and on
-  health questions, and politeness ratings (a relative of a fit family; Gemma 4 12B head ECE 0.106)
+  health questions, and politeness ratings (a relative of a fit family; Gemma 4 12B H2 ECE 0.106)
   ([model cards](https://github.com/judgly/judgly/blob/v0.1.0/docs/model-cards/gemma4-12b-q8.md#known-weaknesses)).
 - **Calibration was measured on public benchmarks.** On your task it may differ; check it on a
   few hundred labelled cases ([docs/calibration.md](https://github.com/judgly/judgly/blob/v0.1.0/docs/calibration.md)).

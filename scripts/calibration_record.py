@@ -12,9 +12,10 @@ Writes FORMAT_DIR/record.json (machine-readable) and FORMAT_DIR/tables.md.
 
 The two calibration options are H2 (the head, `head` in the record) and the per-type temperature
 (`temperature`); both are fitted on the fit tier's train split and scored on the same items.
-confirm is the untouched tier of the pre-registered comparison of the two (docs/calibration.md):
-read once, by both, after both were frozen; the numbers here are recomputed from those same
-readouts with the same frozen head and temperatures.
+confirm is the untouched tier of the pre-registered comparison of the two
+(docs/calibration-options.md): each model read it once, after both options were frozen, and the
+frozen scorer produced the confirmatory result from that readout once; the numbers here are
+recomputed afterwards from those same readouts with the same frozen head and temperatures.
 
 final is the fresh final tier (the reported result); final-flagged holds fresh families with a
 recorded caveat (the registry's `caveat`), reported in their own table beside final and never
@@ -62,10 +63,11 @@ TIER_NOTE = {"test": "in-distribution: the fit tier's test split",
              "final": "fresh held-out families, frozen before any head was scored on them: the reported result",
              "final-flagged": "fresh held-out families with a recorded caveat (see `caveats`): reported beside "
                               "the final result, never pooled into it, judging no bar",
-             "confirm": "untouched families (general) and ClimateCheck (stance), built after every other tier and "
-                        "read once, after both calibration options were frozen, for the pre-registered comparison "
-                        "of the temperature with H2 (docs/calibration.md); `caveats` lists the families the "
-                        "review flagged",
+             "confirm": "untouched families (general) and ClimateCheck (stance), built after every other tier; "
+                        "each model read it once, after both calibration options were frozen, for the "
+                        "pre-registered comparison of the temperature with H2 (docs/calibration-options.md), and "
+                        "the numbers here are recomputed from those readouts after the confirmatory result; "
+                        "`caveats` lists the families the review flagged",
              "final-seen": "secondary evaluation: an earlier held-out tier, its families seen during development",
              "bench": "external benchmarks, evaluation only (also scored against their own gold in `benchmark`)"}
 CONDITIONS = {"raw": "no head (H0): letter probabilities with the pack's engine settings (model.engine)",
@@ -386,9 +388,10 @@ def tables(r: dict) -> str:
                        f"{cell(m['ece'])} |")
     if "confirm" in r["tiers"]:
         t = r["tiers"]["confirm"]
-        out += ["", "## Confirmation tier (confirm): untouched families, read once", "",
-                "Built after every other tier and read once, by both calibration options, after both were frozen",
-                "(the pre-registered comparison in docs/calibration.md). Families the review flagged:", ""]
+        out += ["", "## Confirmation tier (confirm): untouched families, read once by each model", "",
+                "Built after every other tier and read once by each model, after both calibration options were",
+                "frozen (the pre-registered comparison in docs/calibration-options.md); these rows are recomputed",
+                "from those readouts after the confirmatory result. Families the review flagged:", ""]
         out += [f"- {s}: {c}" for s, c in t.get("caveats", {}).items()]
         out += ["", "| tier | items | condition | accuracy | log loss | ECE |", "|---|---|---|---|---|---|"]
         for cond, c in t["conditions"].items():

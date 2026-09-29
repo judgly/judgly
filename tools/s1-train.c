@@ -456,11 +456,15 @@ static int fit_temperatures(struct s1_head *head, const struct s1_feat *f,
         int m_v = items_of_type(valid, n_v, type, iv);
         fprintf(report, "%s  \"%s\": ", n_done++ ? ",\n" : "", TYPE_NAME[type]);
         if (m_t == 0 || m_v == 0) {
+            /* A fit needs training items, and its verdict validation items. */
+            const char *why = m_t == 0 && m_v == 0 ? "no items of this type"
+                              : m_t == 0           ? "no training items of this type"
+                                                   : "no validation items of this type";
             printf("%s: %d training and %d validation items; the temperature stays 1 (identity)\n",
                    TYPE_NAME[type], m_t, m_v);
             fprintf(report, "{\"train_items\": %d, \"validation_items\": %d, \"temperature\": 1, "
-                            "\"fallback\": \"identity\", \"reason\": \"no items of this type\"}",
-                    m_t, m_v);
+                            "\"fallback\": \"identity\", \"reason\": \"%s\"}",
+                    m_t, m_v, why);
             continue;
         }
         bool   bounded = false;

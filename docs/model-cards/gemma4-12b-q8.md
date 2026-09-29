@@ -246,6 +246,10 @@ also scores sealed items ([methods.md](../methods.md#data-and-tiers)).
 | jevbench | 231 (195) | temperature | 0.835 [0.788, 0.880] | 0.204 [0.157, 0.253] | 0.390 [0.314, 0.469] | 0.059 [0.042, 0.104] | 0.365 [0.205, 0.602] |
 | typed_decisions | 2,000 (400) | temperature | 0.702 [0.678, 0.724] | 0.138 [0.128, 0.147] | 0.279 [0.264, 0.295] | 0.025 [0.016, 0.048] | 0.327 [0.304, 0.350] |
 
+Accuracy here is scored as each benchmark defines it. For JevBench's score questions that is the
+rounded expected level, not the top level, which the temperature can move; so the temperature's
+JevBench accuracy need not equal raw's, although here both are 0.835.
+
 Dev tier by family:
 
 | family | items | raw accuracy | h2 accuracy | raw ECE | h2 ECE |
@@ -344,14 +348,16 @@ Besides the H2 heads, the pack ships a second calibration option per format, the
 temperature: one temperature per question type, applied to the probabilities after they are
 averaged over the option orders, fitted by minimising log loss on the same train items as H2 and
 rounded to three decimals (general: 3.461 choice, 7.491 yes/no, 6.538 score; stance: 7.151 choice).
-It never changes which answer is on top, so its accuracy is the raw accuracy. The temperature
+It never changes which answer is on top, so its top-answer accuracy is the raw accuracy (a
+benchmark scored by another rule can differ; see the note under the bench table). The temperature
 rows in the tables above come from the same records as the raw and H2 rows.
 
 The temperature was proposed by exploratory analyses of the cached 0.1.0 readouts, which read
 the final, final-flagged, final-seen and bench tiers again after the release run; for the
 comparison of the two options those tiers are therefore not untouched. It was then compared
 with H2 in a pre-registered confirmation on the confirm tier: five general families never used
-before (2,500 items) and ClimateCheck for stance (1,780 items), read once. The criteria, fixed in
+before (2,500 items) and ClimateCheck for stance (1,780 items), read once by each model (the
+same readouts were later scored again, deterministically, for the records). The criteria, fixed in
 advance, were on the paired difference temperature minus H2 (95% interval over 1,000 bootstrap
 resamples of groups): accuracy lower bound above -0.01, Brier upper bound below +0.01, ECE upper
 bound below +0.02. For this pack the temperature was **not confirmed** for general questions and
@@ -373,7 +379,9 @@ Paired difference temperature minus H2 on the same items (the confirmation's sco
 `result-confirm.txt`): general accuracy +0.000 [-0.014, +0.015], ECE +0.037 [+0.015, +0.048], Brier +0.017 [+0.010, +0.024], log loss +0.026 [+0.017, +0.037];
 stance accuracy +0.026 [+0.011, +0.049], ECE -0.026 [-0.045, +0.007], Brier -0.014 [-0.044, -0.001], log loss +0.012 [-0.036, +0.033].
 
-Confirm tier, general, by family (temperature / H2, from the record; no criterion per family):
+Confirm tier, general, by family (temperature / H2, from the record, rounded once; no criterion
+per family). methods.md prints the scorer's values, rounded to four decimals and then to three,
+so a few differ from these by 0.001:
 
 | family | items | accuracy | ECE | Brier |
 |---|---|---|---|---|
@@ -416,6 +424,11 @@ solid; the figures stop there for the same reason.
 | final-seen | 0.68 / 81% (n = 1,698) | 0.72 / 63% (n = 1,323) | 0.76 / 47% (n = 996) | 0.78 / 31% (n = 653) | 0.80 / 15% (n = 311) | 0.82 / 5% (n = 109) | *1.00 / 0% (n = 4)* |
 
 ## Known weaknesses
+
+These are for the H2 heads (the rows labelled h2 above). General questions use H2 by default;
+stance questions use the per-type temperature, whose top-answer accuracy is the raw readout's and
+whose ECE was 0.087 [0.068, 0.108] on the fresh final tier (the bar of 0.05 missed) and
+0.069 [0.051, 0.091] on the dev tier (the tables above give every tier).
 
 - **The general head costs accuracy on the fresh final tier.** Pooled, accuracy went from
   0.760 to 0.737 (paired difference -0.023 [-0.031, -0.016]). The largest drops were on grammar (0.848 to 0.767), ethics (0.794 to 0.733), pragmatics (0.791 to 0.765).

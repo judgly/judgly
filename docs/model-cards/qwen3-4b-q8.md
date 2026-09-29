@@ -247,6 +247,11 @@ also scores sealed items ([methods.md](../methods.md#data-and-tiers)).
 | jevbench | 231 (195) | temperature | 0.671 [0.606, 0.734] | 0.365 [0.308, 0.427] | 0.632 [0.549, 0.726] | 0.087 [0.064, 0.151] | 0.712 [0.483, 0.923] |
 | typed_decisions | 2,000 (400) | temperature | 0.576 [0.552, 0.600] | 0.210 [0.194, 0.226] | 0.368 [0.344, 0.393] | 0.137 [0.123, 0.158] | 0.538 [0.509, 0.565] |
 
+Accuracy here is scored as each benchmark defines it. For JevBench's score questions that is the
+rounded expected level, not the top level, and the temperature moves the expected level towards
+the middle of the scale; that is why JevBench accuracy differs between raw (0.693) and the
+temperature (0.671) although the temperature never changes the top answer.
+
 Dev tier by family:
 
 | family | items | raw accuracy | h2 accuracy | raw ECE | h2 ECE |
@@ -345,14 +350,16 @@ Besides the H2 heads, the pack ships a second calibration option per format, the
 temperature: one temperature per question type, applied to the probabilities after they are
 averaged over the option orders, fitted by minimising log loss on the same train items as H2 and
 rounded to three decimals (general: 6.846 choice, 13.36 yes/no, 24.22 score; stance: 12.391 choice).
-It never changes which answer is on top, so its accuracy is the raw accuracy. The temperature
+It never changes which answer is on top, so its top-answer accuracy is the raw accuracy (a
+benchmark scored by another rule can differ; see the note under the bench table). The temperature
 rows in the tables above come from the same records as the raw and H2 rows.
 
 The temperature was proposed by exploratory analyses of the cached 0.1.0 readouts, which read
 the final, final-flagged, final-seen and bench tiers again after the release run; for the
 comparison of the two options those tiers are therefore not untouched. It was then compared
 with H2 in a pre-registered confirmation on the confirm tier: five general families never used
-before (2,500 items) and ClimateCheck for stance (1,780 items), read once. The criteria, fixed in
+before (2,500 items) and ClimateCheck for stance (1,780 items), read once by each model (the
+same readouts were later scored again, deterministically, for the records). The criteria, fixed in
 advance, were on the paired difference temperature minus H2 (95% interval over 1,000 bootstrap
 resamples of groups): accuracy lower bound above -0.01, Brier upper bound below +0.01, ECE upper
 bound below +0.02. For this pack the temperature was **confirmed** for general questions and
@@ -374,7 +381,9 @@ Paired difference temperature minus H2 on the same items (the confirmation's sco
 `result-confirm.txt`): general accuracy +0.022 [+0.008, +0.036], ECE -0.029 [-0.049, -0.014], Brier -0.027 [-0.035, -0.020], log loss -0.032 [-0.043, -0.023];
 stance accuracy +0.042 [+0.023, +0.090], ECE -0.078 [-0.097, -0.054], Brier -0.031 [-0.065, -0.018], log loss -0.023 [-0.070, -0.001].
 
-Confirm tier, general, by family (temperature / H2, from the record; no criterion per family):
+Confirm tier, general, by family (temperature / H2, from the record, rounded once; no criterion
+per family). methods.md prints the scorer's values, rounded to four decimals and then to three,
+so a few differ from these by 0.001:
 
 | family | items | accuracy | ECE | Brier |
 |---|---|---|---|---|
@@ -417,6 +426,12 @@ solid; the figures stop there for the same reason.
 | final-seen | 0.59 / 76% (n = 1,595) | 0.61 / 54% (n = 1,142) | 0.65 / 38% (n = 797) | 0.67 / 22% (n = 463) | 0.79 / 5% (n = 101) | *0.83 / 1% (n = 12)* | *n/a / 0% (n = 0)* |
 
 ## Known weaknesses
+
+These are for the H2 heads (the rows labelled h2 above). This pack's default for both formats is
+the per-type temperature, whose top-answer accuracy is the raw readout's and whose calibration
+differs: on the fresh final tier ECE 0.034 [0.027, 0.042] for general questions and
+0.093 [0.068, 0.116] for stance (the bar of 0.05 missed), and 0.137 [0.123, 0.158] on
+typed-decisions (the tables above give every tier).
 
 - **The general head costs accuracy on the fresh final tier.** Pooled, accuracy went from
   0.656 to 0.639 (paired difference -0.017 [-0.024, -0.011]). The largest drops were on grammar (0.717 to 0.635), difficulty (0.287 to 0.253), tables (0.722 to 0.699).

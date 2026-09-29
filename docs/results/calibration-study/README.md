@@ -17,7 +17,7 @@ files still have the SHA-256 recorded when they were frozen.
 | [`exploratory-0-combine`](exploratory-0-combine/README.md) | exploratory, no protocol | temperature-only variants and pooling Gemma 4 12B with Qwen3-4B; every variant reported | the fit tier's test split | test, dev, final, final-seen |
 | [`exploratory-1-temperature`](exploratory-1-temperature/README.md) | exploratory, choice rule in the docstring before any result | one temperature (T1), one per question type (Ttype), per type with position biases (TBtype), against H2; rule: lowest validation log loss | the fit tier's train split | train, validation, dev, final, final-flagged, final-seen, bench |
 | [`exploratory-2-post-processing`](exploratory-2-post-processing/README.md) | exploratory, protocol frozen first (`PROTOCOL.md`, `PROTOCOL.sha256`) | order-disagreement temperature, Platt, isotonic, histogram binning on top of Ttype, chosen on dev; the own-data temperature sub-study | the fit tier's train split | train, dev, final, final-flagged, final-seen, bench |
-| [`confirmation`](confirmation/README.md) | confirmatory, pre-registered (`CONFIRM.md` with Amendment 1, `CONFIRM.sha256`) | Ttype with the temperatures frozen in `temperatures.json` against H2, three criteria fixed in advance | nothing refitted | confirm, once |
+| [`confirmation`](confirmation/README.md) | confirmatory, pre-registered (`CONFIRM.md` with Amendment 1, `CONFIRM.sha256`) | Ttype with the temperatures frozen in `temperatures.json` against H2, three criteria fixed in advance | nothing refitted | confirm (read once by each model); dev for the scorer's smoke test |
 
 Facts for the record:
 
@@ -25,14 +25,19 @@ Facts for the record:
   then again by each of the three exploratory analyses; final-flagged and bench by the release
   run and by analyses 1 and 2. For any comparison involving the temperature these tiers are not
   untouched.
-- In exploratory analysis 1 the choice rule chose H2 in all four pack and format cases. The
-  temperature was taken further because of its results on the held-out tiers, which is why it had
-  to be confirmed on data nobody had read.
+- In exploratory analysis 1 the choice rule chose H2 in all four pack and format cases; in
+  analysis 2 the frozen rule chose Ttype in one of four. Taking the temperature to a
+  confirmation was a judgement made after seeing the held-out results, not the output of either
+  rule, which is why it had to be confirmed on data nobody had read.
 - In exploratory analysis 2 three bugs in the analysis script were fixed during the run; the
   frozen protocol was not changed.
-- The confirm tier was built after every other tier (judgly commits `ad8c91a` and `dbf1a9f`),
-  frozen by SHA-256 (`data/tiers-confirm.sha256`), and read once by each pack, after `CONFIRM.md`
-  (with Amendment 1), `temperatures.json` and `score_confirm.py` were frozen.
+- The confirm tier was built after every other tier (judgly commits `ad8c91a` and `dbf1a9f`) and
+  frozen by SHA-256 (`data/tiers-confirm.sha256`). Each model read it once (`s1-features`, 10:38
+  to 13:12 by `results-confirm/run.log`), starting after `CONFIRM.md` (with Amendment 1) and
+  `temperatures.json` were frozen and about two minutes before `score_confirm.py` was frozen
+  (10:40); no per-item output existed before 11:31. The frozen scorer produced the confirmatory
+  result once (13:13). The same readouts were later scored again, deterministically, by `make
+  calibrate`, `confirmation_check.py` and `rerun.py`.
 
 ## Rerunning
 

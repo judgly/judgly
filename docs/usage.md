@@ -87,7 +87,7 @@ Every answer also carries:
 | field | meaning |
 |---|---|
 | `slot_mass` | how much probability the model put on the answer letters at all, averaged over option orders. Near 1 is healthy. A low value means the model wanted to say something else, and the answer is less reliable. |
-| `rotation_spread` | the range of the top option's probability across the option orders asked. A large spread means the answer depended on the order of the options. |
+| `rotation_spread` | the range of the top option's probability across the option orders asked. A large spread means the answer depended on the order of the options. With H2 it is measured on each order's calibrated probabilities; with the temperature (and with raw) on the raw per-order probabilities, before the temperature, so it is not on the same scale as the temperature's `probs`. |
 | `n_rotations` | how many option orders were asked |
 | `head`, `head_format` | the SHA-256 of the head file used and which heads entry it was (`"stance"`, `"*"`, or `None` for raw probabilities) |
 

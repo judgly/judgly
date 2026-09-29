@@ -116,8 +116,10 @@ class Engine:
         - ``"h2"``: the fitted head H2, applied to each option order's letter logits;
         - ``"raw"``: none (raw letter probabilities, H0; the same as ``heads=False``).
 
-        ``engine.calibration`` records the option used per format. An unknown value, or one the
-        pack does not offer, raises ValueError.
+        ``engine.calibration`` records the option used per format ("h2" or "temperature"); it is
+        empty ({}) with ``calibration="raw"``, ``heads=False`` or heads given as files, and
+        ``engine.config.heads`` then says which head files, if any, are in use. An unknown
+        value, or one the pack does not offer, raises ValueError.
 
         ``heads=False`` uses no heads, and a mapping of format to head file uses those files
         (both leave ``calibration`` at "default", or "raw" with ``heads=False``). Other keyword

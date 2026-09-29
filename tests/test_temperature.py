@@ -158,6 +158,19 @@ def test_sidecar_must_match_the_file(fitted, tmp_path):
     assert any("is not the sidecar's" in p for p in check_heads.problems(head))
 
 
+def test_type_without_validation_items_stays_identity(tmp_path):
+    """A type with training but no validation items has no verdict and stays at T = 1; the
+    sidecar says which split was empty."""
+    records = [r for r in choice_records(np.random.default_rng(11)) if r["split"] != 1]
+    feat, head = tmp_path / "f.feat", tmp_path / "t.bin"
+    write_features(feat, records)
+    done = run("s1-train", "--features", feat, "--head", "temperature", "--out", head, "--rotations")
+    assert done.returncode == 0, done.stderr
+    choice = json.loads(Path(f"{head}.json").read_text())["types"]["choice"]
+    assert (choice["train_items"], choice["validation_items"], choice["temperature"]) == (200, 0, 1)
+    assert choice["reason"] == "no validation items of this type"
+
+
 def test_trainer_refuses_options_that_do_not_apply(fitted, tmp_path):
     for extra in (["--limit-train", "10"], ["--probe"]):
         done = run("s1-train", "--features", fitted["feat"], "--head", "temperature", "--out",
@@ -264,6 +277,36 @@ def test_pack_defaults_follow_the_confirmation():
                              "stance": gemma.heads(calibration="temperature")["stance"]}
 
 
+@pytest.fixture
+def no_model(monkeypatch):
+    """Engine.load without a model: the model file is not resolved and no native handle is
+    opened, so what Engine.load chooses (config.heads, engine.calibration) can be checked."""
+    import judgly.engine
+    monkeypatch.setattr(judgly.engine, "resolve_model", lambda pack, model_path=None: (Path("m.gguf"), "0" * 64))
+    monkeypatch.setattr(judgly.engine._native, "open_handle", lambda config_json: None)
+
+
+@pytest.mark.parametrize("pack", ["qwen3-4b-q8", "gemma4-12b-q8"])
+@pytest.mark.parametrize("calibration", ["default", "h2", "temperature", "raw"])
+def test_engine_load_resolves_the_calibration(no_model, pack, calibration):
+    """Engine.load's head files are Pack.heads' for the same choice, and engine.calibration names
+    the option per format: the pack's default (Gemma 4 12B: H2 for "*", the temperature for
+    stance), the one asked for, or {} for raw."""
+    p = Pack.find(pack)
+    engine = Engine.load(pack, calibration=calibration)
+    assert engine.config.heads == p.heads(calibration=calibration)
+    if calibration == "raw":
+        assert engine.calibration == {} and engine.config.heads == {}
+    elif calibration == "default":
+        assert engine.calibration == p.defaults()
+    else:
+        assert engine.calibration == {"*": calibration, "stance": calibration}
+    if pack == "gemma4-12b-q8" and calibration == "default":
+        assert engine.config.heads["*"].name == "h2.bin"
+        assert engine.config.heads["stance"].name == "temperature-stance.bin"
+    assert Engine.load(pack, heads=False).calibration == {}
+
+
 def test_unknown_calibration_is_refused():
     with pytest.raises(ValueError, match="calibration must be one of"):
         Pack.find("qwen3-4b-q8").heads(calibration="platt")
@@ -332,6 +375,31 @@ def test_engine_applies_the_temperature_to_its_raw_mean(qwen_temperature, qwen_h
         assert float(np.abs(q - temperature_of(p, t[spec["type"]])).max()) < tol, qid
         assert a["head_format"] == "*" and a["head"] is not None
         assert a["rotation_spread"] == r["rotation_spread"] and a["slot_mass"] == r["slot_mass"]
+
+
+@pytest.mark.model
+def test_stance_format_uses_the_stance_temperature(qwen_temperature, qwen_h0):
+    """A question with format "stance" uses temperature-stance.bin, whose choice temperature
+    (12.391) is applied to the engine's own raw answer."""
+    from judgly.packs import sha256_file
+    request = json.dumps({"schema": 1, "state": (
+        "Claim: Coffee raises blood pressure.\n\nEvidence: In 40 adults, systolic pressure rose "
+        "8 mmHg after caffeine."), "questions": {"stance": {
+            "type": "choice", "format": "stance",
+            "instructions": "How does the evidence bear on the claim?",
+            "options": {"supports": "The evidence supports the claim",
+                        "contradicts": "The evidence contradicts the claim",
+                        "no_bearing": "The evidence has no bearing on the claim"}}}})
+    r = json.loads(qwen_h0.decide_json(request))["answers"]["stance"]
+    a = json.loads(qwen_temperature.decide_json(request))["answers"]["stance"]
+    head = Pack.find("qwen3-4b-q8").heads(calibration="temperature")["stance"]
+    assert head.name == "temperature-stance.bin"
+    assert a["head_format"] == "stance" and a["head"] == sha256_file(head)
+    p, q = np.array(list(r["probs"].values())), np.array(list(a["probs"].values()))
+    t = CONFIRMED[("qwen3-4b-q8", "stance")][CHOICE]
+    assert t == 12.391
+    assert float(np.abs(q - temperature_of(p, t)).max()) < 1e-12
+    assert a["rotation_spread"] == r["rotation_spread"]
 
 
 @pytest.mark.model

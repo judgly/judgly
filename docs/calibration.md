@@ -57,7 +57,7 @@ levels:
 | H0 | nothing: the raw letter probabilities, averaged over option orders | 0 | no |
 | H1 | a temperature, a bias per letter and, only with the content-free pass (off in the built-in packs), how much of the content-free scores to subtract, per question type | 28 per type | a few hundred |
 | H2 | H1 plus a small correction to each letter's output row of the model | 28 + 26 x hidden size per type | thousands |
-| temperature | one temperature per question type, applied to the probabilities after they are averaged over the option orders | 1 per type | a few hundred |
+| temperature | one temperature per question type, applied to the probabilities after they are averaged over the option orders | 1 per type | about 50 to 100 per type helped on average in an exploratory sub-study; more to check it |
 
 H1 is contextual calibration (Zhao et al. 2021) with the amount of correction learned rather
 than fixed, plus temperature scaling (Guo et al. 2017). H2 lets the correction depend on the
@@ -71,7 +71,8 @@ stance): an H2 head (for score questions it is H1, fitted with every level weigh
 [methods.md](methods.md#the-heads)) and the per-type temperature. `Engine.load(pack)` uses the
 pack's default per format; `calibration="h2"`, `"temperature"` or `"raw"` chooses one for every
 format ([calibration-options.md](calibration-options.md)). The temperature never changes which
-answer is on top, so its accuracy is the raw readout's; H2 can change it, for better or worse.
+answer is on top, so its top-answer accuracy is the raw readout's; H2 can change it, for better
+or worse.
 Both are fitted on some task families and evaluated on others, so the published calibration
 describes tasks they have not seen. Your task is also one they have not seen: check it.
 
@@ -110,11 +111,13 @@ cases and check it on another.
 With a source checkout and the command-line tools
 ([installation.md](installation.md#build-from-source)), you can fit an H1 head or a per-type
 temperature on your own labelled cases. H1 needs a few hundred cases: calibration curves flatten
-after a few hundred labelled items. A temperature has one number per question type; in an
-exploratory analysis of held-out families, a temperature fitted on about 50 to 100 of a family's
-own items usually calibrated that family better than the shipped one
-([calibration-options.md](calibration-options.md#what-the-results-do-and-do-not-show)), but that
-was not confirmed, so check it on cases you held back.
+after a few hundred labelled items. A temperature has one number per question type. In an
+exploratory analysis of held-out families, a temperature fitted on 50 to 100 of a family's own
+items had, averaged over families, a lower log loss than the shipped one in 7 or 8 of the 8
+pack, format and tier rows; per family it helped in 22 to 25 of the 36 family cases and not in
+the other 11 to 14
+([calibration-options.md](calibration-options.md#what-the-results-do-and-do-not-show)). This was
+not confirmed, so check it on cases you held back.
 
 1. Write your cases as JSONL with the fields `id`, `task`, `family`, `split`, `type`, `state`,
    `instructions`, `options` and `label`. Split them yourself into `train`, `validation` and

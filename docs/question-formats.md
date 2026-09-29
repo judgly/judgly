@@ -113,6 +113,8 @@ see the model cards ([Gemma 4 12B](model-cards/gemma4-12b-q8.md#results-stance-f
 - **Check `slot_mass`.** A low slot mass (well below 0.9) means the model did not want to
   answer with one of the letters. Rephrase.
 - **Check `rotation_spread`.** A large spread means the answer depends on the option order.
-  The averaged answer is still the best estimate, but treat it with care.
+  The averaged answer is still the best estimate, but treat it with care. With the temperature
+  option the spread is measured on the raw per-order probabilities, before the temperature, so
+  compare it with other spreads rather than with the answer's calibrated `probs`.
 - **Calibrate on your own data** before trusting the probabilities in a new workflow
   ([calibration.md](calibration.md)).

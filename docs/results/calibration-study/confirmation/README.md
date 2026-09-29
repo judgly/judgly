@@ -2,12 +2,13 @@
 
 **Kind.** Confirmatory, pre-registered. `CONFIRM.md` is the protocol, with Amendment 1;
 `temperatures.json` holds the temperatures under test; `score_confirm.py` is the scorer;
-`CONFIRM.sha256` records the SHA-256 of these three files and when they were frozen;
-`result-confirm.txt` (printed) and `result-confirm.json` are the scorer's output of its one run
+`CONFIRM.sha256` records the SHA-256 of these three files and when the amended protocol and the
+scorer were frozen (it records no time for `temperatures.json`);
+`result-confirm.txt` (printed) and `result-confirm.json` are the scorer's output of its confirmatory run
 on the confirm tier.
 
-**Order of events** (2026-09-29, UTC+8; commit times from git, other times are file
-modification times):
+**Order of events** (2026-09-29, UTC+8; commit times from git, extraction times from
+`results-confirm/run.log`, other times are file modification times):
 
 | time | event |
 |---|---|
@@ -16,13 +17,17 @@ modification times):
 | 10:04 | confirm tier built (judgly commit `ad8c91a`) |
 | 10:37 | review fixes to the tier (commit `dbf1a9f`); tier files frozen in `data/tiers-confirm.sha256` |
 | 10:38 | Amendment 1 added; `CONFIRM.md` re-frozen (SHA-256 in `CONFIRM.sha256`) |
+| 10:38 to 13:12 | each model read the confirm tier once (`s1-features`, release engine settings: up to four option orders, no content-free pass) into `results-confirm/<pack>/<format>/confirm.feat`, in the order Gemma 4 12B general (10:38 to 11:31), Gemma 4 12B stance, Qwen3-4B general, Qwen3-4B stance (`results-confirm/run.log`); `s1-eval` wrote the raw and H2 per-item dumps. Extraction began after Amendment 1 was re-frozen and about two minutes before the scorer was frozen; no per-item output existed before 11:31 |
 | 10:40 | `score_confirm.py` frozen, after a smoke test on the 0.1.0 dev tier only |
-| 11:31 to 13:12 | each pack extracted the confirm tier once (`s1-features`, release engine settings: up to four option orders, no content-free pass) into `results-confirm/<pack>/<format>/confirm.feat`; `s1-eval` wrote the raw and H2 per-item dumps |
-| 13:13 | `score_confirm.py` run once; `result-confirm.txt`, `result-confirm.json` |
+| 13:13 | `score_confirm.py` run once on the confirm tier; `result-confirm.txt`, `result-confirm.json` |
+| later that day | the same cached readouts scored again, deterministically and after the result, by `make calibrate` (the calibration records), `docs/tools/confirmation_check.py` and `rerun.py confirm` (which re-ran the unchanged scorer and reproduced its output byte for byte) |
 
-**Claim.** On task families that nothing in judgly was fitted, tuned or chosen on, the per-type
-temperature is at least as good as the 0.1.0 H2 head: no loss of accuracy and no worse
-calibration. Nothing is refitted.
+**Claim**, in the protocol's words: "On task families that nothing in judgly was fitted, tuned
+or chosen on, the per-question-type temperature ("Ttype") is at least as good as the head shipped
+in judgly 0.1.0 ("H2"): no loss of accuracy and no worse calibration." Nothing is refitted. The
+criteria test this as non-inferiority within pre-set margins: a confirmed case is one where the
+temperature was not worse than H2 by more than 0.01 in accuracy, 0.01 in Brier score or 0.02 in
+ECE.
 
 **Data: the confirm tier.** Built after every other tier by `scripts/prep_tiers.py`, from sources
 not used before in this project (the registry, `data/registry.yaml`, and the list of earlier

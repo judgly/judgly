@@ -80,9 +80,12 @@ question's type is then applied to p:
     p_T[k] = exp(log(max(p[k], 1e-12)) / T) / sum_j exp(log(max(p[j], 1e-12)) / T)
 
 T > 1 flattens p; T = 1 leaves it unchanged. The transformation is monotone for each question,
-so it never changes which option is on top: **the temperature's accuracy is always the raw
-readout's.** H2, by contrast, acts on each order's letter logits, can change the top answer, and
-its accuracy differs from raw.
+so it never changes which option is on top: **the temperature's top-answer accuracy is always
+the raw readout's.** H2, by contrast, acts on each order's letter logits, can change the top
+answer, and its accuracy differs from raw. (A benchmark scored by another rule can differ:
+JevBench scores its score questions by the rounded expected level, which the temperature moves
+towards the middle of the scale, so Qwen3-4B's JevBench accuracy is 0.693 raw and 0.671 with the
+temperature.)
 
 The shipped temperatures, per question type:
 
@@ -93,8 +96,9 @@ The shipped temperatures, per question type:
 | qwen3-4b-q8 | general | 6.846 | 13.36 | 24.22 |
 | qwen3-4b-q8 | stance | 12.391 | (1, no data) | (1, no data) |
 
-The stance format has only choice questions, so its yes/no and score temperatures are 1 (no
-change), recorded as a fallback in the sidecar. A large temperature means that the raw readout
+The stance format has only choice questions, so its yes/no and score entries have no items and
+are set to 1 (no change); the sidecar records them as an identity fallback with the reason "no
+items of this type". No type that had training items fell back. A large temperature means that the raw readout
 was very overconfident on that question type in the fit data (Qwen3-4B's score questions most of
 all).
 
@@ -128,7 +132,9 @@ is fitted per option order and weights score levels equally). The loss is convex
 fitter (`s1-train --head temperature`, `csrc/s1_temperature.c`) finds the minimum by bisection
 on its derivative to machine precision and rounds it to three decimals. The validation split is
 used only for the same verdict as H2's: a type whose temperature is no better than the raw
-readout on validation, or whose output hardly varies, falls back to T = 1 (none did).
+readout on validation, or whose output hardly varies, falls back to T = 1 (no type with
+training items did), and so does a type without training or validation items (stance yes/no and
+score, which have none).
 
 **H2, for comparison** ([methods.md](methods.md#the-heads)): fitted on the same train items per
 question type, by L-BFGS on the mean log loss over the option orders (score levels weighted
@@ -138,8 +144,10 @@ fitting H2 but only in the fallback verdict for the temperature.
 
 **Relation to the confirmed values.** The temperatures in the table above are exactly the values
 frozen in `docs/results/calibration-study/confirmation/temperatures.json` before the
-confirmation. Those were fitted by the exploratory script `tricks.py` (Nelder-Mead in log T,
-from the same train items) and rounded to three decimals. Refitted by `s1-train`, all eight
+confirmation. `temperatures.json` was written from exploratory analysis 2's fit (`tricks.py`,
+Nelder-Mead in log T, on the same train items), rounded to three decimals; exploratory analysis 1
+(`temperature.py`) had fitted the same objective by L-BFGS, and its values round to the same
+three decimals. Refitted by `s1-train`, all eight
 unrounded optima round to the same three decimals (for example 6.84589 for Qwen3-4B choice,
 frozen 6.846; 13.35999 for Qwen3-4B yes/no, frozen 13.36); the shipped files hold the rounded
 values, and `docs/tools/confirmation_check.py` checks them against `temperatures.json`.
@@ -178,11 +186,16 @@ readouts cached by the release runs (no model was run):
    refinements were more often worse than better. Three bugs in the analysis script were fixed
    during this run, without changing the protocol. A sub-study simulated calibration on a user's
    own data (below).
-4. **The decision to confirm.** The per-type temperature was chosen for confirmation because it
-   was the simplest variant and did as well as the others across these analyses. That choice was
-   made after reading the held-out tiers, including the fresh final tier, which by then had been
-   read by the release run and by all three analyses. The final tier therefore cannot confirm the
-   temperature, and a new, untouched tier was built for that purpose.
+4. **The decision to confirm.** Taking the per-type temperature to a confirmation was a
+   judgement made after seeing these results. It was not the output of either pre-specified
+   choice rule and was not registered in advance: analysis 1's rule chose H2 in all four cases
+   and analysis 2's chose the per-type temperature in one of four, so the rules picked it in 1 of
+   8 pack and analysis decisions. The stated reasons were that it was the simplest variant, keeps
+   the raw ranking and was not reliably beaten on the held-out tiers; Platt scaling, however, had
+   a lower log loss than it in 9 of 18 comparisons and a higher one in 6 (paired intervals wholly
+   below or above zero). The choice was made after reading the held-out tiers, including the
+   fresh final tier, which by then had been read by the release run and by all three analyses. Those tiers therefore cannot confirm it, and because
+   the choice departed from both rules, a new, untouched tier was built to test it.
 
 Each analysis has a README with its data, its dates and how to rerun it
 ([results/calibration-study](results/calibration-study/README.md)); rerun from the repository,
@@ -190,15 +203,22 @@ all four reproduced their committed output byte for byte.
 
 ## The pre-registered confirmation
 
-The protocol ([CONFIRM.md](results/calibration-study/confirmation/CONFIRM.md)) was written and
-frozen on 2026-09-29 before any confirmation data existed; Amendment 1 was added after the tier
-was built and reviewed and before any model read it. `CONFIRM.sha256` records the SHA-256 and
-freeze time of the protocol, of `temperatures.json` and of the scorer `score_confirm.py` (frozen
-after a smoke test on the 0.1.0 dev tier only).
+The protocol ([CONFIRM.md](results/calibration-study/confirmation/CONFIRM.md)) states that it
+was written and frozen on 2026-09-29 before any confirmation data existed; Amendment 1 was added
+after the tier was built and reviewed and before any model read it. Only the amended file is
+hashed: the SHA-256 and time of the first version were not kept, so that the first version
+predates the data rests on the file's own statement and on the amendment's text.
+`CONFIRM.sha256` records the SHA-256 of the amended protocol, of `temperatures.json` and of the
+scorer `score_confirm.py`, and the freeze times of the amended protocol (10:38) and of the scorer
+(10:40, after a smoke test on the 0.1.0 dev tier only). It records no time for
+`temperatures.json`; that file's modification time is 09:30, before the tier was built.
 
-**Claim.** On task families that nothing in judgly was fitted, tuned or chosen on, the per-type
-temperature is at least as good as the 0.1.0 H2 head: no loss of accuracy and no worse
-calibration. Nothing is refitted: the temperatures of `temperatures.json`, the heads of the 0.1.0
+**Claim**, in the protocol's words: "On task families that nothing in judgly was fitted, tuned
+or chosen on, the per-question-type temperature ("Ttype") is at least as good as the head shipped
+in judgly 0.1.0 ("H2"): no loss of accuracy and no worse calibration." The criteria below test
+this as non-inferiority within pre-set margins, so a confirmed case is one where the temperature
+was not worse than H2 by more than 0.01 in accuracy, 0.01 in Brier score or 0.02 in ECE (by the
+bounds of the paired intervals). Nothing is refitted: the temperatures of `temperatures.json`, the heads of the 0.1.0
 release (commit 034d5e6), the release engine settings (up to four option orders, no content-free
 pass).
 
@@ -219,8 +239,11 @@ The review of the tier flagged three general families before any model read them
 argument_quality and humour as possible relatives of used rating families, and code_outcome as
 having a language shortcut (the verdict goes with the programming language). By Amendment 1 the
 endpoints are judged on all five families, and the result is also reported with each of these
-three left out, without a criterion. Each pack extracted the tier once (`s1-features`, release
-settings) and the frozen scorer read the per-item output once.
+three left out, without a criterion. Each model read the tier once (`s1-features`, release
+settings), from 10:38 to 13:12 by the run log (the first per-item output appeared at 11:31).
+Extraction began after Amendment 1 was re-frozen (10:38) and about two minutes before the scorer
+was frozen (10:40); no output existed before 11:31. The frozen scorer produced the confirmatory
+result from that readout once (13:13).
 
 **Criteria**, per pack and format, on the paired difference temperature minus H2 over the same
 items, 95% percentile interval from 1,000 bootstrap resamples of the groups (seed 20260929):
@@ -254,8 +277,10 @@ against 0.580) and more accurate on spatial for Qwen (0.612 against 0.488); the 
 table is in `result-confirm.txt`.
 
 So Gemma 4 12B keeps H2 for general questions and the other three cases use the temperature by
-default. The Gemma general case is not evidence that H2 is better in general: its accuracy was
-equal, H2 was better calibrated on this tier, and the confirmation was not designed to test that
+default. For Gemma 4 12B general the result is more than a missed criterion: on this untouched
+tier H2 was better calibrated than the temperature, with the paired intervals of ECE (+0.037
+[+0.015, +0.048]), Brier score (+0.017 [+0.010, +0.024]) and log loss (+0.026 [+0.017, +0.037])
+all excluding zero in H2's favour, at equal accuracy. The protocol pre-specified no test in that
 direction.
 
 ## Both options on every tier
@@ -269,10 +294,16 @@ are recomputed from the same readouts with the same frozen head and temperatures
 values equal the confirmation's to the four decimals it reports, and their intervals differ from
 the confirmation's paired ones.
 
-How often each tier had been read before these numbers: **test** and **dev** were read during
-development and by every analysis; **final**, **final-flagged**, **final-seen** and **bench** by
-the 0.1.0 release run and then by the three exploratory analyses; **confirm** once, by the
-confirmation. Only the confirm tier is untouched for the comparison of the two options.
+How often each tier had been read before these numbers: the fit tier's **test** split by the
+0.1.0 release run and, for fitting its variants, by exploratory analysis 0 (analyses 1 and 2 and
+the confirmation did not read it); **dev** during development, by all three analyses and by the
+scorer's smoke test before it was frozen; **final** and **final-seen** by the release run and by
+analyses 0, 1 and 2; **final-flagged** and **bench** by the release run and by analyses 1 and 2.
+Each model read the **confirm** tier once, and the frozen scorer produced the confirmatory
+result from that readout once. The same cached readouts were scored again afterwards,
+deterministically and without changing the result, by `make calibrate` (the rows below),
+`confirmation_check.py` and `rerun.py`, for the records and the reproducibility checks. Only the
+confirm tier is untouched for the comparison of the two options.
 
 **Gemma 4 12B, general**
 
@@ -384,14 +415,24 @@ confirmation. Only the confirm tier is untouched for the comparison of the two o
   although the temperature is now the stance default. On the stance confirm tier (ClimateCheck)
   the temperature was better in both. Stance calibration depends strongly on the kind of claims
   and evidence, and either option can miss a bar of 0.05 on a new source.
+- **For Qwen3-4B general, H2 was better calibrated on most earlier tiers.** Before the
+  confirmation, H2 had the lower ECE on dev (0.055 against 0.068), final (0.030 against 0.034),
+  final-seen (0.019 against 0.037) and bench (0.114 against 0.128), and on the in-distribution
+  test split (0.040 against 0.062); the temperature had the lower ECE only on final-flagged
+  (0.037 against 0.046). In analysis 1 the paired intervals showed the temperature worse on dev
+  (ECE), final-seen (ECE and Brier) and bench (Brier); on final it had the lower Brier score and
+  log loss and the higher accuracy, with the ECE difference within noise. The switch to the
+  temperature as Qwen3-4B's general default rests on the confirm tier, where its accuracy gain
+  comes mostly from one family (next point).
 - **One family carries the Qwen3-4B general accuracy gain.** On spatial (SpartQA yes/no) H2
   lowered Qwen3-4B's accuracy from 0.612 to 0.488; the five general families have 500 items each,
   and the mean accuracy difference of the other four is -0.004 (post hoc arithmetic, no interval).
   The protocol specified no analysis without spatial.
 - **The confirmation is one tier per format.** Five general families and one stance source, with
-  70 resampling groups for stance, so the stance intervals are wide. It tests "at least as good
-  as H2" by the three criteria; it does not show that the temperature is better, and a case that
-  was not confirmed does not show that H2 is better.
+  70 resampling groups for stance, so the stance intervals are wide. It tests non-inferiority
+  within the three pre-set margins (accuracy -0.01, Brier +0.01, ECE +0.02); it does not show
+  that the temperature is better. In the one case not confirmed, Gemma 4 12B general, H2 was
+  better calibrated on this tier (above).
 - **The temperatures were chosen on data that had been read.** The idea of the per-type
   temperature, and the decision to test it, came from analyses that read the final tier several
   times. Only the confirm tier is free of that; the final-tier numbers for the temperature above
@@ -399,9 +440,11 @@ confirmation. Only the confirm tier is untouched for the comparison of the two o
 - **Calibrating on your own data.** In the exploratory sub-study (`tricks.txt`, "Tdomain"),
   each held-out family's items were split in two halves by a hash of their group; a single
   temperature fitted on the first 25, 50, 100 or 200 items of one half (or all of it) was judged
-  on the other half. Averaged over families, it gave a lower log loss than the shipped per-type
-  temperature from about 50 to 100 items in most pack, format and tier cases, and was mixed at 25
-  (for example, Gemma 4 12B general on the final tier needed about 100). This was exploratory and
+  on the other half. Averaged over families, its log loss was lower than the shipped per-type
+  temperature's in 6 of the 8 pack, format and tier rows at 25 items, 7 of 8 at 50 and 8 of 8 at
+  100 (Gemma 4 12B general on the final tier was higher at 25 and 50 and lower from 100). Per
+  family it helped less often: in 22 of 36 families at 25 and at 50 items, and in 25 of 36 at
+  100. This was exploratory and
   was not confirmed; [calibration.md](calibration.md#fitting-a-head-on-your-own-data) shows how to
   fit a temperature on your own labelled cases, and checking it on held-back cases of your own is
   the part that matters.

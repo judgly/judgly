@@ -41,7 +41,13 @@ All notable changes to judgly. The format follows
 
 - The default calibration is now the temperature for Qwen3-4B (general and stance) and for Gemma
   4 12B stance; Gemma 4 12B general keeps H2. Use `calibration="h2"` for the 0.1.0 behaviour.
-  The H2 head files, and every raw and H2 number and per-item dump, are unchanged.
+  The H2 head files, and every raw and H2 number and per-item dump, are unchanged. This is a
+  trade-off, not a gain everywhere: with the new defaults top-answer accuracy is the raw
+  readout's, but on the 0.1.0 fresh final tier stance ECE rises from 0.048 to 0.087 (Gemma 4 12B)
+  and from 0.052 to 0.093 (Qwen3-4B), and Qwen3-4B general ECE from 0.030 to 0.034 (and on
+  final-seen from 0.019 to 0.037, on the bench tier from 0.114 to 0.128), while on the untouched
+  confirm tier the temperature was the better calibrated in these three cases
+  (`docs/calibration-options.md`).
 - `pack.json` schema 2 (per format, the options and the default); schema 1 packs still load.
   Calibration records are schema 3 (the `temperature` option, the condition and the confirm tier).
 - The fresh final tier is no longer untouched for comparisons involving the temperature: after
