@@ -14,6 +14,10 @@
 #                                     extracts (see "Calibration options" below)
 #   make install-pack MODEL=...       copy a finished (non-QUICK) pack into src/judgly/packs
 #   make figures                      the results figures from the snapshot in docs/results
+#   make compare-score                CPU only: rescore the committed answers of the external comparison
+#                                     with its frozen scorer and check the results equal the committed ones
+#   make compare-run                  ask the Ollama models of the external comparison again (Ollama >= 0.35.0,
+#                                     models pulled), into COMPARE_OUT (default results-compare), never the record
 #
 #   QUICK=1          small tiers (data/tiers-quick, results-quick) for a smoke run in minutes; the
 #                    fresh final and final-flagged tiers and the confirm tier are neither extracted
@@ -67,7 +71,7 @@ endif
 ACCEPT_FAIL ?=
 
 .PHONY: pack run stop status data check verify-data licences fetch tools install-pack features format figures \
-        calibrate
+        calibrate compare-score compare-run
 .DELETE_ON_ERROR:
 
 # ---- control -------------------------------------------------------------------------------
@@ -292,3 +296,20 @@ install-pack:
 # plotted number is checked against record.json. Reruns give byte-identical files.
 figures:
 	uv run --group figures python scripts/make_figures.py
+
+# ---- external comparison ---------------------------------------------------------------------
+
+# docs/results/external-comparison: judgly and the Ollama decision models on the same test items.
+# compare-score rebuilds every result from the committed answers with the frozen scorer (a
+# hash-checked copy run in a scratch workspace; needs the tiers from make data) and checks that
+# each equals the committed one, byte for byte. compare-run asks the models again (Ollama >= 0.35.0
+# with nimble:9b, tev1:4b and tev1:0.8b pulled; tags can move, so the model IDs are compared with
+# the recorded ones) and writes answers and results to COMPARE_OUT, never into the record.
+COMPARE_OUT ?= results-compare
+COMPARE     = uv run --no-project --with numpy python docs/results/external-comparison/reproduce.py
+
+compare-score:
+	$(COMPARE) score
+
+compare-run:
+	$(COMPARE) run --out $(COMPARE_OUT)

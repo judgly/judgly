@@ -22,6 +22,7 @@ per source).
 - [Steps](#steps)
 - [Outputs](#outputs)
 - [The committed snapshot](#the-committed-snapshot)
+- [The external comparison](#the-external-comparison)
 - [Checks that must pass](#checks-that-must-pass)
 - [Data sources](#data-sources)
 
@@ -256,6 +257,41 @@ committed files.
 `docs/results/MANIFEST` has the SHA-256 of every file in the snapshot, and
 `docs/results/INPUTS.sha256` those of the large inputs that are not committed. The snapshot and
 the figures made from it are under CC-BY-4.0 ([licences.md](licences.md#5-results-and-figures)).
+
+## The external comparison
+
+[results/external-comparison/](results/external-comparison/README.md) is the record of a
+descriptive comparison of judgly with three decision models served by Ollama (`nimble:9b`,
+`tev1:4b`, `tev1:0.8b`) on the same items of the confirm, final, bench and final-flagged tiers:
+the frozen protocol, runner and scorer (`PROTOCOL.sha256`), the raw responses
+(`answers/<model>/<format>-<tier>.jsonl.gz`), the results (`final/`) and the environment
+(`ENVIRONMENT.md`). Two targets reproduce it; both run hash-checked copies of the frozen files in
+another directory and never edit or write into the record.
+
+**Rescore (CPU, seconds).** Needs the tier files (`make data`):
+
+```bash
+make compare-score
+```
+
+It runs the frozen scorer on the committed answers and on judgly's committed per-item dumps,
+once per model and once with all three, and checks that every `final/result-*.json` and
+`final/score-*.txt` it rebuilds equals the committed one byte for byte (`reproduce.py score`;
+`tests/test_external_comparison.py` runs the same check and skips without the tier files).
+
+**Rerun the models (Ollama, about five hours on an Apple M3 Max).** Needs Ollama 0.35.0 or later
+and the three models pulled by the recorded tags:
+
+```bash
+ollama pull nimble:9b && ollama pull tev1:4b && ollama pull tev1:0.8b
+make compare-run                  # COMPARE_OUT=DIR to write elsewhere than results-compare/
+```
+
+It compares the pulled models' IDs with the recorded ones and reports any difference (Ollama
+tags can move, so a tag pulled later may name other weights), asks every item through the frozen
+runner (resumable), scores the new answers into `COMPARE_OUT/final/` and reports whether they
+equal the record. No tolerance has been set for what counts as the same result on other hardware
+or Ollama versions.
 
 ## Checks that must pass
 

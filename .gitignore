@@ -26,3 +26,6 @@ data/*.log
 
 # Confirmation extraction outputs (branch confirm-temperature)
 /results-confirm/
+
+# External comparison reruns (make compare-run)
+/results-compare/

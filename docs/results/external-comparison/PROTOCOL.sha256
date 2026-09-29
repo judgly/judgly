@@ -1,0 +1,4 @@
+0f1d7a756eba60c97b740d92ee9a44a4dc56899ab609685e2952842874c5e649  PROTOCOL.md
+2ed5798bdad3e97b7e59fe478de3d1c1c4b3357226df6437053ae75bf8696cff  run_external.py
+73318ed80d118d5a369eacabf02c6572243b6ee0ba9bf33af6d1fe2cd857da7d  score_external.py
+frozen 2026-09-29 16:47 (before any external model answered a test item; smoke test used 3 dev items only)
