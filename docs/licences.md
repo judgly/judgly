@@ -19,7 +19,7 @@ I am not a lawyer; this records what the sources say, not legal advice.
 
 ## 1. What ships
 
-### Wheel (`judgly-0.2.0-py3-none-macosx_*_arm64.whl`)
+### Wheel (`judgly-0.2.1-py3-none-macosx_*_arm64.whl`)
 
 | File(s) | Origin | Licence | Licence text present |
 |---|---|---|---|
@@ -38,7 +38,7 @@ The in-source notices inside ggml that apply to compiled code are llamafile
 sgemm (Mozilla Foundation, MIT) and YaRN RoPE (Quesnelle and Peng, MIT);
 `scripts/check_licenses.py` fails if either notice changes.
 
-### sdist (`judgly-0.2.0.tar.gz`)
+### sdist (`judgly-0.2.1.tar.gz`)
 
 | Path | Origin | Licence | Licence text present |
 |---|---|---|---|

@@ -1,0 +1,529 @@
+{
+ "what": "the equal-calibration control (external-comparison/calibrated), by question type: for each external model on the items it answered, the fitted temperature of the type (1 where the training sample had none), and accuracy, ECE, Brier and the mean top probability as served and calibrated; point values only, recomputed from the committed answers by scripts/make_compare_figures.py after it reproduced calibrated/result.json; not in the record",
+ "tiers": {
+  "general/confirm": {
+   "nimble_9b": {
+    "choice": {
+     "n": 1000,
+     "temperature": 2.1155,
+     "as served accuracy": 0.525,
+     "as served ece": 0.1612,
+     "as served brier": 0.6577,
+     "as served mean top probability": 0.676,
+     "calibrated accuracy": 0.525,
+     "calibrated ece": 0.0673,
+     "calibrated brier": 0.6142,
+     "calibrated mean top probability": 0.4891
+    },
+    "bool": {
+     "n": 500,
+     "temperature": 1.4865,
+     "as served accuracy": 0.576,
+     "as served ece": 0.233,
+     "as served brier": 0.5455,
+     "as served mean top probability": 0.809,
+     "calibrated accuracy": 0.576,
+     "calibrated ece": 0.1761,
+     "calibrated brier": 0.4892,
+     "calibrated mean top probability": 0.7521
+    },
+    "score": {
+     "n": 1000,
+     "temperature": 12.9046,
+     "as served accuracy": 0.389,
+     "as served ece": 0.2977,
+     "as served brier": 0.8234,
+     "as served mean top probability": 0.6867,
+     "calibrated accuracy": 0.389,
+     "calibrated ece": 0.0202,
+     "calibrated brier": 0.6588,
+     "calibrated mean top probability": 0.3688
+    }
+   },
+   "tev1_4b": {
+    "choice": {
+     "n": 1000,
+     "temperature": 1.884,
+     "as served accuracy": 0.47,
+     "as served ece": 0.2266,
+     "as served brier": 0.7685,
+     "as served mean top probability": 0.6807,
+     "calibrated accuracy": 0.47,
+     "calibrated ece": 0.1375,
+     "calibrated brier": 0.6912,
+     "calibrated mean top probability": 0.5318
+    },
+    "bool": {
+     "n": 500,
+     "temperature": 1.0747,
+     "as served accuracy": 0.7,
+     "as served ece": 0.0574,
+     "as served brier": 0.3851,
+     "as served mean top probability": 0.6426,
+     "calibrated accuracy": 0.7,
+     "calibrated ece": 0.065,
+     "calibrated brier": 0.3878,
+     "calibrated mean top probability": 0.635
+    },
+    "score": {
+     "n": 1000,
+     "temperature": 54.598,
+     "as served accuracy": 0.377,
+     "as served ece": 0.1742,
+     "as served brier": 0.7413,
+     "as served mean top probability": 0.551,
+     "calibrated accuracy": 0.377,
+     "calibrated ece": 0.0389,
+     "calibrated brier": 0.6653,
+     "calibrated mean top probability": 0.3381
+    }
+   },
+   "tev1_0.8b": {
+    "choice": {
+     "n": 1000,
+     "temperature": 1.3586,
+     "as served accuracy": 0.32,
+     "as served ece": 0.216,
+     "as served brier": 0.822,
+     "as served mean top probability": 0.5354,
+     "calibrated accuracy": 0.32,
+     "calibrated ece": 0.1462,
+     "calibrated brier": 0.7796,
+     "calibrated mean top probability": 0.4662
+    },
+    "bool": {
+     "n": 500,
+     "temperature": 54.5979,
+     "as served accuracy": 0.574,
+     "as served ece": 0.0921,
+     "as served brier": 0.4637,
+     "as served mean top probability": 0.6608,
+     "calibrated accuracy": 0.574,
+     "calibrated ece": 0.0707,
+     "calibrated brier": 0.4976,
+     "calibrated mean top probability": 0.5033
+    },
+    "score": {
+     "n": 1000,
+     "temperature": 54.5979,
+     "as served accuracy": 0.338,
+     "as served ece": 0.1263,
+     "as served brier": 0.6988,
+     "as served mean top probability": 0.4643,
+     "calibrated accuracy": 0.338,
+     "calibrated ece": 0.0021,
+     "calibrated brier": 0.6661,
+     "calibrated mean top probability": 0.3359
+    }
+   }
+  },
+  "stance/confirm": {
+   "nimble_9b": {
+    "choice": {
+     "n": 1780,
+     "temperature": 2.6497,
+     "as served accuracy": 0.5949,
+     "as served ece": 0.2639,
+     "as served brier": 0.657,
+     "as served mean top probability": 0.8566,
+     "calibrated accuracy": 0.5949,
+     "calibrated ece": 0.0677,
+     "calibrated brier": 0.5446,
+     "calibrated mean top probability": 0.6594
+    }
+   },
+   "tev1_4b": {
+    "choice": {
+     "n": 1780,
+     "temperature": 1.5594,
+     "as served accuracy": 0.6298,
+     "as served ece": 0.1848,
+     "as served brier": 0.5418,
+     "as served mean top probability": 0.8072,
+     "calibrated accuracy": 0.6298,
+     "calibrated ece": 0.1039,
+     "calibrated brier": 0.4954,
+     "calibrated mean top probability": 0.7156
+    }
+   },
+   "tev1_0.8b": {
+    "choice": {
+     "n": 1780,
+     "temperature": 1.606,
+     "as served accuracy": 0.4511,
+     "as served ece": 0.3038,
+     "as served brier": 0.7936,
+     "as served mean top probability": 0.7549,
+     "calibrated accuracy": 0.4511,
+     "calibrated ece": 0.2042,
+     "calibrated brier": 0.7026,
+     "calibrated mean top probability": 0.6505
+    }
+   }
+  },
+  "general/final": {
+   "nimble_9b": {
+    "choice": {
+     "n": 4005,
+     "temperature": 2.1155,
+     "as served accuracy": 0.7643,
+     "as served ece": 0.0968,
+     "as served brier": 0.3448,
+     "as served mean top probability": 0.8611,
+     "calibrated accuracy": 0.7643,
+     "calibrated ece": 0.0275,
+     "calibrated brier": 0.3269,
+     "calibrated mean top probability": 0.7462
+    },
+    "bool": {
+     "n": 2000,
+     "temperature": 1.4865,
+     "as served accuracy": 0.7515,
+     "as served ece": 0.1147,
+     "as served brier": 0.3522,
+     "as served mean top probability": 0.8662,
+     "calibrated accuracy": 0.7515,
+     "calibrated ece": 0.061,
+     "calibrated brier": 0.3275,
+     "calibrated mean top probability": 0.8125
+    },
+    "score": {
+     "n": 1874,
+     "temperature": 12.9046,
+     "as served accuracy": 0.3986,
+     "as served ece": 0.2121,
+     "as served brier": 0.7784,
+     "as served mean top probability": 0.6101,
+     "calibrated accuracy": 0.3986,
+     "calibrated ece": 0.1489,
+     "calibrated brier": 0.7564,
+     "calibrated mean top probability": 0.2497
+    }
+   },
+   "tev1_4b": {
+    "choice": {
+     "n": 4005,
+     "temperature": 1.884,
+     "as served accuracy": 0.803,
+     "as served ece": 0.0462,
+     "as served brier": 0.2889,
+     "as served mean top probability": 0.7949,
+     "calibrated accuracy": 0.803,
+     "calibrated ece": 0.1214,
+     "calibrated brier": 0.3164,
+     "calibrated mean top probability": 0.6828
+    },
+    "bool": {
+     "n": 2000,
+     "temperature": 1.0747,
+     "as served accuracy": 0.6955,
+     "as served ece": 0.0658,
+     "as served brier": 0.3753,
+     "as served mean top probability": 0.7613,
+     "calibrated accuracy": 0.6955,
+     "calibrated ece": 0.0557,
+     "calibrated brier": 0.3725,
+     "calibrated mean top probability": 0.7512
+    },
+    "score": {
+     "n": 1874,
+     "temperature": 54.598,
+     "as served accuracy": 0.3047,
+     "as served ece": 0.1675,
+     "as served brier": 0.7928,
+     "as served mean top probability": 0.4708,
+     "calibrated accuracy": 0.3047,
+     "calibrated ece": 0.0886,
+     "calibrated brier": 0.7855,
+     "calibrated mean top probability": 0.2161
+    }
+   },
+   "tev1_0.8b": {
+    "choice": {
+     "n": 4005,
+     "temperature": 1.3586,
+     "as served accuracy": 0.6035,
+     "as served ece": 0.0552,
+     "as served brier": 0.5051,
+     "as served mean top probability": 0.648,
+     "calibrated accuracy": 0.6035,
+     "calibrated ece": 0.0423,
+     "calibrated brier": 0.5029,
+     "calibrated mean top probability": 0.5968
+    },
+    "bool": {
+     "n": 2000,
+     "temperature": 54.5979,
+     "as served accuracy": 0.5415,
+     "as served ece": 0.1274,
+     "as served brier": 0.536,
+     "as served mean top probability": 0.6689,
+     "calibrated accuracy": 0.5415,
+     "calibrated ece": 0.038,
+     "calibrated brier": 0.4989,
+     "calibrated mean top probability": 0.5035
+    },
+    "score": {
+     "n": 1874,
+     "temperature": 54.5979,
+     "as served accuracy": 0.2513,
+     "as served ece": 0.1298,
+     "as served brier": 0.8209,
+     "as served mean top probability": 0.3794,
+     "calibrated accuracy": 0.2513,
+     "calibrated ece": 0.0373,
+     "calibrated brier": 0.7883,
+     "calibrated mean top probability": 0.214
+    }
+   }
+  },
+  "stance/final": {
+   "nimble_9b": {
+    "choice": {
+     "n": 1343,
+     "temperature": 2.6497,
+     "as served accuracy": 0.8168,
+     "as served ece": 0.1131,
+     "as served brier": 0.312,
+     "as served mean top probability": 0.9259,
+     "calibrated accuracy": 0.8168,
+     "calibrated ece": 0.0614,
+     "calibrated brier": 0.2969,
+     "calibrated mean top probability": 0.7555
+    }
+   },
+   "tev1_4b": {
+    "choice": {
+     "n": 1343,
+     "temperature": 1.5594,
+     "as served accuracy": 0.8258,
+     "as served ece": 0.0412,
+     "as served brier": 0.2636,
+     "as served mean top probability": 0.8654,
+     "calibrated accuracy": 0.8258,
+     "calibrated ece": 0.048,
+     "calibrated brier": 0.2654,
+     "calibrated mean top probability": 0.7799
+    }
+   },
+   "tev1_0.8b": {
+    "choice": {
+     "n": 1343,
+     "temperature": 1.606,
+     "as served accuracy": 0.5771,
+     "as served ece": 0.1105,
+     "as served brier": 0.5558,
+     "as served mean top probability": 0.6827,
+     "calibrated accuracy": 0.5771,
+     "calibrated ece": 0.0266,
+     "calibrated brier": 0.5364,
+     "calibrated mean top probability": 0.5814
+    }
+   }
+  },
+  "general/bench": {
+   "nimble_9b": {
+    "choice": {
+     "n": 739,
+     "temperature": 2.1155,
+     "as served accuracy": 0.7253,
+     "as served ece": 0.051,
+     "as served brier": 0.3747,
+     "as served mean top probability": 0.7716,
+     "calibrated accuracy": 0.7253,
+     "calibrated ece": 0.1181,
+     "calibrated brier": 0.3937,
+     "calibrated mean top probability": 0.6072
+    },
+    "bool": {
+     "n": 674,
+     "temperature": 1.4865,
+     "as served accuracy": 0.7626,
+     "as served ece": 0.0929,
+     "as served brier": 0.3249,
+     "as served mean top probability": 0.8555,
+     "calibrated accuracy": 0.7626,
+     "calibrated ece": 0.0477,
+     "calibrated brier": 0.3097,
+     "calibrated mean top probability": 0.7945
+    },
+    "score": {
+     "n": 818,
+     "temperature": 12.9046,
+     "as served accuracy": 0.6528,
+     "as served ece": 0.0462,
+     "as served brier": 0.4891,
+     "as served mean top probability": 0.6794,
+     "calibrated accuracy": 0.6528,
+     "calibrated ece": 0.3671,
+     "calibrated brier": 0.6965,
+     "calibrated mean top probability": 0.2857
+    }
+   },
+   "tev1_4b": {
+    "choice": {
+     "n": 712,
+     "temperature": 1.884,
+     "as served accuracy": 0.6882,
+     "as served ece": 0.0587,
+     "as served brier": 0.4322,
+     "as served mean top probability": 0.7457,
+     "calibrated accuracy": 0.6882,
+     "calibrated ece": 0.0937,
+     "calibrated brier": 0.4407,
+     "calibrated mean top probability": 0.5976
+    },
+    "bool": {
+     "n": 668,
+     "temperature": 1.0747,
+     "as served accuracy": 0.7305,
+     "as served ece": 0.0226,
+     "as served brier": 0.3574,
+     "as served mean top probability": 0.7506,
+     "calibrated accuracy": 0.7305,
+     "calibrated ece": 0.0214,
+     "calibrated brier": 0.3569,
+     "calibrated mean top probability": 0.7408
+    },
+    "score": {
+     "n": 815,
+     "temperature": 54.598,
+     "as served accuracy": 0.4933,
+     "as served ece": 0.0515,
+     "as served brier": 0.5941,
+     "as served mean top probability": 0.5394,
+     "calibrated accuracy": 0.4933,
+     "calibrated ece": 0.2437,
+     "calibrated brier": 0.7484,
+     "calibrated mean top probability": 0.2496
+    }
+   },
+   "tev1_0.8b": {
+    "choice": {
+     "n": 712,
+     "temperature": 1.3586,
+     "as served accuracy": 0.507,
+     "as served ece": 0.1673,
+     "as served brier": 0.6408,
+     "as served mean top probability": 0.6744,
+     "calibrated accuracy": 0.507,
+     "calibrated ece": 0.0957,
+     "calibrated brier": 0.6134,
+     "calibrated mean top probability": 0.6028
+    },
+    "bool": {
+     "n": 668,
+     "temperature": 54.5979,
+     "as served accuracy": 0.524,
+     "as served ece": 0.2311,
+     "as served brier": 0.5809,
+     "as served mean top probability": 0.7551,
+     "calibrated accuracy": 0.524,
+     "calibrated ece": 0.0175,
+     "calibrated brier": 0.4969,
+     "calibrated mean top probability": 0.5065
+    },
+    "score": {
+     "n": 815,
+     "temperature": 54.5979,
+     "as served accuracy": 0.3546,
+     "as served ece": 0.1429,
+     "as served brier": 0.7271,
+     "as served mean top probability": 0.4975,
+     "calibrated accuracy": 0.3546,
+     "calibrated ece": 0.106,
+     "calibrated brier": 0.7518,
+     "calibrated mean top probability": 0.2486
+    }
+   }
+  },
+  "general/final-flagged": {
+   "nimble_9b": {
+    "score": {
+     "n": 1000,
+     "temperature": 12.9046,
+     "as served accuracy": 0.39,
+     "as served ece": 0.3273,
+     "as served brier": 0.8125,
+     "as served mean top probability": 0.7173,
+     "calibrated accuracy": 0.39,
+     "calibrated ece": 0.0419,
+     "calibrated brier": 0.651,
+     "calibrated mean top probability": 0.3733
+    }
+   },
+   "tev1_4b": {
+    "score": {
+     "n": 1000,
+     "temperature": 54.598,
+     "as served accuracy": 0.421,
+     "as served ece": 0.1833,
+     "as served brier": 0.676,
+     "as served mean top probability": 0.6043,
+     "calibrated accuracy": 0.421,
+     "calibrated ece": 0.0819,
+     "calibrated brier": 0.6627,
+     "calibrated mean top probability": 0.3391
+    }
+   },
+   "tev1_0.8b": {
+    "score": {
+     "n": 1000,
+     "temperature": 54.5979,
+     "as served accuracy": 0.339,
+     "as served ece": 0.1052,
+     "as served brier": 0.6796,
+     "as served mean top probability": 0.4391,
+     "calibrated accuracy": 0.339,
+     "calibrated ece": 0.0038,
+     "calibrated brier": 0.6665,
+     "calibrated mean top probability": 0.3352
+    }
+   }
+  },
+  "stance/final-flagged": {
+   "nimble_9b": {
+    "choice": {
+     "n": 749,
+     "temperature": 2.6497,
+     "as served accuracy": 0.474,
+     "as served ece": 0.4041,
+     "as served brier": 0.8789,
+     "as served mean top probability": 0.8781,
+     "calibrated accuracy": 0.474,
+     "calibrated ece": 0.2152,
+     "calibrated brier": 0.6702,
+     "calibrated mean top probability": 0.6876
+    }
+   },
+   "tev1_4b": {
+    "choice": {
+     "n": 749,
+     "temperature": 1.5594,
+     "as served accuracy": 0.6889,
+     "as served ece": 0.1381,
+     "as served brier": 0.4361,
+     "as served mean top probability": 0.8271,
+     "calibrated accuracy": 0.6889,
+     "calibrated ece": 0.0616,
+     "calibrated brier": 0.4074,
+     "calibrated mean top probability": 0.7342
+    }
+   },
+   "tev1_0.8b": {
+    "choice": {
+     "n": 749,
+     "temperature": 1.606,
+     "as served accuracy": 0.6168,
+     "as served ece": 0.076,
+     "as served brier": 0.4913,
+     "as served mean top probability": 0.6784,
+     "calibrated accuracy": 0.6168,
+     "calibrated ece": 0.039,
+     "calibrated brier": 0.4875,
+     "calibrated mean top probability": 0.581
+    }
+   }
+  }
+ }
+}

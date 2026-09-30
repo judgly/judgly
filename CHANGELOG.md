@@ -4,6 +4,53 @@ All notable changes to judgly. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/) (0.x: the API may still change).
 
+## 0.2.1 - 2026-09-30
+
+No change to the package, the packs or any judgly number.
+
+### Added
+
+- An equal-calibration control for the comparison with the Ollama decision models
+  (`docs/results/external-comparison/calibrated/`): the same per-type temperature (temperature
+  scaling, Guo et al. 2017) fitted for Nimble 9B, Tev1 4B, Tev1 0.8B and judgly on the same
+  sample of judgly's training split (1,500 general and 500 stance items), and all of them scored
+  again on the comparison's test items. Protocol, sampler, runner and scorer frozen on 2026-09-30
+  at 09:24 by the author's record (the same minute the run started; first committed together with
+  the results), before any external model answered a training item; the 6,000 raw training answers
+  (the three models refused the same 49 general items that have no text), the results, and
+  judgly's train-split readout of the sampled items, so that the results can be rebuilt from the
+  repository. Four fitted temperatures reached the search's upper bound (54.6).
+- `make compare-score` also rebuilds the control's `result.json` and `result.txt` byte for byte
+  (`reproduce.py score --part control`; scipy 1.18.1 is now pinned there), with a test.
+- `compare-control-by-type.json`: the control's point values by question type.
+- `compare-by-source.json` also gives judgly's temperature refitted on the control's sample for
+  typed-decisions and JevBench apart; the README's comparison tables give these refitted rows next
+  to judgly's defaults.
+
+### Changed
+
+- `compare-tiers` shows each Ollama model both as served and with the equal calibration;
+  `make compare-figures` fits the control's temperatures again and checks every number of its
+  `result.json` before drawing.
+- README restructured and shortened: what judgly is (Gemma 4 12B or Qwen3-4B, unchanged, run
+  through llama.cpp, with a thin layer on top), a short "Results at a glance", and one comparison
+  section with the models as served and with the equal calibration. The 0.1.0 H2 results
+  (tables and the reliability and selective-accuracy figures) moved to `docs/calibration.md`, the
+  reliability figure of the comparison to `docs/methods.md`, and the quoted figures of other
+  systems to a shorter table (their calibration figures to `docs/methods.md`).
+- The comparison's caveats: the statement that no temperature had been fitted for the external
+  models is replaced by the control's results. With the same temperature fitted on the same data,
+  the external models' ECE came close to judgly's defaults on most test sets. On general final it
+  stayed above judgly Gemma 4 12B's default for all three and above judgly Qwen3-4B's for Tev1 4B
+  (Nimble 9B marginally, Tev1 0.8B level); judgly's own temperature refitted on the same sample
+  rose there too (0.038 and 0.044, against 0.017 and 0.034 as shipped), so that gap comes largely
+  with the fitting sample, not with H2. Nimble 9B stayed far above judgly on stance final-flagged,
+  and the temperature made Nimble 9B and Tev1 4B worse calibrated on typed-decisions.
+- The docs describe judgly's defaults as temperature scaling (Guo et al. 2017) per question type,
+  with H2 only for Gemma 4 12B general questions: the related-work comparison with Cygnet and
+  open-alternative-jev, the FAQ and the stance section of the question-formats page, which now
+  give the default's numbers first.
+
 ## 0.2.0 - 2026-09-30
 
 ### Added

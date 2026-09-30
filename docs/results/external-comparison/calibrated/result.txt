@@ -1,0 +1,113 @@
+{
+ "nimble:9b/general": {
+  "n_fit": 1451,
+  "refused": 49,
+  "T": {
+   "bool": 1.4865,
+   "choice": 2.1155,
+   "score": 12.9046
+  }
+ },
+ "nimble:9b/stance": {
+  "n_fit": 500,
+  "refused": 0,
+  "T": {
+   "choice": 2.6497
+  }
+ },
+ "tev1:4b/general": {
+  "n_fit": 1451,
+  "refused": 49,
+  "T": {
+   "bool": 1.0747,
+   "choice": 1.884,
+   "score": 54.598
+  }
+ },
+ "tev1:4b/stance": {
+  "n_fit": 500,
+  "refused": 0,
+  "T": {
+   "choice": 1.5594
+  }
+ },
+ "tev1:0.8b/general": {
+  "n_fit": 1451,
+  "refused": 49,
+  "T": {
+   "bool": 54.5979,
+   "choice": 1.3586,
+   "score": 54.5979
+  }
+ },
+ "tev1:0.8b/stance": {
+  "n_fit": 500,
+  "refused": 0,
+  "T": {
+   "choice": 1.606
+  }
+ },
+ "judgly-gemma/general (refit on the sample)": {
+  "n_fit": 1500,
+  "T": {
+   "bool": 8.2955,
+   "choice": 4.3681,
+   "score": 6.4871
+  }
+ },
+ "judgly-gemma/stance (refit on the sample)": {
+  "n_fit": 500,
+  "T": {
+   "choice": 7.8485
+  }
+ },
+ "judgly-qwen/general (refit on the sample)": {
+  "n_fit": 1500,
+  "T": {
+   "bool": 10.2386,
+   "choice": 8.5351,
+   "score": 54.5978
+  }
+ },
+ "judgly-qwen/stance (refit on the sample)": {
+  "n_fit": 500,
+  "T": {
+   "choice": 13.2365
+  }
+ }
+}
+
+== general/confirm
+  on nimble:9b's 2500 items: as served: ECE 0.229 Brier 0.702 | calibrated: ECE 0.059 Brier 0.607 | judgly-gemma default: ECE 0.051 Brier 0.562 | judgly-qwen default: ECE 0.047 Brier 0.597 | judgly-gemma refit on the sample: ECE 0.072 Brier 0.578 | judgly-qwen refit on the sample: ECE 0.020 Brier 0.596
+  on tev1:4b's 2500 items: as served: ECE 0.142 Brier 0.681 | calibrated: ECE 0.065 Brier 0.620 | judgly-gemma default: ECE 0.051 Brier 0.562 | judgly-qwen default: ECE 0.047 Brier 0.597 | judgly-gemma refit on the sample: ECE 0.072 Brier 0.578 | judgly-qwen refit on the sample: ECE 0.020 Brier 0.596
+  on tev1:0.8b's 2500 items: as served: ECE 0.154 Brier 0.701 | calibrated: ECE 0.043 Brier 0.678 | judgly-gemma default: ECE 0.051 Brier 0.562 | judgly-qwen default: ECE 0.047 Brier 0.597 | judgly-gemma refit on the sample: ECE 0.072 Brier 0.578 | judgly-qwen refit on the sample: ECE 0.020 Brier 0.596
+
+== stance/confirm
+  on nimble:9b's 1780 items: as served: ECE 0.264 Brier 0.657 | calibrated: ECE 0.068 Brier 0.545 | judgly-gemma default: ECE 0.052 Brier 0.476 | judgly-qwen default: ECE 0.106 Brier 0.581 | judgly-gemma refit on the sample: ECE 0.044 Brier 0.474 | judgly-qwen refit on the sample: ECE 0.092 Brier 0.576
+  on tev1:4b's 1780 items: as served: ECE 0.185 Brier 0.542 | calibrated: ECE 0.104 Brier 0.495 | judgly-gemma default: ECE 0.052 Brier 0.476 | judgly-qwen default: ECE 0.106 Brier 0.581 | judgly-gemma refit on the sample: ECE 0.044 Brier 0.474 | judgly-qwen refit on the sample: ECE 0.092 Brier 0.576
+  on tev1:0.8b's 1780 items: as served: ECE 0.304 Brier 0.794 | calibrated: ECE 0.204 Brier 0.703 | judgly-gemma default: ECE 0.052 Brier 0.476 | judgly-qwen default: ECE 0.106 Brier 0.581 | judgly-gemma refit on the sample: ECE 0.044 Brier 0.474 | judgly-qwen refit on the sample: ECE 0.092 Brier 0.576
+
+== general/final
+  on nimble:9b's 7879 items: as served: ECE 0.129 Brier 0.450 | calibrated: ECE 0.043 Brier 0.429 | judgly-gemma default: ECE 0.020 Brier 0.348 | judgly-qwen default: ECE 0.034 Brier 0.440 | judgly-gemma refit on the sample: ECE 0.038 Brier 0.326 | judgly-qwen refit on the sample: ECE 0.044 Brier 0.448
+  on tev1:4b's 7879 items: as served: ECE 0.052 Brier 0.431 | calibrated: ECE 0.070 Brier 0.442 | judgly-gemma default: ECE 0.020 Brier 0.348 | judgly-qwen default: ECE 0.034 Brier 0.440 | judgly-gemma refit on the sample: ECE 0.038 Brier 0.326 | judgly-qwen refit on the sample: ECE 0.044 Brier 0.448
+  on tev1:0.8b's 7879 items: as served: ECE 0.086 Brier 0.588 | calibrated: ECE 0.040 Brier 0.570 | judgly-gemma default: ECE 0.020 Brier 0.348 | judgly-qwen default: ECE 0.034 Brier 0.440 | judgly-gemma refit on the sample: ECE 0.038 Brier 0.326 | judgly-qwen refit on the sample: ECE 0.044 Brier 0.448
+
+== stance/final
+  on nimble:9b's 1343 items: as served: ECE 0.113 Brier 0.312 | calibrated: ECE 0.061 Brier 0.297 | judgly-gemma default: ECE 0.087 Brier 0.280 | judgly-qwen default: ECE 0.093 Brier 0.357 | judgly-gemma refit on the sample: ECE 0.114 Brier 0.288 | judgly-qwen refit on the sample: ECE 0.111 Brier 0.362
+  on tev1:4b's 1343 items: as served: ECE 0.041 Brier 0.264 | calibrated: ECE 0.048 Brier 0.265 | judgly-gemma default: ECE 0.087 Brier 0.280 | judgly-qwen default: ECE 0.093 Brier 0.357 | judgly-gemma refit on the sample: ECE 0.114 Brier 0.288 | judgly-qwen refit on the sample: ECE 0.111 Brier 0.362
+  on tev1:0.8b's 1343 items: as served: ECE 0.111 Brier 0.556 | calibrated: ECE 0.027 Brier 0.536 | judgly-gemma default: ECE 0.087 Brier 0.280 | judgly-qwen default: ECE 0.093 Brier 0.357 | judgly-gemma refit on the sample: ECE 0.114 Brier 0.288 | judgly-qwen refit on the sample: ECE 0.111 Brier 0.362
+
+== general/bench
+  on nimble:9b's 2231 items: as served: ECE 0.057 Brier 0.402 | calibrated: ECE 0.164 Brier 0.479 | judgly-gemma default: ECE 0.029 Brier 0.382 | judgly-qwen default: ECE 0.128 Brier 0.558 | judgly-gemma refit on the sample: ECE 0.048 Brier 0.388 | judgly-qwen refit on the sample: ECE 0.154 Brier 0.589
+  on tev1:4b's 2195 items: as served: ECE 0.042 Brier 0.470 | calibrated: ECE 0.120 Brier 0.529 | judgly-gemma default: ECE 0.029 Brier 0.382 | judgly-qwen default: ECE 0.130 Brier 0.557 | judgly-gemma refit on the sample: ECE 0.047 Brier 0.388 | judgly-qwen refit on the sample: ECE 0.158 Brier 0.588
+  on tev1:0.8b's 2195 items: as served: ECE 0.178 Brier 0.655 | calibrated: ECE 0.066 Brier 0.629 | judgly-gemma default: ECE 0.029 Brier 0.382 | judgly-qwen default: ECE 0.130 Brier 0.557 | judgly-gemma refit on the sample: ECE 0.047 Brier 0.388 | judgly-qwen refit on the sample: ECE 0.158 Brier 0.588
+
+== general/final-flagged
+  on nimble:9b's 1000 items: as served: ECE 0.327 Brier 0.812 | calibrated: ECE 0.042 Brier 0.651 | judgly-gemma default: ECE 0.106 Brier 0.621 | judgly-qwen default: ECE 0.037 Brier 0.617 | judgly-gemma refit on the sample: ECE 0.107 Brier 0.604 | judgly-qwen refit on the sample: ECE 0.104 Brier 0.635
+  on tev1:4b's 1000 items: as served: ECE 0.183 Brier 0.676 | calibrated: ECE 0.082 Brier 0.663 | judgly-gemma default: ECE 0.106 Brier 0.621 | judgly-qwen default: ECE 0.037 Brier 0.617 | judgly-gemma refit on the sample: ECE 0.107 Brier 0.604 | judgly-qwen refit on the sample: ECE 0.104 Brier 0.635
+  on tev1:0.8b's 1000 items: as served: ECE 0.105 Brier 0.680 | calibrated: ECE 0.004 Brier 0.666 | judgly-gemma default: ECE 0.106 Brier 0.621 | judgly-qwen default: ECE 0.037 Brier 0.617 | judgly-gemma refit on the sample: ECE 0.107 Brier 0.604 | judgly-qwen refit on the sample: ECE 0.104 Brier 0.635
+
+== stance/final-flagged
+  on nimble:9b's 749 items: as served: ECE 0.404 Brier 0.879 | calibrated: ECE 0.215 Brier 0.670 | judgly-gemma default: ECE 0.069 Brier 0.369 | judgly-qwen default: ECE 0.052 Brier 0.410 | judgly-gemma refit on the sample: ECE 0.093 Brier 0.376 | judgly-qwen refit on the sample: ECE 0.065 Brier 0.412
+  on tev1:4b's 749 items: as served: ECE 0.138 Brier 0.436 | calibrated: ECE 0.062 Brier 0.407 | judgly-gemma default: ECE 0.069 Brier 0.369 | judgly-qwen default: ECE 0.052 Brier 0.410 | judgly-gemma refit on the sample: ECE 0.093 Brier 0.376 | judgly-qwen refit on the sample: ECE 0.065 Brier 0.412
+  on tev1:0.8b's 749 items: as served: ECE 0.076 Brier 0.491 | calibrated: ECE 0.039 Brier 0.487 | judgly-gemma default: ECE 0.069 Brier 0.369 | judgly-qwen default: ECE 0.052 Brier 0.410 | judgly-gemma refit on the sample: ECE 0.093 Brier 0.376 | judgly-qwen refit on the sample: ECE 0.065 Brier 0.412

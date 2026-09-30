@@ -68,12 +68,16 @@ The built-in packs define two formats, and ship a head for each:
 
 ### Stance
 
-On the fresh final tier (Check-COVID, n = 1,343 pairs), the stance heads reached ECE 0.048
-[0.034, 0.072] (Gemma 4 12B) and 0.052 [0.034, 0.077] (Qwen3-4B), around the bar of 0.05, but
-**both missed the dev-tier bar** (ECE 0.122 and 0.209 against 0.08, worst on scientific
-abstracts), and on HealthVer (final-seen) head ECE was 0.067 and 0.100
-([README results](../README.md#results)). The general head (leave `format` unset) was not
-scored on stance questions, so whether it would do better is not known.
+With the default stance calibration, the per-type temperature, ECE on the fresh final tier
+(Check-COVID, n = 1,343 pairs) was 0.087 [0.068, 0.108] (Gemma 4 12B) and 0.093 [0.068, 0.116]
+(Qwen3-4B), **well above the bar of 0.05**; on the untouched confirm tier (ClimateCheck, n =
+1,780) it was 0.052 and 0.106, and on HealthVer (final-seen) 0.076 and 0.058. The H2 stance heads,
+which are not the default (`calibration="h2"`), reached 0.048 [0.034, 0.072] and 0.052 [0.034,
+0.077] on Check-COVID, around the bar, but **both missed the dev-tier bar** (ECE 0.122 and 0.209
+against 0.08, worst on scientific abstracts), and gave 0.078 and 0.183 on ClimateCheck and 0.067
+and 0.100 on HealthVer ([calibration.md](calibration.md#results-of-the-two-options)). The general
+calibration (leave `format` unset) was not scored on stance questions, so whether it would do
+better is not known.
 
 The stance head is fitted on states of the form
 

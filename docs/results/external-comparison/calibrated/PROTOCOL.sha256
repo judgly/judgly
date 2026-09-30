@@ -1,0 +1,6 @@
+79e539a746b87ce703c212bbbc811b1d9ecc2c5045cb2ecdb48f23e1f477c57a  PROTOCOL.md
+59e4a95f920c11418d8ab03a9d22f26b0e9e4360138094c12a0070e451c03f4b  sample.py
+6450bff8ee3f71aa42b923670c714c46b242877ac1f0a1b4a9d08d38739f29ec  run_calibration.py
+21485485bee31b6cde2ed3377f395ffbc6104ba6a81e6737e3ff9967234df993  score_calibrated.py
+5e45e4a945bd1507d6c1be57d914ec89c62a50c869ee0dea1085c67e98ad7138  sample.json
+frozen 2026-09-30 09:24 (before any external model answered a training item)

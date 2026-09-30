@@ -4,8 +4,13 @@
     uv run --group figures python scripts/make_compare_figures.py        (or: make compare-figures)
 
 Writes docs/assets/results/{compare-tiers,compare-reliability,compare-timing}.{svg,png}, the bench-by-source
-intervals docs/assets/results/compare-by-source.json, and the comparison section of CAPTIONS.md
+intervals docs/assets/results/compare-by-source.json, the control's by-type point values
+docs/assets/results/compare-control-by-type.json, and the comparison section of CAPTIONS.md
 (the text after the marker below; make_figures.py keeps it).
+
+compare-tiers shows each external model twice: as served, and with the equal-calibration control
+(external-comparison/calibrated: a per-type temperature fitted for every system on the same
+sample of judgly's training split; the temperatures are read from its result.json).
 
 What is plotted comes from the record, and nothing is written before all of it has been checked:
 
@@ -21,6 +26,17 @@ What is plotted comes from the record, and nothing is written before all of it h
    resampled on its own with a generator seeded 20260930 (written to compare-by-source.json).
 3. The reliability bins of judgly's defaults on the confirm tiers must equal those in judgly's
    calibration records (docs/results/<pack>/<format>/record.json).
+4. The equal-calibration control (calibrated/, frozen files checked against its PROTOCOL.sha256):
+   the per-type temperatures are fitted again as its scorer fits them (scipy's bounded minimiser,
+   which is why make compare-figures adds scipy 1.18.1 to the figures group) from the committed
+   training answers (calibrated/answers) and judgly's committed train readout
+   (calibrated/judgly-train), and must equal result.json's (4 decimals); they are applied to the
+   committed test answers and dumps, the control's bootstrap is replayed (seed 20260929, the tiers
+   and models in its scorer's order), and every point value, interval and paired difference of
+   every system in result.json must be reproduced. The bench points of the calibrated models are
+   then split by source as above (seed 20260930), and the external models' point values are split
+   by question type (choice, yes/no, score), as served and calibrated, with the temperature
+   applied and the mean top probability (compare-control-by-type.json; not in the record).
 
 Output is deterministic (the rcParams of make_figures.py, a fixed SVG hash salt, no dates or
 versions in the metadata), so a rerun gives byte-identical files.
@@ -44,6 +60,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SNAP = ROOT / "docs" / "results"
 REC = SNAP / "external-comparison"
 FINAL = REC / "final"
+CONTROL = REC / "calibrated"
 OUT = ROOT / "docs" / "assets" / "results"
 MARKER = "<!-- external comparison: written by scripts/make_compare_figures.py -->"
 
@@ -69,18 +86,27 @@ SETS = [("confirm, general", "general/confirm", None),
         ("typed-decisions", "general/bench", "typed_decisions"),
         ("JevBench, public items", "general/bench", "jevbench")]
 SHOWN = ("nimble:9b", "tev1:4b", "tev1:0.8b", "judgly-gemma-default", "judgly-qwen-default")
+CALIBRATED = tuple(f"{m} calibrated" for m in MODELS)   # the equal-calibration control's rows
 FAINT = ("judgly-gemma-raw", "judgly-qwen-raw")
 LABEL = {"nimble:9b": "Nimble 9B", "tev1:4b": "Tev1 4B", "tev1:0.8b": "Tev1 0.8B",
          "judgly-gemma-default": "judgly Gemma 4 12B, default", "judgly-qwen-default": "judgly Qwen3-4B, default",
          "judgly-gemma-raw": "judgly Gemma 4 12B, raw", "judgly-qwen-raw": "judgly Qwen3-4B, raw"}
+LABEL |= {f"{m} calibrated": f"{LABEL[m]}, equal calibration" for m in MODELS}
+SERVED_LABEL = {m: f"{LABEL[m]}, as served" for m in MODELS}
 # judgly in blues (Gemma dark, Qwen light), the other models in greys told apart by shade and
-# marker; judgly raw in its pack's blue, hollow and faint.
+# marker: filled with the equal calibration, hollow and faint as served; judgly raw in its
+# pack's blue, hollow and faint.
 COLOUR = {"nimble:9b": "#3C3C3C", "tev1:4b": "#7A7A7A", "tev1:0.8b": "#ABABAB",
           "judgly-gemma-default": "#0072B2", "judgly-qwen-default": "#56B4E9",
           "judgly-gemma-raw": "#0072B2", "judgly-qwen-raw": "#56B4E9"}
+COLOUR |= {f"{m} calibrated": COLOUR[m] for m in MODELS}
 HIGHLIGHT = ("judgly-gemma-default", "judgly-qwen-default")
 MARK = {"nimble:9b": "D", "tev1:4b": "^", "tev1:0.8b": "v", "judgly-gemma-default": "o",
         "judgly-qwen-default": "s", "judgly-gemma-raw": "o", "judgly-qwen-raw": "s"}
+MARK |= {f"{m} calibrated": MARK[m] for m in MODELS}
+# As in calibrated/score_calibrated.py:
+C_PACKS = {"gemma": "gemma4-12b-q8", "qwen": "qwen3-4b-q8"}
+C_TYPES = {0: "choice", 1: "bool", 2: "score"}
 RELIABILITY = ("nimble:9b", "tev1:4b", "judgly-gemma-default", "judgly-qwen-default")
 GREY = "#7F7F7F"
 BINS = 10
@@ -120,15 +146,15 @@ def load_module(name: str, path: Path):
     return mod
 
 
-def check_frozen() -> None:
+def check_frozen(where: Path = REC) -> None:
     want = {}
-    for line in (REC / "PROTOCOL.sha256").read_text().splitlines():
+    for line in (where / "PROTOCOL.sha256").read_text().splitlines():
         m = re.match(r"^([0-9a-f]{64})  (\S+)$", line)
         if m:
             want[m.group(2)] = m.group(1)
     for name, sha in want.items():
-        if hashlib.sha256((REC / name).read_bytes()).hexdigest() != sha:
-            raise Mismatch(f"make_compare_figures: {name} does not match PROTOCOL.sha256")
+        if hashlib.sha256((where / name).read_bytes()).hexdigest() != sha:
+            raise Mismatch(f"make_compare_figures: {where.name}/{name} does not match PROTOCOL.sha256")
 
 
 def fnv(text: str) -> str:
@@ -161,13 +187,14 @@ def external_probs(item: dict, resp: dict) -> np.ndarray:
     return np.array([pr[str(i)] for i in range(item["levels"])], float)
 
 
-def judgly_dump(pack: str, fmt: str, cond: str, tier: str) -> dict[str, tuple[np.ndarray, int]]:
+def judgly_dump(pack: str, fmt: str, cond: str, tier: str) -> dict[str, tuple[np.ndarray, int, int]]:
+    """{id hash: (probabilities, gold index, question type)} from a committed per-item dump."""
     out = {}
     with gzip.open(SNAP / pack / fmt / f"items-{cond}-{tier}.tsv.gz", "rt") as f:
         next(f)
         for line in f:
-            h, _, _, _, _, y, p = line.rstrip("\n").split("\t")
-            out[h] = (np.array([float(v) for v in p.split(",")]), int(y))
+            h, _, _, t, _, y, p = line.rstrip("\n").split("\t")
+            out[h] = (np.array([float(v) for v in p.split(",")]), int(y), int(t))
     return out
 
 
@@ -198,20 +225,21 @@ def boot(xs: dict, grp: np.ndarray, rng: np.random.Generator) -> tuple[dict, int
     return draws, len(units)
 
 
-def rows(xs: dict, draws: dict, idx: np.ndarray) -> dict:
-    """Point values, intervals and paired differences, as the frozen scorer rounds them."""
+def rows(xs: dict, draws: dict, idx: np.ndarray,
+         refs: tuple[str, ...] = ("judgly-gemma-default", "judgly-qwen-default"), prefix: str = "minus_") -> dict:
+    """Point values, intervals and paired differences, as the frozen scorers round them."""
     out = {}
     for k, x in xs.items():
         p = metrics(x, idx)
         lo, hi = np.percentile(draws[k], [2.5, 97.5], axis=0)
         row = {m: [round(p[j], 4), round(lo[j], 4), round(hi[j], 4)] for j, m in enumerate(NAMES)}
-        for ref in ("judgly-gemma-default", "judgly-qwen-default"):
+        for ref in refs:
             if ref in xs and k != ref:
                 d = np.array(draws[k]) - np.array(draws[ref])
                 pd = p - metrics(xs[ref], idx)
                 dlo, dhi = np.percentile(d, [2.5, 97.5], axis=0)
-                row[f"minus_{ref}"] = {m: [round(pd[j], 4), round(dlo[j], 4), round(dhi[j], 4)]
-                                       for j, m in enumerate(NAMES)}
+                row[f"{prefix}{ref}"] = {m: [round(pd[j], 4), round(dlo[j], 4), round(dhi[j], 4)]
+                                         for j, m in enumerate(NAMES)}
         out[k] = {m: (v if isinstance(v, dict) else [float(a) for a in v]) for m, v in row.items()}
         for m, v in out[k].items():
             if isinstance(v, dict):
@@ -290,6 +318,141 @@ def rescore(tiers: dict, judgly: dict, run: str, record: dict) -> tuple[dict, di
     return per_tier, by_source
 
 
+def temper(p: np.ndarray, T: float) -> np.ndarray:
+    """As calibrated/score_calibrated.py: probabilities proportional to exp(log p / T), p floored at 1e-12."""
+    z = np.log(np.clip(p, EPS, 1)) / T
+    e = np.exp(z - z.max())
+    return e / e.sum()
+
+
+def check_rows(where: str, mine: dict, theirs: dict) -> None:
+    if sorted(mine) != sorted(theirs):
+        raise Mismatch(f"make_compare_figures: {where}: systems {sorted(mine)} vs {sorted(theirs)}")
+    for k, row in mine.items():
+        if sorted(row) != sorted(theirs[k]):
+            raise Mismatch(f"make_compare_figures: {where} {k}: fields {sorted(row)} vs {sorted(theirs[k])}")
+        for m, v in row.items():
+            if isinstance(v, dict):
+                for a, b in v.items():
+                    same(f"{where} {k} {m} {a}", b, theirs[k][m][a])
+            else:
+                same(f"{where} {k} {m}", v, theirs[k][m])
+
+
+def fit(P: list[np.ndarray], y: list[int], types: list[str]) -> dict[str, float]:
+    """As calibrated/score_calibrated.py: one temperature per question type, minimising log loss."""
+    from scipy.optimize import minimize_scalar
+    out = {}
+    for t in sorted(set(types)):
+        idx = [i for i, x in enumerate(types) if x == t]
+        f = lambda lt: -np.mean([np.log(max(temper(P[i], np.exp(lt))[y[i]], EPS)) for i in idx])  # noqa: E731
+        out[t] = float(np.exp(minimize_scalar(f, bounds=(-3, 4), method="bounded").x))
+    return out
+
+
+def fit_control(record: dict) -> dict[str, dict[str, float]]:
+    """Fit the control's temperatures again from its committed inputs; check them against result.json."""
+    sample = json.loads((CONTROL / "sample.json").read_text())
+    temps = {}
+    for fmt, ids in sample.items():
+        rows_ = {r["id"]: r for r in map(json.loads, open(ROOT / "data" / "tiers" / fmt / "fitdev.jsonl"))}
+        for m in MODELS:
+            with gzip.open(CONTROL / "answers" / FILES[m] / f"{fmt}-train.jsonl.gz", "rt") as f:
+                ans = {r["id"]: r for r in map(json.loads, f)}
+            ok = [i for i in ids if ans[i]["error"] is None]
+            P = [np.clip(external_probs(rows_[i], ans[i]["response"]), EPS, 1) for i in ok]
+            temps[f"{m}/{fmt}"] = fit(P, [gold_index(rows_[i]) for i in ok], [rows_[i]["type"] for i in ok])
+            rec = record["temperatures"][f"{m}/{fmt}"]
+            same(f"calibrated/result.json {m}/{fmt} n_fit, refused", [len(ok), len(ids) - len(ok)],
+                 [rec["n_fit"], rec["refused"]])
+        for short, pack in C_PACKS.items():
+            tr = {}
+            with gzip.open(CONTROL / "judgly-train" / f"{pack}-{fmt}-train.tsv.gz", "rt") as f:
+                next(f)
+                for line in f:
+                    h, _, _, t, _, y, p = line.rstrip("\n").split("\t")
+                    tr[h] = (np.array([float(v) for v in p.split(",")]), int(y), C_TYPES[int(t)])
+            hs = [fnv(i) for i in ids]
+            temps[f"judgly-{short}/{fmt} (refit on the sample)"] = fit(
+                [tr[h][0] for h in hs], [tr[h][1] for h in hs], [tr[h][2] for h in hs])
+    for k, T in temps.items():
+        rec = record["temperatures"][k]["T"]
+        if sorted(T) != sorted(rec):
+            raise Mismatch(f"make_compare_figures: calibrated/result.json {k}: types {sorted(T)} vs {sorted(rec)}")
+        for t, v in T.items():
+            same(f"calibrated/result.json temperature {k} {t}", round(v, 4), rec[t])
+    return temps
+
+
+def rescore_control(tiers: dict, judgly: dict, record: dict, served: dict) -> tuple[dict, dict, dict]:
+    """Reproduce calibrated/result.json (the equal-calibration control) from the committed answers
+    and dumps with the temperatures fitted again, replaying its bootstrap; check every row against
+    it and the as-served points against each model's own result file. Return {model: {tier: xs}},
+    the bench-by-source intervals of the calibrated models and judgly's defaults, and the external
+    models' point values by question type."""
+    where = "calibrated/result.json"
+    temps = fit_control(record)
+    rng = np.random.default_rng(SEED)
+    per_model, by_source, by_type = {m: {} for m in MODELS}, {}, {}
+    refs = ("judgly-gemma default", "judgly-qwen default")
+    for fmt, tier in TIERS:
+        key = f"{fmt}/{tier}"
+        items, answers = tiers[key]["items"], tiers[key]["answers"]
+        byid = {x["id"]: x for x in items}
+        for m in MODELS:
+            ids = [x["id"] for x in items if answers[m][x["id"]]["error"] is None]
+            grp = np.array([str(byid[i].get("group") or i) for i in ids])
+            raw, cal, y = [], [], []
+            for i in ids:
+                p = np.clip(external_probs(byid[i], answers[m][i]["response"]), EPS, 1)
+                raw.append(p)
+                cal.append(temper(p, temps[f"{m}/{fmt}"].get(byid[i]["type"], 1.0)))
+                y.append(gold_index(byid[i]))
+            xs = {f"{m} as served": per_item(raw, y), f"{m} calibrated": per_item(cal, y)}
+            hs = [fnv(i) for i in ids]
+            for short, pack in C_PACKS.items():
+                d = judgly[(pack, fmt, "raw", tier)]
+                yy = [d[h][1] for h in hs]
+                xs[f"judgly-{short} raw"] = per_item([d[h][0] for h in hs], yy)
+                refit = temps[f"judgly-{short}/{fmt} (refit on the sample)"]
+                xs[f"judgly-{short} refit on the sample"] = per_item(
+                    [temper(d[h][0], refit.get(C_TYPES[d[h][2]], 1.0)) for h in hs], yy)
+                for cond in ("temperature", "h2"):
+                    dc = judgly[(pack, fmt, cond, tier)]
+                    xs[f"judgly-{short} {cond}"] = per_item([dc[h][0] for h in hs], [dc[h][1] for h in hs])
+                xs[f"judgly-{short} default"] = xs[f"judgly-{short} {DEFAULT[(short, fmt)]}"]
+            draws, units = boot(xs, grp, rng)
+            rec = record["tiers"][key][m]
+            same(f"{where} {key} {m} n", len(ids), rec["n"])
+            same(f"{where} {key} {m} units", units, rec["units"])
+            check_rows(f"{where} {key} {m}", rows(xs, draws, np.arange(len(ids)), refs, "minus "), rec["systems"])
+            same(f"{where} {key} {m} as served = result-{FILES[m]}.json",
+                 [rec["systems"][f"{m} as served"][n][0] for n in NAMES],
+                 [served[m][key]["systems"][m][n][0] for n in NAMES])
+            per_model[m][key] = xs
+            kinds = np.array([byid[i]["type"] for i in ids])
+            for t in ("choice", "bool", "score"):
+                ix = np.where(kinds == t)[0]
+                if len(ix):
+                    by_type.setdefault(key, {}).setdefault(FILES[m], {})[t] = {
+                        "n": int(len(ix)), "temperature": round(temps[f"{m}/{fmt}"].get(t, 1.0), 4),
+                        **{f"{label} {n}": round(float(v), 4)
+                           for label, x in (("as served", xs[f"{m} as served"]), ("calibrated", xs[f"{m} calibrated"]))
+                           for n, v in zip(("accuracy", "ece", "brier", "mean top probability"),
+                                           [*metrics(x, ix)[:3], x[1, ix].mean()])}}
+            if tier == "bench":
+                src = np.array([byid[i]["source"] for i in ids])
+                by_source[m] = {}
+                for s_ in np.unique(src):
+                    ix = np.where(src == s_)[0]
+                    sub = {k: xs[k][:, ix] for k in (f"{m} calibrated", "judgly-gemma default", "judgly-qwen default",
+                                                     "judgly-gemma refit on the sample", "judgly-qwen refit on the sample")}
+                    dd, u = boot(sub, grp[ix], np.random.default_rng(SOURCE_SEED))
+                    by_source[m][str(s_)] = {"n_items": int(len(ix)), "units": int(u),
+                                             "systems": rows(sub, dd, np.arange(len(ix)), refs, "minus ")}
+    return per_model, by_source, by_type
+
+
 def reliability(x: np.ndarray) -> list[dict]:
     right, conf = x[0], x[1]
     b = np.minimum((conf * BINS).astype(int), BINS - 1)
@@ -334,7 +497,15 @@ def save(fig: plt.Figure, name: str) -> None:
 
 def point(results: dict, by_source: dict, key: str, source: str | None, system: str) -> tuple[dict, int]:
     """(row, n) for one system on one test set: an external model from its own result file (the items
-    it answered), judgly from Nimble's (every item of the tier)."""
+    it answered), with the equal calibration from the control's result on the same items, judgly
+    from Nimble's (every item of the tier)."""
+    if system in CALIBRATED:
+        m = system.removesuffix(" calibrated")
+        if source is None:
+            block = results["control"]["tiers"][key][m]
+            return block["systems"][system], block["n"]
+        s = by_source["control"][m][source]
+        return s["systems"][system], s["n_items"]
     run = system if system in MODELS else "nimble:9b"
     if source is None:
         return results[run][key]["systems"][system], results[run][key]["n_common"]
@@ -343,17 +514,26 @@ def point(results: dict, by_source: dict, key: str, source: str | None, system: 
 
 
 def fig_tiers(results: dict, by_source: dict) -> None:
-    fig, axes = plt.subplots(2, 3, figsize=(8.4, 6.4))
+    fig, axes = plt.subplots(2, 3, figsize=(8.4, 6.9))
     for ax, (label, key, source) in zip(axes.flat, SETS):
-        for system in FAINT + SHOWN:
+        for m in MODELS:   # as served (hollow, faint, no bars) joined to the same model calibrated
+            a0, e0 = (lambda r: (r["accuracy"][0], r["ece"][0]))(point(results, by_source, key, source, m)[0])
+            a1, e1 = (lambda r: (r["accuracy"][0], r["ece"][0]))(point(results, by_source, key, source, f"{m} calibrated")[0])
+            ax.plot([e0, e1], [a0, a1], color=COLOUR[m], linewidth=0.8, alpha=0.5, zorder=2)
+            ax.plot([e0], [a0], color=COLOUR[m], marker=MARK[m], linestyle="none", markersize=5.5, alpha=0.55,
+                    markerfacecolor="white", markeredgewidth=1.0, zorder=3, label=SERVED_LABEL[m])
+        for system in FAINT:
+            row, _ = point(results, by_source, key, source, system)
+            ax.plot([row["ece"][0]], [row["accuracy"][0]], color=COLOUR[system], marker=MARK[system], linestyle="none",
+                    markersize=5.5, alpha=0.45, markerfacecolor="white", markeredgewidth=1.0, zorder=3,
+                    label=LABEL[system])
+        for system in CALIBRATED + HIGHLIGHT:
             row, _ = point(results, by_source, key, source, system)
             a, e = row["accuracy"], row["ece"]
-            faint = system in FAINT
             ax.errorbar([e[0]], [a[0]], xerr=[[e[0] - e[1]], [e[2] - e[0]]], yerr=[[a[0] - a[1]], [a[2] - a[0]]],
                         color=COLOUR[system], marker=MARK[system], linestyle="none", capsize=2, elinewidth=0.9,
-                        markersize=6.5 if system in HIGHLIGHT else 5.5, alpha=0.35 if faint else 1.0,
-                        zorder=4 if system in HIGHLIGHT else 3,
-                        markerfacecolor="white" if faint else COLOUR[system], label=LABEL[system])
+                        markersize=6.5 if system in HIGHLIGHT else 5.5, zorder=5 if system in HIGHLIGHT else 4,
+                        label=LABEL[system])
         n = point(results, by_source, key, source, "judgly-gemma-default")[1]
         n_tev = point(results, by_source, key, source, "tev1:4b")[1]
         ax.set_title(f"{label}\n(n = {n:,}" + (f"; Tev1 {n_tev:,}" if n_tev != n else "") + ")")
@@ -366,12 +546,15 @@ def fig_tiers(results: dict, by_source: dict) -> None:
         ax.set_ylabel("accuracy")
     handles, labels = axes[0][0].get_legend_handles_labels()
     blank = plt.Line2D([], [], linestyle="none")
-    columns = [SHOWN[:3], SHOWN[3:] + (None,), FAINT + (None,)]    # external | judgly default | judgly raw
-    keys = [s for col in columns for s in col]
-    fig.legend([handles[labels.index(LABEL[s])] if s else blank for s in keys],
-               [LABEL[s] if s else "" for s in keys], loc="lower center", ncol=3, frameon=False,
-               bbox_to_anchor=(0.5, 0), fontsize=8.5)
-    fig.tight_layout(rect=(0, 0.1, 1, 1))
+    served = tuple(SERVED_LABEL[m] for m in MODELS)
+    calibrated = tuple(LABEL[s] for s in CALIBRATED)
+    judgly = tuple(LABEL[s] for s in HIGHLIGHT + FAINT)
+    # columns of the legend (filled column by column): external with the equal calibration |
+    # external as served | judgly default | judgly raw
+    keys = list(calibrated + served + judgly[:2] + (None,) + judgly[2:] + (None,))
+    fig.legend([handles[labels.index(s)] if s else blank for s in keys], [s or "" for s in keys],
+               loc="lower center", ncol=4, frameon=False, bbox_to_anchor=(0.5, 0), fontsize=8)
+    fig.tight_layout(rect=(0, 0.13, 1, 1))
     save(fig, "compare-tiers")
 
 
@@ -447,32 +630,56 @@ def captions(results: dict, by_source: dict, timing: dict) -> str:
     sets = []
     for label, key, source in SETS:
         parts = []
-        for system in SHOWN:
-            row, n = point(results, by_source, key, source, system)
+        for m in MODELS:
+            row, _ = point(results, by_source, key, source, m)
+            cal, _ = point(results, by_source, key, source, f"{m} calibrated")
+            parts.append(f"{LABEL[m]} accuracy {c(row['accuracy'])}, ECE as served {c(row['ece'])}, "
+                         f"with the equal calibration {c(cal['ece'])}")
+        for system in HIGHLIGHT:
+            row, _ = point(results, by_source, key, source, system)
             parts.append(f"{LABEL[system]} accuracy {c(row['accuracy'])}, ECE {c(row['ece'])}")
         sets.append(f"{label}: " + "; ".join(parts))
+    temps = results["control"]["temperatures"]
+    kind = {"choice": "choice", "bool": "yes/no", "score": "score"}
+    bound = sorted(f"{LABEL[m]} {kind[t]}" for m in MODELS for f in ("general", "stance")
+                   for t, v in temps[f"{m}/{f}"]["T"].items() if v > 54.59)
     rel = []
     for fmt in ("general", "stance"):
         rel.append(f"{fmt} (n = {results['nimble:9b'][f'{fmt}/confirm']['n_common']:,}): " + ", ".join(
             f"{LABEL[s]} {results[s if s in MODELS else 'nimble:9b'][f'{fmt}/confirm']['systems'][s]['ece'][0]:.3f}"
             for s in RELIABILITY))
+    cal_rel = "; ".join(
+        f"{fmt}: " + ", ".join(
+            f"{LABEL[m]} {results['control']['tiers'][f'{fmt}/confirm'][m]['systems'][f'{m} calibrated']['ece'][0]:.3f}"
+            for m in RELIABILITY if m in MODELS) for fmt in ("general", "stance"))
     jev = by_source["tev1:4b"]["jevbench"]["n_items"]
     return "\n".join([
         MARKER, "",
         "# External comparison figures", "",
         "Made by `make compare-figures` (scripts/make_compare_figures.py) from the record in",
-        "docs/results/external-comparison and judgly's committed per-item dumps; every item is rescored",
-        "and every plotted number checked against the record's result files before anything is written.",
-        "The external models were run as served by Ollama 0.35.0 (`/v1/systemone`), uncalibrated;",
-        "judgly's calibration was fitted by us on similar question types (see the caveats in the",
-        "README and in docs/methods.md).", "",
+        "docs/results/external-comparison (with its equal-calibration control in calibrated/) and judgly's",
+        "committed per-item dumps; every item is rescored and every plotted number checked against the",
+        "record's result files before anything is written. The external models were run as served by",
+        "Ollama 0.35.0 (`/v1/systemone`); judgly's calibration was fitted by us on similar question types",
+        "(see the caveats in the README and in docs/methods.md).", "",
         "## compare-tiers.svg", "",
-        "*What it shows:* accuracy (y) against ECE (x) on six test sets, for Nimble 9B, Tev1 4B, Tev1",
-        "0.8B and judgly's two packs with their default calibration (filled), and judgly raw, without",
-        "calibration (hollow, faint). Bars are 95% percentile bootstrap intervals over the tier's groups",
-        "of related items (1,000 resamples): for the confirm and final tiers they are the record's",
-        "(score_external.py); for typed-decisions and JevBench, which the record reports together as",
-        "bench with point values per source, each source was resampled on its own by this script (seed",
+        "*What it shows:* accuracy (y) against ECE (x) on six test sets. Each of Nimble 9B, Tev1 4B and",
+        "Tev1 0.8B appears twice: as served by Ollama (hollow, faint grey, without bars) and with the equal",
+        "calibration (filled grey, with bars), joined by a thin line. The equal calibration is temperature",
+        "scaling (Guo et al. 2017): one temperature per question type, fitted for each model by the same",
+        "code on the same sample of judgly's training split (1,500 general and 500 stance items; the",
+        "record in docs/results/external-comparison/calibrated). A temperature never changes which answer",
+        "is on top, so both points of a model share one accuracy. judgly's two packs are shown with their",
+        "default calibration as shipped (filled blue) and raw, without calibration (hollow, faint blue).",
+        "judgly's defaults were not fitted on the control's sample: they were fitted by judgly's own trainer",
+        "on the whole train split (6,300 general and 14,783 stance items, 4 to 30 times the sample), and",
+        "for Gemma 4 12B on general questions the default is H2, not the temperature. Only the external",
+        "models and judgly's temperature refitted on the sample (not drawn; its values are in",
+        "docs/methods.md and compare-by-source.json) share the sample and the code. Bars are 95%",
+        "percentile bootstrap intervals over the tier's groups of related items (1,000 resamples): for the",
+        "confirm and final tiers they are the record's (score_external.py for the models as served and",
+        "judgly, score_calibrated.py for the calibrated models); for typed-decisions and JevBench, which",
+        "the record reports together as bench, each source was resampled on its own by this script (seed",
         "20260930; compare-by-source.json). Each external model is scored on the items it answered and",
         "judgly on every item: Tev1 refused 36 JevBench items longer than its context, so in the JevBench",
         f"panel the Tev1 points are on {jev} of the 231 items and judgly's on all 231, different item sets",
@@ -480,17 +687,28 @@ def captions(results: dict, by_source: dict, timing: dict) -> str:
         "is more accurate than on all 231). On the confirm tiers, judgly's defaults are the ones the",
         "pre-registered confirmation selected from its read of this same tier (the temperature where it was",
         "confirmed; H2, the 0.1.0 default, for Gemma 4 12B on general questions). *How to read it:* up and",
-        "to the left is better; points",
-        "whose intervals overlap are not clearly different, and the paired differences in",
-        "docs/methods.md are the sharper test. ECE is never negative, so its intervals lean upward near",
-        "0. *What it says:* judgly Gemma 4 12B is the most accurate or level with the most accurate on",
-        "every set. judgly's defaults have the lowest ECE on the confirm and general final tiers; on",
-        "stance final and typed-decisions Tev1 4B is as well or better calibrated. Without its",
-        "calibration judgly is among the worst calibrated on every set. The numbers: "
-        + ". ".join(sets) + ".", "",
+        "to the left is better; points whose intervals overlap are not clearly different, and the paired",
+        "differences in docs/methods.md are the sharper test. ECE is never negative, so its intervals lean",
+        "upward near 0. *What it says:* accuracy comes from the models, and the temperature does not move",
+        "it; judgly Gemma 4 12B is the most accurate or level with the most accurate on every set. Given",
+        "the same temperature fitted on the same data, the external models come close to judgly's defaults",
+        "in ECE: level with them on general confirm; better calibrated than both judgly packs on stance",
+        "final; between judgly's two packs on stance confirm (Tev1 0.8B excepted, 0.204); on general final",
+        "above judgly Gemma 4 12B's default for all three and, against judgly Qwen3-4B's, Tev1 4B clearly",
+        "above, Nimble 9B marginally and Tev1 0.8B level. On general final judgly's own temperature gave",
+        "0.017 (Gemma 4 12B) and 0.034 (Qwen3-4B) as shipped and 0.038 and 0.044 refitted on the sample, so",
+        "much of that remaining gap comes with the fitting sample, not with H2. Most of judgly's calibration",
+        "lead over the models as served therefore came from its calibration step, not from its models. The",
+        "temperature does not always carry over to new kinds of questions: it made",
+        "Tev1 4B slightly worse calibrated on the final tiers, where it was already well calibrated as",
+        "served, and Nimble 9B and Tev1 4B clearly worse on typed-decisions, mostly on its score questions",
+        "(compare-control-by-type.json). Some fitted temperatures reached the search's upper bound,",
+        "exp(4) = 54.6 (" + ", ".join(bound) + "); at that temperature the answers of that type are almost",
+        "flat, so a low ECE there says little about their usefulness.",
+        "The numbers: " + ". ".join(sets) + ".", "",
         "## compare-reliability.svg", "",
-        "*What it shows:* reliability diagrams on the two confirm tiers for Nimble 9B, Tev1 4B and",
-        "judgly's two packs with their default calibration: for ten equal-width bins of the top",
+        "*What it shows:* reliability diagrams on the two confirm tiers for Nimble 9B and Tev1 4B as served",
+        "and judgly's two packs with their default calibration: for ten equal-width bins of the top",
         "probability, the mean confidence (x) against the share of correct answers (y), with 95% Wilson",
         "intervals; empty bins are left out. *How to read it:* on the dotted diagonal, confidence equals",
         "accuracy; points below it are overconfident. The Wilson intervals treat items as independent,",
@@ -501,7 +719,8 @@ def captions(results: dict, by_source: dict, timing: dict) -> str:
         "*What it says:* Nimble 9B and Tev1 4B, as served, are overconfident on these tiers. judgly's",
         "defaults lie closer to the diagonal, but both are overconfident on stance above 0.5 (Gemma 4 12B",
         "by 0.03 to 0.13 per bin, Qwen3-4B by 0.09 to 0.14), and Gemma 4 12B on general questions in the",
-        "0.5 to 0.6 bin (by 0.12, 796 items). ECE: " + "; ".join(rel) + ".", "",
+        "0.5 to 0.6 bin (by 0.12, 796 items). ECE: " + "; ".join(rel) + ". With the equal calibration",
+        "(compare-tiers), the external models' ECE on these tiers was " + cal_rel + ".", "",
         "## compare-timing.svg", "",
         "*What it shows:* the median time per request (bar) and its 95th percentile (whisker) for each",
         "system, from final/timing.json: 100 items (the first 50 of each confirm tier by the SHA-256 of",
@@ -524,7 +743,10 @@ def write_captions(text: str) -> None:
 
 def main() -> None:
     check_frozen()
-    load_module("reproduce", REC / "reproduce.py").check_tiers()
+    check_frozen(CONTROL)
+    reproduce = load_module("reproduce", REC / "reproduce.py")
+    reproduce.check_tiers()
+    reproduce.check_tiers(("fitdev",))
     tiers = {}
     for fmt, tier in TIERS:
         items = [json.loads(line) for line in open(ROOT / "data" / "tiers" / fmt / f"{tier}.jsonl")]
@@ -541,6 +763,9 @@ def main() -> None:
         per_tier[run], by_source[run] = rescore(tiers, judgly, run, results[run])
         print(f"make_compare_figures: result-{FILES[run]}.json reproduced (points, intervals, differences)", flush=True)
     check_reliability(per_tier["nimble:9b"])
+    results["control"] = json.loads((CONTROL / "result.json").read_text())
+    _, by_source["control"], by_type = rescore_control(tiers, judgly, results["control"], results)
+    print("make_compare_figures: calibrated/result.json reproduced (points, intervals, differences)", flush=True)
     OUT.mkdir(parents=True, exist_ok=True)
     plt.rcParams.update(RC)
     fig_tiers(results, by_source)
@@ -552,10 +777,23 @@ def main() -> None:
                  "bootstrap intervals and paired differences against judgly's defaults, 1,000 resamples of "
                  f"each source's groups, numpy default_rng({SOURCE_SEED}); per scorer run (the result file "
                  "whose items are used)",
-         "runs": {FILES[r]: by_source[r] for r in RUNS}}, indent=1) + "\n")
+         "runs": {FILES[r]: by_source[r] for r in RUNS},
+         "equal calibration": {
+             "what": "the equal-calibration control (external-comparison/calibrated): each external model with its "
+                     "per-type temperature fitted on the training sample, judgly's defaults, and judgly's temperature "
+                     "refitted on the same sample by the same code, on the items that model answered; the same "
+                     "resampling (seed 20260930 per source); differences are the system minus judgly's default",
+             "models": {FILES[m]: by_source["control"][m] for m in MODELS}}}, indent=1) + "\n")
+    (OUT / "compare-control-by-type.json").write_text(json.dumps(
+        {"what": "the equal-calibration control (external-comparison/calibrated), by question type: for each "
+                 "external model on the items it answered, the fitted temperature of the type (1 where the "
+                 "training sample had none), and accuracy, ECE, Brier and the mean top probability as served "
+                 "and calibrated; point values only, recomputed from the committed answers by "
+                 "scripts/make_compare_figures.py after it reproduced calibrated/result.json; not in the record",
+         "tiers": by_type}, indent=1) + "\n")
     write_captions(captions(results, by_source, timing))
     print(f"make_compare_figures: checked against the record; wrote compare-tiers, compare-reliability, compare-timing, "
-          f"compare-by-source.json and CAPTIONS.md in {OUT.relative_to(ROOT)}")
+          f"compare-by-source.json, compare-control-by-type.json and CAPTIONS.md in {OUT.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":

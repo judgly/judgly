@@ -16,7 +16,8 @@
 #   make figures                      the results figures from the snapshot in docs/results
 #   make compare-figures              the external-comparison figures (needs make data)
 #   make compare-score                CPU only: rescore the committed answers of the external comparison
-#                                     with its frozen scorer and check the results equal the committed ones
+#                                     and of its equal-calibration control with their frozen scorers and
+#                                     check the results equal the committed ones
 #   make compare-run                  ask the Ollama models of the external comparison again (Ollama >= 0.35.0,
 #                                     models pulled), into COMPARE_OUT (default results-compare), never the record
 #
@@ -302,8 +303,9 @@ figures:
 
 # The external-comparison figures (docs/results/external-comparison); needs the tier files from
 # make data, rescores every item and checks every plotted number against the record's results.
+# scipy (pinned, as in compare-score) refits the equal-calibration control's temperatures.
 compare-figures:
-	uv run --only-group figures python scripts/make_compare_figures.py
+	uv run --only-group figures --with scipy==1.18.1 python scripts/make_compare_figures.py
 
 # ---- external comparison ---------------------------------------------------------------------
 
@@ -313,10 +315,15 @@ compare-figures:
 # each equals the committed one, byte for byte. compare-run asks the models again (Ollama >= 0.35.0
 # with nimble:9b, tev1:4b and tev1:0.8b pulled; tags can move, so the model IDs are compared with
 # the recorded ones) and writes answers and results to COMPARE_OUT, never into the record.
-# numpy and Python are pinned to the versions the byte-for-byte check was made with: the scorer's
-# bootstrap uses numpy's default_rng, whose draws numpy does not promise to keep across versions.
+# compare-score also rescores the equal-calibration control (external-comparison/calibrated: the
+# same per-type temperature fitted for every system on the same training sample) from its
+# committed answers and judgly's committed train readout, and checks its result.json and
+# result.txt byte for byte.
+# numpy, scipy and Python are pinned to the versions the byte-for-byte check was made with: the
+# scorers' bootstrap uses numpy's default_rng, whose draws numpy does not promise to keep across
+# versions, and the control's temperatures come from scipy's bounded minimiser.
 COMPARE_OUT ?= results-compare
-COMPARE     = uv run --no-project --python 3.13 --with numpy==2.5.3 python docs/results/external-comparison/reproduce.py
+COMPARE     = uv run --no-project --python 3.13 --with numpy==2.5.3 --with scipy==1.18.1 python docs/results/external-comparison/reproduce.py
 
 compare-score:
 	$(COMPARE) score
