@@ -73,10 +73,12 @@ FAINT = ("judgly-gemma-raw", "judgly-qwen-raw")
 LABEL = {"nimble:9b": "Nimble 9B", "tev1:4b": "Tev1 4B", "tev1:0.8b": "Tev1 0.8B",
          "judgly-gemma-default": "judgly Gemma 4 12B, default", "judgly-qwen-default": "judgly Qwen3-4B, default",
          "judgly-gemma-raw": "judgly Gemma 4 12B, raw", "judgly-qwen-raw": "judgly Qwen3-4B, raw"}
-# Okabe-Ito colours (colour-blind safe); judgly raw in its pack's colour, hollow and faint.
-COLOUR = {"nimble:9b": "#E69F00", "tev1:4b": "#009E73", "tev1:0.8b": "#56B4E9",
-          "judgly-gemma-default": "#0072B2", "judgly-qwen-default": "#CC79A7",
-          "judgly-gemma-raw": "#0072B2", "judgly-qwen-raw": "#CC79A7"}
+# judgly in blues (Gemma dark, Qwen light), the other models in greys told apart by shade and
+# marker; judgly raw in its pack's blue, hollow and faint.
+COLOUR = {"nimble:9b": "#3C3C3C", "tev1:4b": "#7A7A7A", "tev1:0.8b": "#ABABAB",
+          "judgly-gemma-default": "#0072B2", "judgly-qwen-default": "#56B4E9",
+          "judgly-gemma-raw": "#0072B2", "judgly-qwen-raw": "#56B4E9"}
+HIGHLIGHT = ("judgly-gemma-default", "judgly-qwen-default")
 MARK = {"nimble:9b": "D", "tev1:4b": "^", "tev1:0.8b": "v", "judgly-gemma-default": "o",
         "judgly-qwen-default": "s", "judgly-gemma-raw": "o", "judgly-qwen-raw": "s"}
 RELIABILITY = ("nimble:9b", "tev1:4b", "judgly-gemma-default", "judgly-qwen-default")
@@ -349,7 +351,8 @@ def fig_tiers(results: dict, by_source: dict) -> None:
             faint = system in FAINT
             ax.errorbar([e[0]], [a[0]], xerr=[[e[0] - e[1]], [e[2] - e[0]]], yerr=[[a[0] - a[1]], [a[2] - a[0]]],
                         color=COLOUR[system], marker=MARK[system], linestyle="none", capsize=2, elinewidth=0.9,
-                        markersize=5.5, alpha=0.35 if faint else 1.0,
+                        markersize=6.5 if system in HIGHLIGHT else 5.5, alpha=0.35 if faint else 1.0,
+                        zorder=4 if system in HIGHLIGHT else 3,
                         markerfacecolor="white" if faint else COLOUR[system], label=LABEL[system])
         n = point(results, by_source, key, source, "judgly-gemma-default")[1]
         n_tev = point(results, by_source, key, source, "tev1:4b")[1]
@@ -386,7 +389,7 @@ def fig_reliability(per_tier: dict, results: dict) -> None:
             acc = np.array([b["accuracy"] for b in bins])
             err = np.array([[b["accuracy"] - b["wilson_lo"] for b in bins], [b["wilson_hi"] - b["accuracy"] for b in bins]])
             ax.errorbar(conf, acc, yerr=err, color=COLOUR[system], marker=MARK[system], linestyle="-", capsize=2,
-                        elinewidth=0.9, markersize=4)
+                        elinewidth=0.9, markersize=4, linewidth=2.0 if system in HIGHLIGHT else 1.4)
             ax.text(0.04, 0.93, f"ECE {ece:.3f}", transform=ax.transAxes, fontsize=8.5, va="top")
             ax.set_xlim(0, 1)
             ax.set_ylim(0, 1)
