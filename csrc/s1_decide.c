@@ -1,6 +1,7 @@
 /* Questions to probabilities: rotations, the content-free pass, and the averaging.
  * Order of application, per rotation: slot logits, content-free
- * subtraction, softmax, slots back to options; across rotations: the mean. */
+ * subtraction, softmax (or the H1/H2 head), slots back to options; across rotations: the mean;
+ * then, for a temperature head only, the temperature of the question's type. */
 #include "s1.h"
 
 #include <math.h>
@@ -333,7 +334,7 @@ void s1_readouts_free(struct s1_readouts *r)
 void s1_readout_probs(const struct s1_readout *item, const struct s1_head *head,
                       enum s1_type type, int K, double *p)
 {
-    if (head) {
+    if (head && !head->temperature) { /* a temperature head acts after the mean (s1_combine) */
         s1_head_apply(head->x[type], head->h2, head->n_embd, item->z, item->zc, item->h, K, p);
         return;
     }
@@ -367,6 +368,9 @@ void s1_combine(const struct s1_ask *ask, int n_ask, const struct s1_readouts *r
         reply[i].slot_mass /= reply[i].n_rotation;
         for (int k = 0; k < ask[i].K; k++) {
             reply[i].p[k] /= reply[i].n_rotation;
+        }
+        if (head && head->temperature) {
+            s1_temperature_apply(head->x[ask[i].type][0], ask[i].K, reply[i].p);
         }
     }
 }

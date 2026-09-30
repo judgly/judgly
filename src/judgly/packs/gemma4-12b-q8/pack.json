@@ -1,5 +1,5 @@
 {
- "schema": 1,
+ "schema": 2,
  "name": "gemma4-12b-q8",
  "description": "Google Gemma 4 12B instruction-tuned, 8-bit GGUF. The default model.",
  "model": {
@@ -20,27 +20,83 @@
  },
  "heads": {
   "*": {
-   "file": "heads/h2.bin",
-   "status": "available",
-   "sha256": "bdf84fac9bb91fefac915e168d95dc5f42fdadae48e5590d70223e0b8e78d9ff",
-   "licence": "Apache-2.0",
-   "calibration": "calibration/general.json",
-   "final_tier": {
-    "accuracy": 0.7368955451,
-    "log_loss": 0.6308785127,
-    "ece": 0.02004988251
+   "default": "h2",
+   "default_basis": "pre-registered confirmation on untouched data, temperature against H2 (docs/calibration.md): not confirmed, so H2 stays the default",
+   "options": {
+    "h2": {
+     "file": "heads/h2.bin",
+     "status": "available",
+     "sha256": "bdf84fac9bb91fefac915e168d95dc5f42fdadae48e5590d70223e0b8e78d9ff",
+     "licence": "Apache-2.0",
+     "calibration": "calibration/general.json",
+     "final_tier": {
+      "accuracy": 0.7368955451,
+      "log_loss": 0.6308785127,
+      "ece": 0.02004988251
+     },
+     "confirm_tier": {
+      "accuracy": 0.5092,
+      "log_loss": 0.932611517,
+      "ece": 0.0504804908
+     }
+    },
+    "temperature": {
+     "file": "heads/temperature.bin",
+     "status": "available",
+     "sha256": "1ed3d20095731763cbb08a8333d8054b1f5a5268697ed27eb5ee8fe494155305",
+     "licence": "Apache-2.0",
+     "calibration": "calibration/general.json",
+     "final_tier": {
+      "accuracy": 0.7603756822,
+      "log_loss": 0.5955543731,
+      "ece": 0.01686942528
+     },
+     "confirm_tier": {
+      "accuracy": 0.5092,
+      "log_loss": 0.9588195793,
+      "ece": 0.08723819235
+     }
+    }
    }
   },
   "stance": {
-   "file": "heads/h2-stance.bin",
-   "status": "available",
-   "sha256": "ac30505af5d62bad368df67cd12e14eff5684103f71e3897bd9c4387e4e5faa5",
-   "licence": "CC-BY-SA-4.0",
-   "calibration": "calibration/stance.json",
-   "final_tier": {
-    "accuracy": 0.8123603872,
-    "log_loss": 0.5085015586,
-    "ece": 0.04785436583
+   "default": "temperature",
+   "default_basis": "pre-registered confirmation on untouched data, temperature against H2 (docs/calibration.md): confirmed, so the temperature is the default",
+   "options": {
+    "h2": {
+     "file": "heads/h2-stance.bin",
+     "status": "available",
+     "sha256": "ac30505af5d62bad368df67cd12e14eff5684103f71e3897bd9c4387e4e5faa5",
+     "licence": "CC-BY-SA-4.0",
+     "calibration": "calibration/stance.json",
+     "final_tier": {
+      "accuracy": 0.8123603872,
+      "log_loss": 0.5085015586,
+      "ece": 0.04785436583
+     },
+     "confirm_tier": {
+      "accuracy": 0.6292134831,
+      "log_loss": 0.8115773497,
+      "ece": 0.07774044692
+     }
+    },
+    "temperature": {
+     "file": "heads/temperature-stance.bin",
+     "status": "available",
+     "sha256": "f719e07cfef652ee4298c126c5165d2f8b77e3471d8364ed84e7e009515a7a08",
+     "licence": "CC-BY-SA-4.0",
+     "calibration": "calibration/stance.json",
+     "final_tier": {
+      "accuracy": 0.82725242,
+      "log_loss": 0.5364100675,
+      "ece": 0.08658710076
+     },
+     "confirm_tier": {
+      "accuracy": 0.6550561798,
+      "log_loss": 0.8231400418,
+      "ece": 0.05165316623
+     }
+    }
    }
   }
  },

@@ -50,9 +50,11 @@ def registry_sha256() -> str:
 # recorded caveat (a source's `caveat`), read with final but reported beside it, never pooled
 # into it; final-seen: an earlier held-out tier, its families read during development
 # (reported separately as previously seen); bench: external benchmarks, evaluation only;
-# reserved: in no tier, kept unseen; none: not used.
-TIERS = ("fit", "dev", "final", "final-flagged", "final-seen", "bench", "reserved", "none")
-EVAL_TIERS = ("dev", "final", "final-flagged", "final-seen", "bench")
+# confirm: untouched families for a pre-registered confirmation, evaluation only, built after
+# every other tier and cleaned against all of them; reserved: in no tier, kept unseen; none: not
+# used.
+TIERS = ("fit", "dev", "final", "final-flagged", "final-seen", "bench", "confirm", "reserved", "none")
+EVAL_TIERS = ("dev", "final", "final-flagged", "final-seen", "bench", "confirm")
 
 
 def tier_of(reg: dict, name: str) -> str:

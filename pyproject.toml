@@ -1,6 +1,6 @@
 [project]
 name = "judgly"
-version = "0.1.0"
+version = "0.2.0"
 description = "Calibrated probabilities for typed questions from two open language models via llama.cpp (hobby project; early release)"
 readme = "README.md"
 license = "Apache-2.0 AND MIT AND CC-BY-SA-4.0"
@@ -32,7 +32,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/judgly/judgly"
-Documentation = "https://github.com/judgly/judgly/tree/v0.1.0/docs"
+Documentation = "https://github.com/judgly/judgly/tree/v0.2.0/docs"
 Repository = "https://github.com/judgly/judgly"
 Changelog = "https://github.com/judgly/judgly/blob/main/CHANGELOG.md"
 Issues = "https://github.com/judgly/judgly/issues"

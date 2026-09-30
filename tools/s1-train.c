@@ -1,4 +1,12 @@
-/* s1-train: fits head H1 or H2 on a feature file.
+/* s1-train: fits head H1 or H2, or the per-type temperature, on a feature file.
+ *
+ * The temperature (--head temperature): per question type, the one temperature T that minimises
+ * the mean log loss of the training items, each item's probabilities being the raw readout
+ * (softmax(z - zc) per rotation, mapped back to the options, averaged over the rotations the
+ * engine settings read) with T applied to the average (s1_temperature_apply). Every item counts
+ * once, unweighted. T is rounded to three decimals, the precision of the values confirmed on
+ * untouched data (docs/calibration.md); the unrounded value is recorded in the sidecar. The
+ * validation split is used only for the verdict below, as for H2.
  *
  * Per question type: H1 from the identity by L-BFGS; for H2, from the fitted H1 for each
  * lambda of the grid, stopping early on the validation loss, keeping the best lambda. The
@@ -384,6 +392,117 @@ static int train_type(struct s1_head *head, const struct s1_feat *f, int type, F
     return rc;
 }
 
+/* Largest, over option positions k, standard deviation of p_T[k] across the items (those with
+ * K > k): the temperature form of s1_head_prob_sd. */
+static double temperature_prob_sd(double t, const struct s1_pred *pred, const int *index, int n)
+{
+    double mean[S1_K_MAX] = { 0.0 };
+    double m2[S1_K_MAX]   = { 0.0 };
+    int    count[S1_K_MAX] = { 0 };
+    for (int i = 0; i < n; i++) {
+        const struct s1_pred *x = &pred[index[i]];
+        double                p[S1_K_MAX];
+        memcpy(p, x->p, sizeof p);
+        s1_temperature_apply(t, x->K, p);
+        for (int k = 0; k < x->K; k++) {
+            double delta = p[k] - mean[k];
+            count[k]++;
+            mean[k] += delta / count[k];
+            m2[k] += delta * (p[k] - mean[k]);
+        }
+    }
+    double worst = 0.0;
+    for (int k = 0; k < S1_K_MAX; k++) {
+        if (count[k] > 1) {
+            worst = fmax(worst, sqrt(m2[k] / count[k]));
+        }
+    }
+    return worst;
+}
+
+/* The positions in pred[0 .. n) of the items of one question type. Returns their number. */
+static int items_of_type(const struct s1_pred *pred, int n, int type, int *index)
+{
+    int m = 0;
+    for (int i = 0; i < n; i++) {
+        if (pred[i].type == type) {
+            index[m++] = i;
+        }
+    }
+    return m;
+}
+
+/* Fits the temperature of every question type into head (a temperature head) and writes the
+ * per-type entries of the sidecar. */
+static int fit_temperatures(struct s1_head *head, const struct s1_feat *f,
+                            struct s1_decide_opts engine, FILE *report)
+{
+    struct s1_pred *train  = NULL;
+    struct s1_pred *valid  = NULL;
+    int             n_t    = s1_feat_predictions(f, S1_TRAIN, NULL, engine.rotations,
+                                                 engine.content_free, &train);
+    int             n_v    = n_t < 0 ? -1 : s1_feat_predictions(f, S1_VALIDATION, NULL,
+                                                                engine.rotations,
+                                                                engine.content_free, &valid);
+    int            *it     = n_v < 0 ? NULL : malloc((size_t)(n_t + 1) * sizeof *it);
+    int            *iv     = it ? malloc((size_t)(n_v + 1) * sizeof *iv) : NULL;
+    int             rc     = iv ? 0 : -1;
+    int             n_done = 0;
+    if (rc != 0) {
+        fprintf(stderr, "s1-train: cannot read the items of the feature file\n");
+    }
+    for (int type = 0; rc == 0 && type < 3; type++) {
+        int m_t = items_of_type(train, n_t, type, it);
+        int m_v = items_of_type(valid, n_v, type, iv);
+        fprintf(report, "%s  \"%s\": ", n_done++ ? ",\n" : "", TYPE_NAME[type]);
+        if (m_t == 0 || m_v == 0) {
+            /* A fit needs training items, and its verdict validation items. */
+            const char *why = m_t == 0 && m_v == 0 ? "no items of this type"
+                              : m_t == 0           ? "no training items of this type"
+                                                   : "no validation items of this type";
+            printf("%s: %d training and %d validation items; the temperature stays 1 (identity)\n",
+                   TYPE_NAME[type], m_t, m_v);
+            fprintf(report, "{\"train_items\": %d, \"validation_items\": %d, \"temperature\": 1, "
+                            "\"fallback\": \"identity\", \"reason\": \"%s\"}",
+                    m_t, m_v, why);
+            continue;
+        }
+        bool   bounded = false;
+        double exact   = s1_temperature_fit(train, it, m_t, &bounded);
+        double t       = round(exact * 1000.0) / 1000.0; /* three decimals */
+        t              = fmin(fmax(t, S1_TEMP_MIN), S1_TEMP_MAX);
+        double train_loss = s1_temperature_loss(t, train, it, m_t);
+        double h0         = s1_temperature_loss(1.0, valid, iv, m_v);
+        double loss       = s1_temperature_loss(t, valid, iv, m_v);
+        double sd         = temperature_prob_sd(t, valid, iv, m_v);
+        const char *reason = sd < S1_MIN_PROB_SD ? "input-independent on validation"
+                             : !(loss < h0)      ? "no better than the raw readout on validation"
+                                                 : NULL;
+        printf("%s: %d training and %d validation items, raw validation %.6f\n"
+               "  temperature %.3f (unrounded %.9g%s), train %.6f, validation %.6f, "
+               "probability sd %.4f\n",
+               TYPE_NAME[type], m_t, m_v, h0, t, exact, bounded ? ", at a bound" : "", train_loss,
+               loss, sd);
+        if (reason) {
+            printf("  %s: %s; the temperature is 1 (identity)\n", TYPE_NAME[type], reason);
+        }
+        head->x[type][0] = reason ? 1.0 : t;
+        fprintf(report, "{\"train_items\": %d, \"validation_items\": %d, \"h0_validation_loss\": "
+                        "%.6f, \"train_loss\": %.6f, \"validation_loss\": %.6f, \"temperature\": "
+                        "%.3f, \"temperature_unrounded\": %.9g, \"temperature_bounded\": %s, "
+                        "\"prob_sd\": %.6g, \"fallback\": %s%s%s, \"reason\": %s%s%s}",
+                m_t, m_v, h0, train_loss, loss, reason ? 1.0 : t, exact,
+                bounded ? "true" : "false", sd, reason ? "\"" : "", reason ? "identity" : "null",
+                reason ? "\"" : "", reason ? "\"" : "", reason ? reason : "null",
+                reason ? "\"" : "");
+    }
+    free(it);
+    free(iv);
+    free(train);
+    free(valid);
+    return rc;
+}
+
 static int compare_u64(const void *a, const void *b)
 {
     uint64_t x = *(const uint64_t *)a;
@@ -449,12 +568,14 @@ int main(int argc, char **argv)
     const char *out      = s1_arg_value(argc, argv, "--out");
     const char *limit    = s1_arg_value(argc, argv, "--limit-train");
     bool        h2       = kind && strcmp(kind, "h2") == 0;
+    bool        temp     = kind && strcmp(kind, "temperature") == 0;
     const char *max_rot  = s1_arg_value(argc, argv, "--max-rotations");
     struct s1_decide_opts engine = { s1_arg_flag(argc, argv, "--rotations"),
                                      s1_arg_flag(argc, argv, "--content-free"),
                                      max_rot ? (int)strtol(max_rot, NULL, 10) : 0 };
-    if (!features || !out || !kind || (!h2 && strcmp(kind, "h1") != 0)) {
-        fprintf(stderr, "usage: s1-train --features FILE.feat --head h1|h2 --out HEAD.bin "
+    if (!features || !out || !kind || (!h2 && !temp && strcmp(kind, "h1") != 0) ||
+        (temp && (limit || s1_arg_flag(argc, argv, "--probe")))) {
+        fprintf(stderr, "usage: s1-train --features FILE.feat --head h1|h2|temperature --out HEAD.bin "
                         "[--limit-train N] [--probe]\n"
                         "         [--rotations] [--max-rotations N] [--content-free]\n"
                         "       The engine settings the features were extracted with, and that the\n"
@@ -462,6 +583,8 @@ int main(int argc, char **argv)
                         "       HEAD.bin.json.\n"
                         "       --probe fits on h alone: the slot logits are set to zero.\n"
                         "       --limit-train keeps N training items, evenly across tasks, nested.\n"
+                        "       --head temperature fits one temperature per question type on the\n"
+                        "       rotation-averaged raw readout (no --limit-train, no --probe).\n"
                         "       The gradient check is test T7 of s1-selftest.\n");
         return 2;
     }
@@ -478,7 +601,7 @@ int main(int argc, char **argv)
         s1_sha256_file(features, sha) == 0 &&
         (keep = malloc((size_t)(f.header.n_records ? f.header.n_records : 1) * sizeof *keep)) &&
         mark_kept(&f, limit ? strtol(limit, NULL, 10) : LONG_MAX, keep) == 0 &&
-        s1_head_init(&head, h2, (int)f.header.n_embd) == 0 &&
+        (temp ? s1_temperature_head_init(&head) : s1_head_init(&head, h2, (int)f.header.n_embd)) == 0 &&
         snprintf(json, sizeof json, "%s.json", out) < (int)sizeof json &&
         (report = fopen(json, "w")) != NULL) {
         memcpy(head.gguf_sha256, f.header.gguf_sha256, sizeof head.gguf_sha256);
@@ -492,7 +615,10 @@ int main(int argc, char **argv)
                 engine.max_rotations, engine.content_free ? "true" : "false");
         int n_reported = 0;
         status         = 0;
-        for (int type = 0; type < 3 && status == 0; type++) {
+        if (temp) {
+            status = fit_temperatures(&head, &f, engine, report) == 0 ? 0 : 1;
+        }
+        for (int type = 0; !temp && type < 3 && status == 0; type++) {
             status = train_type(&head, &f, type, report, &n_reported, keep) == 0 ? 0 : 1;
         }
         fprintf(report, "\n }}\n");

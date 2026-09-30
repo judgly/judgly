@@ -58,15 +58,16 @@ Data
 ------------------------------------------------------------------------------
 
 This version ships calibration heads inside the packs
-(src/judgly/packs/<name>/heads/), licensed as stated in the LICENSE file next
-to them:
+(src/judgly/packs/<name>/heads/), two per format (the H2 head and the per-type
+temperature, fitted on the same data), licensed as stated in the LICENSE file
+next to them:
 
-  general head ("*")   Apache License 2.0. Fitted on MMLU, CommonsenseQA,
+  general heads ("*")  Apache License 2.0. Fitted on MMLU, CommonsenseQA,
                        StrategyQA, HH-RLHF (MIT); QASC, Cosmos QA, BANKING77,
                        HelpSteer2, LEDGAR as released in LexGLUE (CC BY 4.0);
                        Civil Comments (CC0 1.0); GoEmotions (Apache 2.0); and
                        judgly's own generated tasks.
-  stance head          CC BY-SA 4.0 (LICENSES/CC-BY-SA-4.0.txt). Fitted on
+  stance heads         CC BY-SA 4.0 (LICENSES/CC-BY-SA-4.0.txt). Fitted on
                        MultiNLI (OANC licence, parts CC BY-SA 3.0 / CC BY 3.0);
                        VitaminC and FEVER (CC BY-SA 3.0), which contain
                        material derived from Wikipedia (Wikipedia contributors,
@@ -78,3 +79,22 @@ Heads contain no dataset text. Datasets used only for evaluation are not
 redistributed; they are downloaded by scripts/prep_tiers.py from their
 publishers. Every dataset, its pinned revision, licence and citation is listed
 in data/registry.yaml, and the licence evidence is in docs/licences.md.
+
+------------------------------------------------------------------------------
+External comparison
+------------------------------------------------------------------------------
+
+docs/results/external-comparison/ holds the answers (item ids, probabilities,
+token counts and timings) of three decision models run through Ollama 0.35.0
+(https://github.com/ollama/ollama, MIT License):
+
+  Nimble 9B            Bespoke Labs and Maheswaran Sathiamoorthy,
+                       https://huggingface.co/bespokelabs/Bespoke-Nimble-9B
+                       (weights: Apache License 2.0, as stated on the model card)
+  Tev1 4B, Tev1 0.8B   Together AI, https://github.com/togethercomputer/tev1
+                       (code: MIT License, Copyright (c) 2026 open-jev
+                       contributors; the model cards describe the weights'
+                       licence as being finalized)
+
+No weights of these models are included in judgly or in this repository; judgly
+does not use them.

@@ -5,10 +5,12 @@ pack.json, template.tpl
     Part of judgly, Apache License 2.0 (see LICENSE at the top of the judgly
     source tree or in the wheel's .dist-info/licenses/).
 
-heads/h2.bin (the general head, "*"), when present
-    Apache License 2.0. It is a small calibration head (a few hundred thousand numbers)
-    fitted on the model's answer-letter logits for items from the datasets
-    below, all under permissive licences. The head contains no dataset text.
+heads/h2.bin and heads/temperature.bin (the general calibration options, "*"),
+when present
+    Apache License 2.0. h2.bin is a small calibration head (a few hundred
+    thousand numbers) and temperature.bin holds three numbers (one temperature
+    per question type), both fitted on the model's answer-letter logits for
+    items from the datasets below, all under permissive licences. The head contains no dataset text.
     Where a fitted head counts as an adaptation of the data, these works are
     used under their licences and are credited here:
 
@@ -31,12 +33,13 @@ heads/h2.bin (the general head, "*"), when present
     redistributed. CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
     Evidence for each licence: docs/licences.md in the judgly repository.
 
-heads/h2-stance.bin (the stance head, "stance"), when present
+heads/h2-stance.bin and heads/temperature-stance.bin (the stance calibration
+options, "stance"), when present
     Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0),
     NOT Apache 2.0. Full text: LICENSES/CC-BY-SA-4.0.txt, and
     https://creativecommons.org/licenses/by-sa/4.0/legalcode
-    It is fitted on items from share-alike data, so it is released under a
-    share-alike licence as the conservative reading of those licences:
+    Both are fitted on items from share-alike data, so they are released under
+    a share-alike licence as the conservative reading of those licences:
 
       MultiNLI (Williams, Nangia and Bowman 2018)   OANC licence, with parts
                                                     under CC BY-SA 3.0 and
@@ -59,7 +62,7 @@ heads/h2-stance.bin (the stance head, "stance"), when present
     version with the same licence elements, which is why 4.0 is used.
     Changes: items were reformatted into supports / refutes / not enough
     information questions and only the model's logits on them were used; no
-    text is redistributed. Copyright of the head: Timo Lassmann, 2026.
+    text is redistributed. Copyright of the heads: Timo Lassmann, 2026.
 
 The model weights are NOT part of this pack. They are downloaded from
 https://huggingface.co/ggml-org/gemma-4-12B-it-GGUF (GGUF conversion by

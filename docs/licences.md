@@ -19,14 +19,14 @@ I am not a lawyer; this records what the sources say, not legal advice.
 
 ## 1. What ships
 
-### Wheel (`judgly-0.1.0-py3-none-macosx_*_arm64.whl`)
+### Wheel (`judgly-0.2.0-py3-none-macosx_*_arm64.whl`)
 
 | File(s) | Origin | Licence | Licence text present |
 |---|---|---|---|
 | `judgly/*.py`, `py.typed` | judgly | Apache-2.0 | `.dist-info/licenses/LICENSE` |
 | `judgly/packs/*/pack.json`, `template.tpl` | judgly | Apache-2.0 | `LICENSE`; `packs/*/LICENSE` |
 | `judgly/packs/*/LICENSE` | judgly | describes the pack's files | itself |
-| `judgly/packs/*/heads/` | judgly: H2 heads fitted in the release runs (`h2.bin`, `h2-stance.bin`) | Apache-2.0 (general), CC BY-SA 4.0 (stance) | `packs/*/LICENSE`, `LICENSES/CC-BY-SA-4.0.txt` |
+| `judgly/packs/*/heads/` | judgly: the two calibration options, H2 heads (`h2.bin`, `h2-stance.bin`) fitted in the 0.1.0 release runs, and per-type temperatures (`temperature.bin`, `temperature-stance.bin`) fitted after the release on the same train items (values frozen for the confirmation), each with its trainer sidecar (`*.bin.json`) | Apache-2.0 (general), CC BY-SA 4.0 (stance) | `packs/*/LICENSE`, `LICENSES/CC-BY-SA-4.0.txt` |
 | `judgly/libjudgly.dylib` | judgly `csrc/` + llama.cpp/ggml (static, Metal library embedded) + yyjson | Apache-2.0; MIT (ggml, llama.cpp, llamafile sgemm, YaRN RoPE, yyjson) | `LICENSES/llama.cpp-ggml-MIT.txt`, `llamafile-sgemm-MIT.txt`, `yarn-rope-MIT.txt`, `yyjson-MIT.txt`; `NOTICE` |
 | `.dist-info/licenses/` | LICENSE, NOTICE, LICENSES/* | | via `license-files` in pyproject.toml |
 
@@ -38,7 +38,7 @@ The in-source notices inside ggml that apply to compiled code are llamafile
 sgemm (Mozilla Foundation, MIT) and YaRN RoPE (Quesnelle and Peng, MIT);
 `scripts/check_licenses.py` fails if either notice changes.
 
-### sdist (`judgly-0.1.0.tar.gz`)
+### sdist (`judgly-0.2.0.tar.gz`)
 
 | Path | Origin | Licence | Licence text present |
 |---|---|---|---|
@@ -119,7 +119,7 @@ the general sources; stance head: the stance sources). `NOTICE` and each pack's
 `LICENSE` name this fitting data, with its licences and the attribution each
 licence asks for.
 
-Evaluation-only sources (dev, final, final-flagged, final-seen, bench and reserved tiers) are
+Evaluation-only sources (dev, final, final-flagged, final-seen, bench, confirm and reserved tiers) are
 not fitted on and not redistributed. Several have non-permissive or unconfirmed
 licences (e.g. ANLI CC-BY-NC, COVID-Fact / HealthVer / SciFact unconfirmed,
 HealthFC CC-BY-NC-ND, CEFR-SP CC-BY-NC-SA); publishing numbers on them is
@@ -142,7 +142,12 @@ file at the pinned commit):
 | HealthFC, github.com/jvladika/HealthFC @ 9f31d765 | final-flagged (final_health_claims) | repository `LICENSE-CC-BY-NC-ND`: "Creative Commons Attribution-NonCommercial-NoDerivs 4.0 International License" | evaluation only; no adapted text is redistributed. Reported beside the final tier, not in it: the evidence sentences are the fact-checkers' own summary and often state the verdict (the flaw that excluded PubHealth), and 740 of 749 claims are yes/no questions |
 | typed-decisions, `LocalLLaMA/typed-decisions` @ f7a2487e | bench | card `license: apache-2.0` | the test split only. The gold is a teacher model's output (model-written labels), so the rule in section 2 keeps it to evaluation, although the licence would allow fitting; the teacher and the model that wrote the states are not named |
 | JevBench public items (all 231), github.com/fstandhartinger/jevbench @ 1df665e3 (tag v1.4.2) | bench | `LICENSE`: "MIT License Copyright (c) 2026 Florian Standhartinger and contributors"; per-item `provenance.license` MIT | the hard items were written by Claude Opus 5 and GPT-5.6 Sol (`provenance.author_model`): evaluation only, never fitted on |
-| ClimateCheck, `rabuahmad/climatecheck` @ 93d0dc50 | reserved | card `license: mit` | in no tier; kept unseen as the next stance final tier. Some of its abstracts quote passages that Climate-FEVER (a dev-tier source) also holds: `make check` reports them, and those items are to be removed before it is promoted |
+| ClimateCheck, `rabuahmad/climatecheck` @ 93d0dc50 | confirm (confirm_climate) | card `license: mit` | reserved in 0.1.0; now the stance confirm tier (labelled test split only). Items overlapping any other tier or, as whole sources, Climate-FEVER, COVID-Fact, HealthVer, Check-COVID, HealthFC or SciFact are dropped |
+| CLUTRR, `tasksource/clutrr` @ 3f0016e8 | confirm (kinship) | card: no licence field; the original `CLUTRR/v1` card says `license: unknown`; github.com/facebookresearch/clutrr `LICENSE`: "Attribution-NonCommercial 4.0 International" | evaluation only (CC BY-NC 4.0) |
+| SpartQA-YN, `tasksource/spartqa-yn` @ 150c819e | confirm (spatial) | card `license: apache-2.0`; github.com/HLR/SpartQA_generation and HLR/SpartQA-baselines `LICENSE.md`: MIT | generated scenes |
+| IBM Argument Quality Ranking 30k, `ibm-research/argument_quality_ranking_30k` @ 590726b3 | confirm (argument_quality) | card `license: cc-by-3.0`; licensing section: "(c) Copyright IBM 2014. Released under CC-BY-SA 3.0" and Wikipedia copyright | evaluation only either way. FLAG: card field and card text disagree |
+| Humicroedit (SemEval-2020 Task 7), `tasksource/humicroedit` @ f5a16e65 | confirm (humour) | card `license: unknown` (as the original `SemEvalWorkshop/humicroedit` card); the primary page cs.rochester.edu/u/nhossain/humicroedit.html states no licence | evaluation only. FLAG: no licence stated anywhere |
+| CodeMMLU execution prediction, `Fsoft-AIC/CodeMMLU` @ f7c12212 | confirm (code_outcome) | card `license: mit`; github.com/FSoft-AI4Code/CodeMMLU `LICENSE`: MIT; the programs are Project CodeNet submissions (IBM/Project_CodeNet repository Apache-2.0) | FLAG (weak): the CodeNet data licence was not confirmed from its README |
 
 ### 2.1 Candidates not used, and why
 
@@ -172,7 +177,7 @@ Candidates for fitting, final or bench data that were checked and are not used:
 | wikiHow goal-step, e-CARE, MC-TACO | Relatives of families already used (HellaSwag and SWAG, COPA, commonsense) |
 | OneStopEnglish | 567 long texts; CEFR-SP is used for difficulty |
 | Toxicity, hate-speech and clickbait sets | Relatives of the fit family moderation |
-| CodeMMLU execution prediction | Allowed (MIT) but left out: its name reads as a variant of the fit source MMLU |
+| CodeMMLU execution prediction | Allowed (MIT) but left out of the 0.1.0 tiers: its name reads as a variant of the fit source MMLU (its data is Project CodeNet, not MMLU); used in the confirm tier |
 | JevBench official score (sealed and held-out items, imported router and judge items) | Not published; only the operator can run it |
 | Kev "transfer-v4" test | Not published; the figure often quoted next to Jev's is on a different item set |
 
@@ -182,6 +187,17 @@ Candidates for fitting, final or bench data that were checked and are not used:
 |---|---|---|---|
 | Gemma 4 12B instruction-tuned, Google DeepMind | `ggml-org/gemma-4-12B-it-GGUF` @ e3e68173, file `gemma-4-12B-it-Q8_0.gguf` | Base card `google/gemma-4-12B-it`: `license: apache-2.0`, `license_link: https://ai.google.dev/gemma/docs/gemma_4_license`; that page is titled "Apache License 2.0 \| Gemma" and carries the Apache License, Version 2.0 text. GGUF repo card: `license: apache-2.0`, `base_model: google/gemma-4-12B-it`. The GGUF repo has no LICENSE file. | judgly does not redistribute the weights |
 | Qwen3-4B-Instruct-2507, Qwen team, Alibaba Cloud | `unsloth/Qwen3-4B-Instruct-2507-GGUF` @ a06e946b, file `Qwen3-4B-Instruct-2507-Q8_0.gguf` | Base card `Qwen/Qwen3-4B-Instruct-2507`: `license: apache-2.0`, LICENSE file is the Apache License 2.0 text. GGUF card: `license: apache-2.0`, `license_link` to the Qwen LICENSE. | judgly does not redistribute the weights |
+
+Models run only for the comparison with dedicated decision models
+([results/external-comparison/](results/external-comparison/README.md)). They are not shipped,
+not used by judgly, and their weights are not redistributed; the record holds only their answers
+(probabilities, token counts and timings) as served by Ollama 0.35.0:
+
+| Model | Source | Licence evidence | Notes |
+|---|---|---|---|
+| Nimble 9B (`nimble:9b`), Bespoke Labs | Ollama library; card `bespokelabs/Bespoke-Nimble-9B`, code and data recipe `bespokelabsai/nimble` | Hugging Face card: `license: apache-2.0`, "**License:** Apache 2.0"; a LoRA adapter on Qwen3.5-9B (Apache-2.0). The GitHub repository's `LICENSE` returned 404 when checked, so the code's licence is not confirmed here. | outputs only |
+| Tev1 4B and 0.8B (`tev1:4b`, `tev1:0.8b`), Together AI | Ollama library; cards `togethercomputer/Tev1-4B-experimental` and `-0.8B-experimental`, code `togethercomputer/tev1` | Code: MIT (`LICENSE`, "Copyright (c) 2026 open-jev contributors"). Weights: the cards say "The release license for these fine-tuned weights is being finalized"; the base Qwen3.5 models are Apache-2.0. | outputs only |
+| Ollama 0.35.0 | `ollama/ollama` | MIT | used to serve the two models above |
 
 Trademarks: "Gemma" is a trademark of Google LLC. judgly uses "Gemma" and
 "Qwen" only to name the model a pack runs; the project name, logo and text do
@@ -219,11 +235,18 @@ come from evaluation sets with non-commercial or unconfirmed licences (for examp
 HealthVer, COVID-Fact, HealthFC, CEFR-SP); if you reuse the per-item files for more than checking the reported
 numbers, check the licence of the source dataset too.
 
+`docs/results/external-comparison/` also holds the answers of Nimble 9B and Tev1 (4B and 0.8B),
+served by Ollama: item ids, the models' probabilities, token counts and timings, with no model
+weights and no dataset text. They are the outputs of models under their own terms (above); the
+record around them (protocol, scripts, results) is licensed like the rest of the snapshot.
+
 ## Credits
 
 Thanks to TypeSafe's Jev for the idea; to Georgi Gerganov and the ggml
 authors for llama.cpp and ggml; to Google DeepMind for Gemma; to the Qwen team
 for Qwen3; to YaoYuan for yyjson; to open-alternative-jev (ikermoel), Cygnet (blockbrain-ai), Kev (jaredpalmer),
-decider-4b (Mapika), Laya (convaiinnovations) and CLM-v0.1-8B (Contrastive-LM); to Florian Standhartinger and contributors for JevBench and the
+decider-4b (Mapika), Laya (convaiinnovations) and CLM-v0.1-8B (Contrastive-LM); to Bespoke Labs for
+Nimble, Together AI for Tev1 and the Ollama project for Ollama, which made the comparison with
+dedicated decision models possible; to Florian Standhartinger and contributors for JevBench and the
 authors of typed-decisions (LocalLLaMA) for their benchmarks; and to the authors of
 every dataset above for releasing their work openly.

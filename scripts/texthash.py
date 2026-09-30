@@ -16,7 +16,8 @@ checker. Four levels:
              same passage (a preprint and the published abstract, a Wikipedia paragraph and
              FEVER's tokenised sentences of it). An n-gram found in more than SHINGLE_DF distinct
              indexed texts is boilerplate ("severe acute respiratory syndrome coronavirus 2")
-             and is not counted.
+             and is not counted, except for the confirm tier, where every shared n-gram counts
+             (a quotation repeated across many texts is still a shared passage).
   near       two texts are near duplicates when the Jaccard similarity of their sets of
              normalised words is at least NEAR_JACCARD, both having at least NEAR_MIN_WORDS
              distinct words (`NearIndex`: candidates from MinHash banding, 40 bands of 3,
@@ -104,11 +105,12 @@ class ShingleIndex:
                 for s in g:
                     self.where.setdefault(s, []).append(key)
 
-    def shared(self, text: str) -> list[tuple[str, int]]:
+    def shared(self, text: str, df: int | None = SHINGLE_DF) -> list[tuple[str, int]]:
+        """df=None counts every shared n-gram, boilerplate too (the confirm tier's check)."""
         count: dict[str, int] = {}
         for s in shingles(text):
             keys = self.where.get(s, ())
-            if 0 < len(keys) <= SHINGLE_DF:
+            if keys and (df is None or len(keys) <= df):
                 for k in keys:
                     count[k] = count.get(k, 0) + 1
         return sorted((k, n) for k, n in count.items() if n >= SHINGLE_MIN)

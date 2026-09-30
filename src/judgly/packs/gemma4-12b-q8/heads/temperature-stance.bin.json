@@ -1,0 +1,8 @@
+{"head": "temperature", "features": "results/gemma4-12b-q8/stance/fitdev/features.feat", "features_sha256": "7fd607d605f8bbd912abfb6a655eb4aedafb7bd1f9e415bea732e503960f9148",
+ "limit_train": -1,
+ "engine": {"rotations": true, "max_rotations": 4, "content_free": false},
+ "types": {
+  "choice": {"train_items": 14783, "validation_items": 3072, "h0_validation_loss": 2.670277, "train_loss": 0.718042, "validation_loss": 0.692759, "temperature": 7.151, "temperature_unrounded": 7.15123787, "temperature_bounded": false, "prob_sd": 0.302864, "fallback": null, "reason": null},
+  "bool": {"train_items": 0, "validation_items": 0, "temperature": 1, "fallback": "identity", "reason": "no items of this type"},
+  "score": {"train_items": 0, "validation_items": 0, "temperature": 1, "fallback": "identity", "reason": "no items of this type"}
+ }}

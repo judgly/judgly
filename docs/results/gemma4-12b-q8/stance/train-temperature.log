@@ -1,0 +1,4 @@
+choice: 14783 training and 3072 validation items, raw validation 2.670277
+  temperature 7.151 (unrounded 7.15123787), train 0.718042, validation 0.692759, probability sd 0.3029
+bool: 0 training and 0 validation items; the temperature stays 1 (identity)
+score: 0 training and 0 validation items; the temperature stays 1 (identity)

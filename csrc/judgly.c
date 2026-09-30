@@ -580,12 +580,15 @@ static yyjson_mut_val *answer(yyjson_mut_doc *doc, const struct s1_ask *a, int a
         n_rot++;
     }
     slot_mass /= n_rot;
-    int top = 0;
-    for (int k = 0; k < a->K; k++) {
+    for (int k = 0; k < a->K; k++)
         p[k] /= n_rot;
+    if (head && head->temperature) /* after the mean, as s1_combine applies it */
+        s1_temperature_apply(head->x[a->type][0], a->K, p);
+    int top = 0;
+    for (int k = 0; k < a->K; k++)
         top = p[k] > p[top] ? k : top;
-    }
-    /* The top option's probability under each rotation: its range. */
+    /* The top option's probability under each rotation: its range. With a temperature head the
+     * rotations are read without a head, so this is the range before the temperature. */
     double lo = INFINITY, hi = -INFINITY;
     for (int j = 0; j < r->n; j++) {
         const struct s1_readout *item = &r->item[j];

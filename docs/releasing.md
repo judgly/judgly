@@ -5,7 +5,7 @@ accepts the upload through [trusted publishing](https://docs.pypi.org/trusted-pu
 GitHub hands the job a short-lived OpenID Connect token and PyPI checks it against the
 publisher you register once. No PyPI API token is stored in the repository or its secrets.
 
-What gets built: the sdist (with the llama.cpp sources needed to build libjudgly), about 12 MB,
+What gets built: the sdist (with the llama.cpp sources needed to build libjudgly), about 24 MB,
 and one wheel, `judgly-<version>-py3-none-macosx_14_0_arm64.whl`, about 3.3 MB (15 MB unpacked),
 for Apple silicon on macOS 14 or later. The wheel carries libjudgly, both packs' heads and
 calibration records, the packs' LICENSE files, LICENSE, NOTICE and LICENSES/. There are no Linux,
@@ -122,7 +122,11 @@ X.Y.(Z+1), never re-uploaded.
 1. Set the version in `pyproject.toml` (`[project] version`; the C library and
    `judgly.__version__` read it from there), set the same `version` and the release date as
    `date-released` in `CITATION.cff`, move the CHANGELOG's Unreleased entries under the new
-   version, and commit.
+   version, rewrite every absolute link to this repository at the old tag
+   (`github.com/judgly/judgly/blob/vOLD/`, `.../tree/vOLD/`, `raw.githubusercontent.com/judgly/judgly/vOLD/`)
+   to the new tag `vX.Y.Z` in the README and the docs (not in the CHANGELOG's earlier entries),
+   and commit. `docs/tools/check_docs.py` fails while any such link names another tag than
+   `v` plus the version in `pyproject.toml`.
 2. Steps 1, 2 and 5 to 9 above.
 
 ## CI

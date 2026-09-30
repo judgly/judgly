@@ -1,0 +1,8 @@
+{"head": "temperature", "features": "results/qwen3-4b-q8/stance/fitdev/features.feat", "features_sha256": "e2d6b3acdf8ba8a8416a83d6cdfc1ece78d275ff4af623bcab598d3a46a1df8c",
+ "limit_train": -1,
+ "engine": {"rotations": true, "max_rotations": 4, "content_free": false},
+ "types": {
+  "choice": {"train_items": 14783, "validation_items": 3072, "h0_validation_loss": 4.501333, "train_loss": 0.778538, "validation_loss": 0.750883, "temperature": 12.391, "temperature_unrounded": 12.3905751, "temperature_bounded": false, "prob_sd": 0.273903, "fallback": null, "reason": null},
+  "bool": {"train_items": 0, "validation_items": 0, "temperature": 1, "fallback": "identity", "reason": "no items of this type"},
+  "score": {"train_items": 0, "validation_items": 0, "temperature": 1, "fallback": "identity", "reason": "no items of this type"}
+ }}

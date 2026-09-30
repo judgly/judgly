@@ -4,6 +4,67 @@ All notable changes to judgly. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/) (0.x: the API may still change).
 
+## 0.2.0 - 2026-09-30
+
+### Added
+
+- A second calibration option in every built-in pack, the per-type temperature: one temperature
+  per question type (choice, yes/no, score), applied to the probabilities after they are
+  averaged over the option orders, fitted on the same train items as H2
+  (`heads/temperature.bin`, `heads/temperature-stance.bin`). The shipped values are the ones
+  frozen before a pre-registered comparison with H2 on an untouched confirm tier, where the
+  temperature met all three criteria for Gemma 4 12B stance and Qwen3-4B general and stance, and
+  not for Gemma 4 12B general. `docs/calibration-options.md` describes the fit, the exploratory
+  analyses that led to it (which read the final tier again), the confirmation and both options on
+  every tier; `docs/results/calibration-study/` holds their scripts and outputs.
+- `Engine.load(pack, calibration="default" | "h2" | "temperature" | "raw")` and
+  `engine.calibration`; `Pack.heads(calibration=...)`, `Pack.defaults()`,
+  `Pack.calibration_options()`.
+- A temperature head type in the engine (head file type 3; `s1-train --head temperature`,
+  `s1-eval --head`), with the head guardrails (model and template SHA-256, engine settings in
+  the sidecar, temperature within [0.05, 100]).
+- The confirm tier (five general families never used before and ClimateCheck for stance) in the
+  pipeline and the calibration records; `make calibrate` fits and scores the temperature from
+  cached features on the CPU; `docs/tools/confirmation_check.py`.
+- The five confirm-tier sources (CLUTRR, CodeMMLU execution prediction, SpartQA-YN, IBM Argument
+  Quality 30k, Humicroedit) in the data registry and `docs/licences.md`, evaluation only;
+  ClimateCheck moved from the reserved tier to the stance confirm tier.
+- A README per analysis in `docs/results/calibration-study/` (what it is, when it ran, what data
+  it read, exploratory or confirmatory, how to rerun it) and `rerun.py`, which reruns the
+  unchanged analysis scripts from a checkout and compares their output with the committed files.
+- A section "The calibration comparison" in `docs/methods.md` (the exploratory analyses and the
+  tiers they read, the protocol and its amendment, the confirm tier's construction, per-family
+  and secondary results, and the negative results), temperature rows for every tier in the model
+  cards, and a diagram of both options in `docs/calibration-options.md`.
+- A comparison with three dedicated decision models served by Ollama 0.35.0 (Nimble 9B by Bespoke
+  Labs, Tev1 4B and Tev1 0.8B by Together AI) on the same 17,482 items of judgly's confirm,
+  final, bench and final-flagged tiers, scored by the same code; descriptive, with the protocol,
+  runner and scorer frozen before any of these models answered a test item. The record
+  (`docs/results/external-comparison/`: protocol, decision note, the 52,446 raw answers, results,
+  single-request timings, environment and model digests), `make compare-score` (rebuilds every
+  result from the committed answers, byte for byte) and `make compare-run` (asks the models
+  again, never into the record); `make compare-figures` and two figures (accuracy against ECE on
+  six test sets, reliability on the confirm tiers); a README section "Comparison with dedicated
+  decision models" and a methods section with every number, interval and paired difference.
+  Only the models' outputs are committed, not their weights.
+
+### Changed
+
+- The default calibration is now the temperature for Qwen3-4B (general and stance) and for Gemma
+  4 12B stance; Gemma 4 12B general keeps H2. Use `calibration="h2"` for the 0.1.0 behaviour.
+  The H2 head files, and every raw and H2 number and per-item dump, are unchanged. This is a
+  trade-off, not a gain everywhere: with the new defaults top-answer accuracy is the raw
+  readout's, but on the 0.1.0 fresh final tier stance ECE rises from 0.048 to 0.087 (Gemma 4 12B)
+  and from 0.052 to 0.093 (Qwen3-4B), and Qwen3-4B general ECE from 0.030 to 0.034 (and on
+  final-seen from 0.019 to 0.037, on the bench tier from 0.114 to 0.128), while on the untouched
+  confirm tier the temperature was the better calibrated in these three cases
+  (`docs/calibration-options.md`).
+- `pack.json` schema 2 (per format, the options and the default); schema 1 packs still load.
+  Calibration records are schema 3 (the `temperature` option, the condition and the confirm tier).
+- The fresh final tier is no longer untouched for comparisons involving the temperature: after
+  the 0.1.0 release run it was read again by the three exploratory analyses of the calibration
+  study.
+
 ## 0.1.0 - 2026-09-28
 
 First functional release. A weekend hobby project; Apple silicon (macOS 14 or later) wheels only.

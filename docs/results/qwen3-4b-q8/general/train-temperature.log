@@ -1,0 +1,6 @@
+choice: 4156 training and 892 validation items, raw validation 3.172061
+  temperature 6.846 (unrounded 6.84589115), train 0.861005, validation 0.879211, probability sd 0.2944
+bool: 1093 training and 232 validation items, raw validation 2.997765
+  temperature 13.360 (unrounded 13.359999), train 0.569833, validation 0.579444, probability sd 0.2128
+score: 1051 training and 226 validation items, raw validation 9.982950
+  temperature 24.220 (unrounded 24.2201913), train 1.544544, validation 1.512313, probability sd 0.0974

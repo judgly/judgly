@@ -1,0 +1,8 @@
+{"head": "temperature", "features": "results/qwen3-4b-q8/general/fitdev/features.feat", "features_sha256": "bf3b90c4ea31060cfe8745c34fc3a550e44b56fe936cd3658c9ca4312505195d",
+ "limit_train": -1,
+ "engine": {"rotations": true, "max_rotations": 4, "content_free": false},
+ "types": {
+  "choice": {"train_items": 4156, "validation_items": 892, "h0_validation_loss": 3.172061, "train_loss": 0.861005, "validation_loss": 0.879211, "temperature": 6.846, "temperature_unrounded": 6.84589115, "temperature_bounded": false, "prob_sd": 0.294416, "fallback": null, "reason": null},
+  "bool": {"train_items": 1093, "validation_items": 232, "h0_validation_loss": 2.997765, "train_loss": 0.569833, "validation_loss": 0.579444, "temperature": 13.360, "temperature_unrounded": 13.359999, "temperature_bounded": false, "prob_sd": 0.212843, "fallback": null, "reason": null},
+  "score": {"train_items": 1051, "validation_items": 226, "h0_validation_loss": 9.982950, "train_loss": 1.544544, "validation_loss": 1.512313, "temperature": 24.220, "temperature_unrounded": 24.2201913, "temperature_bounded": false, "prob_sd": 0.0973553, "fallback": null, "reason": null}
+ }}

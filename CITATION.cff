@@ -1,10 +1,10 @@
 cff-version: 1.2.0
 message: "If you use judgly, please cite it as below. Please also cite llama.cpp, the model you used, and the datasets behind any number you report (each dataset's citation is listed in docs/reproduce.md#data-sources)."
 title: "judgly: calibrated, deterministic judgments from open language models"
-abstract: "A weekend hobby project that asks a frozen open language model typed questions about a text, reads the answer-letter probabilities at one position via llama.cpp, and calibrates them with a small fitted head. Questions branch from one cached reading of the text and are isolated from each other. The idea of typed, calibrated decisions comes from TypeSafe's Jev. Calibration was measured on public benchmarks for two model packs (Gemma 4 12B and Qwen3-4B); heads do not transfer between models, and the stance heads missed their pre-set calibration bar."
+abstract: "A weekend hobby project that asks a frozen open language model typed questions about a text, reads the answer-letter probabilities at one position via llama.cpp, and calibrates them with a small fitted head or a per-question-type temperature. Questions branch from one cached reading of the text and are isolated from each other. The idea of typed, calibrated decisions comes from TypeSafe's Jev. Calibration was measured on public benchmarks for two model packs (Gemma 4 12B and Qwen3-4B); heads do not transfer between models, and the stance heads missed their pre-set calibration bar."
 type: software
-version: "0.1.0"
-date-released: "2026-09-28"
+version: "0.2.0"
+date-released: "2026-09-30"
 authors:
   - family-names: Lassmann
     given-names: Timo
@@ -175,3 +175,31 @@ references:
     year: 2024
     url: "https://arxiv.org/abs/2412.13663"
     notes: "and others (ModernBERT)"
+  - type: software
+    title: "Bespoke-Nimble-9B (Nimble)"
+    authors:
+      - name: "Bespoke Labs"
+      - family-names: Sathiamoorthy
+        given-names: Maheswaran
+    year: 2026
+    url: "https://huggingface.co/bespokelabs/Bespoke-Nimble-9B"
+    repository-code: "https://github.com/bespokelabsai/nimble"
+    license: Apache-2.0
+    notes: "Authors as in the project's own citation. Weights licence as stated on the model card. Run through Ollama as nimble:9b (Ollama ID aa4a79f08ae0) in the external comparison (docs/results/external-comparison); the revision served appears to be release v3-12026. No weights are redistributed."
+  - type: software
+    title: "Tev1 (Tev1-4B-experimental, Tev1-0.8B-experimental)"
+    authors:
+      - name: "Together AI"
+      - name: "open-jev contributors"
+    url: "https://huggingface.co/togethercomputer/Tev1-4B-experimental"
+    repository-code: "https://github.com/togethercomputer/tev1"
+    license: MIT
+    notes: "The MIT licence of the code names the open-jev contributors as copyright holder; the model cards (https://huggingface.co/togethercomputer/Tev1-4B-experimental, https://huggingface.co/togethercomputer/Tev1-0.8B-experimental) describe the weights' licence as being finalized. Introduced in Together AI's blog post 'How to train your own Jev for $17' by Hassan El Mghari (https://www.together.ai/blog/how-to-train-your-own-jev). Run through Ollama as tev1:4b and tev1:0.8b in the external comparison; no weights are redistributed."
+  - type: software
+    title: Ollama
+    authors:
+      - name: "Ollama"
+    version: "0.35.0"
+    repository-code: "https://github.com/ollama/ollama"
+    license: MIT
+    notes: "Served the models of the external comparison through its /v1/systemone endpoint."

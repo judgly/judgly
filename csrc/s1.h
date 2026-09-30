@@ -244,13 +244,15 @@ int s1_read_packed(struct s1_engine *e, const struct s1_template *t,
                    const struct s1_ask *ask, int n, struct s1_decide_opts opts,
                    struct s1_readouts *out, struct s1_timing *timing);
 
-/* Probabilities over the K slots of one readout: softmax(z - zc) with no head, otherwise
- * the head's own use of z, zc and h. */
+/* Probabilities over the K slots of one readout: softmax(z - zc) with no head or a temperature
+ * head (which acts after the mean over rotations), otherwise the H1/H2 head's own use of z, zc
+ * and h. */
 void s1_readout_probs(const struct s1_readout *item, const struct s1_head *head,
                       enum s1_type type, int K, double *p);
 
 /* Readouts to probabilities. Per rotation: with no head, softmax(z - zc); with a head, the
- * head's own use of z, zc and h. Then slots back to options, and the mean over rotations.
+ * head's own use of z, zc and h. Then slots back to options, and the mean over rotations; with a
+ * temperature head, the rotations are read as H0 and its temperature is applied to the mean.
  * Writes reply[i] for ask[i]. */
 void s1_combine(const struct s1_ask *ask, int n_ask, const struct s1_readouts *r,
                 const struct s1_head *head, struct s1_reply *reply);
@@ -518,11 +520,14 @@ void s1_head_h2_start(double *x);
 double s1_head_prob_sd(const double *x, bool h2, const struct s1_records *data);
 
 /* A trained head: one parameter array per question type, valid for one GGUF file, one
- * template and one slot table only. */
+ * template and one slot table only. A temperature head (temperature true, h2 false, n_embd 0)
+ * holds one number per type, x[type][0] = T; see the temperature section below. */
 struct s1_head {
     bool    h2;
+    bool    temperature;
     int     n_embd;
-    double *x[3]; /* indexed by enum s1_type; s1_head_n_param(h2, n_embd) doubles each */
+    double *x[3]; /* indexed by enum s1_type; s1_head_n_param(h2, n_embd) doubles each, or one
+                     for a temperature head */
     char    gguf_sha256[S1_SHA256_HEX];
     char    template_sha256[S1_SHA256_HEX];
     int32_t slot[S1_K_MAX];
@@ -556,5 +561,44 @@ int  s1_head_load(struct s1_head *head, const char *path);
  * and slot table. */
 int s1_head_check(const struct s1_head *head, const char *gguf_sha256,
                   const char *template_sha256, const int32_t slot[S1_K_MAX]);
+
+/* ---- temperature: one temperature per question type, after the mean over rotations ----
+ *
+ * The second calibration option. Each rotation is read without a head (softmax(z - zc), as H0),
+ * the probabilities are mapped back to the options and averaged over the rotations, and only
+ * then is the temperature T of the question's type applied to the averaged probabilities:
+ *
+ *   p_T[k] = exp(log(p[k]) / T) / sum_j exp(log(p[j]) / T),   p[k] floored at S1_TEMP_FLOOR
+ *
+ * T = 1 leaves p as it is (the identity, used for a type without fit data). The head file is the
+ * H1/H2 layout with head type 3, n_embd 0 and one float64 per question type; the loader refuses
+ * a temperature outside [S1_TEMP_MIN, S1_TEMP_MAX]. */
+
+#define S1_TEMP_FLOOR 1e-12 /* probabilities below this are raised to it before the log */
+
+/* Allocates a temperature head with T = 1 (the identity) for every question type. */
+int s1_temperature_head_init(struct s1_head *head);
+
+/* Applies temperature T to the K averaged probabilities p, in place. Pure. */
+void s1_temperature_apply(double temperature, int K, double *p);
+
+/* Mean of -log p_T[label] over pred[index[0]], ..., pred[index[n-1]] (index NULL: all n). */
+double s1_temperature_loss(double temperature, const struct s1_pred *pred, const int *index,
+                           int n);
+
+/* The temperature in [S1_TEMP_MIN, S1_TEMP_MAX] that minimises s1_temperature_loss over the
+ * given items (their averaged probabilities, H0 per rotation). The loss is convex in 1/T; the
+ * minimum is found by bisection on its derivative to machine precision. *bounded is set when the
+ * minimum lies at or beyond a bound. Returns 1 for n == 0. */
+double s1_temperature_fit(const struct s1_pred *pred, const int *index, int n, bool *bounded);
+
+/* One prediction per item of a split of a feature file, as s1-eval scores it: each record the
+ * engine settings read (every rotation with `rotations`, else rotation 0; score questions
+ * rotation 0 only) through the head (H0 when NULL or a temperature head: softmax(z - zc), zc
+ * counted only with content_free), slots mapped back to options, the mean over an item's
+ * records, and for a temperature head its temperature on that mean. Sorted by id_hash. Returns
+ * the number of items and sets *out (owned by the caller), or -1. */
+int s1_feat_predictions(const struct s1_feat *f, int split, const struct s1_head *head,
+                        bool rotations, bool content_free, struct s1_pred **out);
 
 #endif

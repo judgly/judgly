@@ -107,6 +107,39 @@ def test_flagged_tier_is_checked_like_final(tmp_path):
     assert write(tmp_path, fitdev, final) > 0
 
 
+def test_confirm_tier_is_checked_against_every_other_tier(tmp_path):
+    fitdev, final = clean_tiers()
+    confirm = [ex(i, "clutrr", "kinship", "heldout") for i in range(3)]
+    (tmp_path / "general").mkdir(parents=True, exist_ok=True)
+    path = tmp_path / "general" / "confirm.jsonl"
+    path.write_text("".join(json.dumps(r) + "\n" for r in confirm))
+    assert write(tmp_path, fitdev, final, seen=seen_tier()) == 0
+    for leak in (final[0]["state"], seen_tier()[0]["state"], fitdev[0]["state"] + " x"):
+        path.write_text("".join(json.dumps(r) + "\n" for r in confirm + [ex(9, "clutrr", "kinship", "heldout", state=leak)]))
+        assert write(tmp_path, fitdev, final, seen=seen_tier()) > 0
+
+
+def test_confirm_passage_check_counts_boilerplate():
+    quote = "global average air and ocean temperatures widespread melting of snow and ice and rising sea level"
+    idx = texthash.ShingleIndex()
+    for i in range(5):                                  # a quotation held by more than SHINGLE_DF texts
+        idx.add(f"t{i}", f"Text {i} about something else entirely. {quote}. And more words number {i}.")
+    probe = f"A new abstract that quotes {quote} in its opening."
+    assert not idx.shared(probe)                        # the other tiers' rule: boilerplate
+    assert idx.shared(probe, None)                      # the confirm tier's rule: a shared passage
+
+
+def test_linked_clusters_join_claims_that_share_an_abstract():
+    def item(i, claim, abstract):
+        it = prep_tiers.stance_item(f"c-{i}", claim, abstract, "supports")
+        it.group = prep_tiers.short("claim:", claim)
+        return it
+    items = [item(0, "claim A", "abstract 1"), item(1, "claim B", "abstract 1"), item(2, "claim B", "abstract 2"),
+             item(3, "claim C", "abstract 2"), item(4, "claim D", "abstract 3")]
+    prep_tiers.link_clusters(items)
+    assert len({it.cluster for it in items[:4]}) == 1 and items[4].cluster != items[0].cluster
+
+
 def test_flagged_sources_record_a_caveat():
     reg = registry.load()
     flagged = [n for n in reg["sources"] if registry.tier_of(reg, n) == "final-flagged"]

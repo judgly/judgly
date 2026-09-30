@@ -7,7 +7,8 @@ on the fresh final tier (`final` in the record: task families frozen before any 
 on them, the reported result).
 
 Every plotted number is checked against record.json before anything is written. For every tier
-the record holds (test, dev, final, final-flagged, final-seen, bench) and both conditions, the
+the record holds (test, dev, final, final-flagged, confirm, final-seen, bench) and every condition
+(raw, h2 and temperature; the figures show raw and h2), the
 per-item dumps (items-*.tsv.gz) are rescored with the definitions of csrc/s1_metrics.c and
 scripts/calibration_record.py, and must reproduce the record's overall accuracy, log loss, Brier
 score and ECE, its reliability bins (count, mean confidence, accuracy, Wilson interval), its
@@ -39,8 +40,9 @@ OUT = ROOT / "docs" / "assets" / "results"
 PACKS = {"gemma4-12b-q8": "Gemma 4 12B", "qwen3-4b-q8": "Qwen3-4B"}
 FORMATS = ("general", "stance")
 FIG_TIER = "final"                                      # the tier every figure shows
-SETS = ("fitdev", "final", "final-flagged", "final-seen", "bench")   # names-<set>.tsv.gz
-CONDS = ("raw", "h2")
+SETS = ("fitdev", "final", "final-flagged", "confirm", "final-seen", "bench")   # names-<set>.tsv.gz
+CONDS = ("raw", "h2")                                   # plotted
+CHECKED = ("raw", "h2", "temperature")                  # rescored and checked
 METRICS = ("accuracy", "log_loss", "brier", "ece")
 LABEL = {"raw": "raw (no head)", "h2": "fitted head (H2)"}
 BINS = 10                                               # as in scripts/calibration_record.py
@@ -109,7 +111,7 @@ def load(pack: str, fmt: str) -> dict:
         if (d / f"names-{s}.tsv.gz").is_file():
             names |= read_names(d / f"names-{s}.tsv.gz")
     return {"record": rec, "tables": (d / "tables.md").read_text(), "names": names,
-            "items": {(c, t): read_dump(d / f"items-{c}-{t}.tsv.gz") for t in rec["tiers"] for c in CONDS}}
+            "items": {(c, t): read_dump(d / f"items-{c}-{t}.tsv.gz") for t in rec["tiers"] for c in CHECKED}}
 
 
 # ---- metrics, as in scripts/calibration_record.py -----------------------------------------
@@ -166,7 +168,7 @@ def verify(pack: str, fmt: str, run: dict, head_sha: dict[str, str]) -> dict:
         raise Mismatch(f"make_figures: {where}: h2.bin in INPUTS.sha256 is not the head the record names")
     tasks: dict[str, set[str]] = {}
     for tier in rec["tiers"]:
-        for cond in CONDS:
+        for cond in CHECKED:
             x, c = run["items"][(cond, tier)], rec["tiers"][tier]["conditions"][cond]
             if len(x["hit"]) != c["items"]:
                 raise Mismatch(f"make_figures: {where} {cond}-{tier}: {len(x['hit'])} items, record {c['items']}")
@@ -201,10 +203,11 @@ def verify(pack: str, fmt: str, run: dict, head_sha: dict[str, str]) -> dict:
                     check(f"{where} {cond}-{tier} family {fam} {name}", v, theirs[name]["value"])
                 if tier == FIG_TIER:
                     tasks.setdefault(fam, set()).update(run["names"][("task", int(t))] for t in x["task"][ix])
-        raw, h2 = (rec["tiers"][tier]["conditions"][c]["by_family"] for c in CONDS)
+        raw, h2, tt = (rec["tiers"][tier]["conditions"][c]["by_family"] for c in CHECKED)
         for fam, h in h2.items():
             row = (f"| {tier} | {fam} | {n_items(h)} | {cell(raw[fam]['accuracy'])} | {cell(h['accuracy'])} | "
-                   f"{cell(raw[fam]['ece'])} | {cell(h['ece'])} |")
+                   f"{cell(tt[fam]['accuracy'])} | {cell(raw[fam]['ece'])} | {cell(h['ece'])} | "
+                   f"{cell(tt[fam]['ece'])} |")
             if row not in run["tables"]:
                 raise Mismatch(f"make_figures: {where}: tables.md lacks the row {row}")
     return {fam: sorted(t) for fam, t in tasks.items()}
@@ -369,7 +372,11 @@ def main() -> None:
     fig_selective(runs)
     for pack in PACKS:
         fig_families(pack, runs, tasks)
-    (OUT / "CAPTIONS.md").write_text(captions(runs))
+    # The external-comparison captions (scripts/make_compare_figures.py) follow a marker; keep them.
+    marker = "<!-- external comparison: written by scripts/make_compare_figures.py -->"
+    old = (OUT / "CAPTIONS.md").read_text() if (OUT / "CAPTIONS.md").is_file() else ""
+    tail = marker + old.split(marker, 1)[1] if marker in old else ""
+    (OUT / "CAPTIONS.md").write_text(captions(runs).rstrip("\n") + "\n\n" + tail if tail else captions(runs))
     print(f"make_figures: checked against record.json and tables.md; wrote {len(list(OUT.iterdir()))} files "
           f"in {OUT.relative_to(ROOT)}")
 

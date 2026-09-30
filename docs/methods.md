@@ -17,6 +17,8 @@ work. The results are in [Results](#results), from the committed snapshot in
 - [Evaluation](#evaluation)
 - [Bars](#bars)
 - [Results](#results)
+- [The calibration comparison](#the-calibration-comparison)
+- [Comparison with dedicated decision models](#comparison-with-dedicated-decision-models)
 - [Negative and null results](#negative-and-null-results)
 - [What the evaluation can and cannot show](#what-the-evaluation-can-and-cannot-show)
 - [Related work](#related-work)
@@ -99,6 +101,13 @@ question type (choice, yes/no, score) and per format.
 - **H2**: u[k] = a dot(w[k] + d[k], h) - c zc[k] + b[k]. The model's letter rows w[k] stay
   fixed. The corrections d[k] (26 x hidden size per type) start at zero, so an untrained H2 is
   H1, and are penalised with lambda * sum(d^2).
+- **Per-type temperature** (the second calibration option, added after 0.1.0): not a head on
+  each rotation. Each rotation is read as H0, the rotations are averaged, and then
+  p_T[k] = softmax_k(log(max(p[k], 1e-12)) / T), with one T per question type, fitted by
+  minimising the mean log loss of the train items (each item once, unweighted) and rounded to
+  three decimals. It keeps the ranking of the raw readout.
+  [calibration-options.md](calibration-options.md) describes its fit, the analyses that led to
+  it, its pre-registered confirmation against H2 and its results.
 
 The loss is the mean cross-entropy (log loss) of the correct option. H1 is fitted by full-batch
 L-BFGS. H2 is fitted from the H1 solution for each lambda in a short grid, with early stopping
@@ -195,15 +204,16 @@ not independent tests. Each family belongs to exactly one tier, per format:
 | final-flagged | politeness (Stanford Politeness) | health questions (HealthFC) | fresh families read with final, but each with a recorded caveat: reported beside the final numbers, never pooled into them, judging no bar |
 | final-seen | topic, biomedical, legal, maths, finance, truthfulness, MMLU-Pro, ratings, yes/no reading | HealthVer | a secondary evaluation, reported separately: an earlier held-out tier whose families were read during development |
 | bench | typed-decisions, JevBench public items | none | external benchmarks, evaluation only, also scored as each defines |
-| reserved | none | SciFact, ClimateCheck | nothing; kept unseen for later work (ClimateCheck must first drop the items that overlap Climate-FEVER, which dev holds) |
+| confirm | kinship (CLUTRR), code outcome (CodeMMLU execution prediction), spatial (SpartQA yes/no), argument quality (IBM ArgQ 30k), humour (Humicroedit) | ClimateCheck | the pre-registered comparison of the two calibration options: families never used before, built after every other tier and cleaned against all of them, read once by each model ([calibration-options.md](calibration-options.md#the-pre-registered-confirmation)) |
+| reserved | none | SciFact | nothing; kept unseen for later work (ClimateCheck was reserved in 0.1.0 and became the stance confirm tier after its overlap with Climate-FEVER and every other tier was removed) |
 
 Tier sizes: general 9,000 fit (6,300 train, 1,350 validation, 1,350 test), 4,500 dev (250 per
 task), 7,879 final (1,000 per task, 1,005 for BLiMP, 500 each for the two ETHICS subsets, 874
 for CEFR-SP; 6,803 resampling groups), 1,000 final-flagged (Stanford Politeness), 10,300
 final-seen and 2,231 bench items (all 2,000 typed-decisions test decisions and all 231
-JevBench public items); stance 21,000 fit (4,500 each from MNLI and VitaminC, 4,000 from FEVER,
+JevBench public items), and, added after 0.1.0, 2,500 confirm items (500 per family); stance 21,000 fit (4,500 each from MNLI and VitaminC, 4,000 from FEVER,
 SUPPORTS and REFUTES only, 3,000 each from SNLI and WANLI, 2,000 from SciNLI), 2,100 dev, 1,343
-final (Check-COVID, on 315 abstracts), 749 final-flagged (HealthFC) and 2,100 final-seen items. The fit tier is split by a hash of the
+final (Check-COVID, on 315 abstracts), 749 final-flagged (HealthFC), 2,100 final-seen and, added after 0.1.0, 1,780 confirm items (ClimateCheck, 70 linked groups). The fit tier is split by a hash of the
 passage, or of a recorded group (the evidence page for FEVER and VitaminC, the prompt for
 HelpSteer2), so items that share one stay in one split. Some sources are sampled evenly: by
 label (the stance fit sources other than MNLI and VitaminC, HelpSteer2, Circa, ESCI, CEFR-SP,
@@ -285,7 +295,7 @@ later tier when it matches an earlier one:
   similarity of at least 0.6 with a text of an earlier tier (both of at least six distinct
   words; candidates from MinHash banding, then the exact Jaccard).
 
-final-seen and dev are built with the exact check only; the bench tier drops nothing for overlap (a benchmark is scored as published). Check-COVID items are checked with their whole
+final-seen and dev are built with the exact check only; the bench tier drops nothing for overlap (a benchmark is scored as published). The confirm tier, added after 0.1.0, is built after all of them and dropped against every other tier with all four checks (its passage check counting boilerplate 8-grams too); for stance also against the texts of every evaluation source as a whole ([below](#the-pre-registered-confirmation)). Check-COVID items are checked with their whole
 abstract, not only the sentences shown, so that every claim on an abstract that HealthVer or
 COVID-Fact also uses is left out. FEVER claims whose evidence page is also an evidence article of
 Climate-FEVER (dev) are left out (7,606 of the SUPPORTS and REFUTES claims). Exact duplicates
@@ -309,7 +319,8 @@ failing, bench items matching other evaluation tiers, the fresh tiers of each fo
 the fit tier of the other format, and dev and final-seen items that overlap a reserved source
 (in the current build 8 dev items share a sentence, 52 texts a passage and 17 are near
 duplicates, nearly all Climate-FEVER against ClimateCheck; Climate-FEVER is a dev-tier source,
-so ClimateCheck must drop them before it becomes a final tier). The test suite plants each kind of
+so ClimateCheck had to drop them before it could become an evaluation tier, which it did when it
+became the stance confirm tier, [below](#the-pre-registered-confirmation)). The test suite plants each kind of
 leak and checks that the checker catches it. The checker runs at the start of every pipeline
 run, and its output is saved with the results.
 
@@ -325,8 +336,10 @@ stance 13 and 14).
 Each pack is evaluated per format on the fit tier's test split (in-distribution), dev, final
 (fresh held-out families; the reported result), final-flagged (fresh families with a caveat,
 reported beside final), final-seen (an earlier held-out tier, reported separately as seen
-during development) and, for the general format, bench. The QUICK pipeline does not score final or final-flagged. Two conditions are scored on
-each: raw (H0 with the served engine settings) and H2.
+during development), confirm (the untouched tier of the pre-registered comparison of the two
+calibration options) and, for the general format, bench. The QUICK pipeline does not score
+final, final-flagged or confirm. Three conditions are scored on each: raw (H0 with the served
+engine settings), H2 and the per-type temperature.
 
 - **Metrics**: accuracy, log loss (primary), Brier score, ECE over 10 equal-width bins of the
   top probability, the reliability table, selective accuracy and share answered at thresholds
@@ -408,6 +421,16 @@ each `pack.json`; features for fitting are extracted with the same settings):
   231 JevBench items); stance fit 21,000 (14,783 train, 3,072 validation, 3,145 test), dev 2,100,
   final 1,343, final-flagged 749 and final-seen 2,100. Calibration curves flatten after a few
   hundred labelled items, so a fit tier of a few thousand items is enough for heads of this size.
+
+### Calibration options
+
+The numbers in the rest of this section are those of the 0.1.0 release: raw against H2. The
+per-type temperature, added later as a second option, is reported against both on every tier in
+[calibration-options.md](calibration-options.md#both-options-on-every-tier); how it came about,
+which tiers its analyses read, and its pre-registered confirmation are described
+[below](#the-calibration-comparison). On the confirm tier, which no analysis had read, it met the
+pre-registered criteria against H2 in three of four cases (Gemma 4 12B stance, Qwen3-4B general
+and stance) and not for Gemma 4 12B general.
 
 ### Tiers and contamination
 
@@ -522,9 +545,801 @@ well above 0.05. Both stance heads ship, because they are far better calibrated 
 0.142 → 0.048 and 0.187 → 0.052), and they are marked as having missed the dev bar in the README
 and the model cards.
 
+## The calibration comparison
+
+After the 0.1.0 release a second calibration option, one temperature per question type, was
+studied and compared with the released H2 heads. Everything in this section ran on the CPU from
+the letter scores cached by the release runs, except that the confirm tier was built new and read
+once by each model. The order in which things were done is part of what the numbers mean, so it
+is stated here. The scripts, protocols and outputs are committed unchanged in
+[results/calibration-study](results/calibration-study/README.md), each with a README; rerun from
+the repository (`rerun.py`), all four reproduced their committed output byte for byte.
+[calibration-options.md](calibration-options.md) has both options on every tier and how to choose
+between them.
+
+### The two options
+
+- **H2** ([above](#the-heads)) acts on each option order's letter scores before the orders are
+  averaged, and can change the top answer.
+- **The per-type temperature** reads each order without a head, averages the orders into the raw
+  readout p, then applies p_T[k] = softmax_k(log(max(p[k], 1e-12)) / T), with one T per question
+  type (choice, yes/no, score). It keeps the raw readout's ranking, so its top-answer accuracy
+  is the raw accuracy (a benchmark that scores score questions by the expected level, as
+  JevBench does, can differ).
+
+Both are fitted on the same items: the fit tier's train split (general 6,300 items: 4,156
+choice, 1,093 yes/no, 1,051 score; stance 14,783 choice items). The temperature minimises the
+mean log loss of the train items, each counted once and unweighted; the validation split
+(general 1,350: 892, 232, 226; stance 3,072) is used only for the fallback verdict (no type with
+training items fell back; stance yes/no and score have no items and are set to 1). The shipped values, rounded to three decimals, are those frozen before the confirmation:
+
+| pack | format | choice | yes/no | score |
+|---|---|---|---|---|
+| gemma4-12b-q8 | general | 3.461 | 7.491 | 6.538 |
+| gemma4-12b-q8 | stance | 7.151 | 1 (no items) | 1 (no items) |
+| qwen3-4b-q8 | general | 6.846 | 13.36 | 24.22 |
+| qwen3-4b-q8 | stance | 12.391 | 1 (no items) | 1 (no items) |
+
+`temperatures.json` was written from exploratory analysis 2's fit (`tricks.py`, Nelder-Mead in
+log T); analysis 1's L-BFGS fit of the same objective gives the same values to three decimals.
+`s1-train --head temperature`
+fits the same objective (bisection on its derivative, which is monotone in 1/T), and all eight of
+its unrounded optima round to the same three decimals (`train-temperature.log` in each results
+directory).
+
+### Exploratory analyses
+
+Three exploratory analyses came first, all on 2026-09-29 after the release:
+
+| analysis | protocol | fitted on | chosen on | tiers read | finding |
+|---|---|---|---|---|---|
+| 0, temperature-only variants and pooling the two packs | none | the fit tier's test split | no choice; every variant reported | test, dev, final, final-seen | a temperature per type had a lower log loss than H2 in 7 of 12 cases; pooling gave no gain worth running two models |
+| 1, T1, Ttype, TBtype against H2 | choice rule in the script's docstring before any result | train split | validation log loss | train, validation, dev, final, final-flagged, final-seen, bench | the rule chose H2 in all 4 cases; on held-out tiers Ttype matched or beat H2 in most comparisons |
+| 2, refinements on top of Ttype, and an own-data temperature | `PROTOCOL.md`, frozen by SHA-256 at 09:09 | train split | dev log loss (ties within 0.002 to fewer parameters) | train, dev, final, final-flagged, final-seen, bench | no refinement beat Ttype reliably; averaged over families, a temperature fitted on a family's own items had a lower log loss from about 50 to 100 items (per family: in 22 to 25 of 36) |
+
+**Analysis 0.** Weights of a log-linear pool (p proportional to the product of each source's
+probabilities raised to its weight; one weight is a temperature) were fitted by Nelder-Mead on the
+fit tier's test split (1,350 general, 3,145 stance items), which after this analysis is no longer
+an unused in-distribution check for these variants. Compared by log loss on dev, final and
+final-seen, the per-type temperature beat H2 in 7 of the 12 pack, format and tier cases. Pooling
+Gemma 4 12B with Qwen3-4B was never more than 0.0022 more accurate than Gemma 4 12B alone (general
+dev; less accurate in the other five format and tier cases); the best pooled variant's log loss
+differed from the best Gemma-only variant's by at most 0.030, lower in four of six cases and
+higher in two. That comparison is of the best of several variants after seeing the results, and
+pooling needs both models at run time; it was not pursued.
+
+**Analysis 1.** Fitted on the train split by L-BFGS: T1 (one temperature), Ttype (one per
+question type) and TBtype (per type a temperature and a bias per option position). The rule fixed
+in the docstring, lowest log loss on the validation split, chose H2 in all four pack and format
+cases; validation is in-distribution, and H2's penalty strength had itself been chosen on it. On
+the 18 held-out comparisons (dev, final, final-flagged, final-seen and bench, per pack and
+format), Ttype's accuracy was at least H2's in 15, and its log loss, ECE and Brier score were
+each lower in 11. In 6 of the 18 the 95% interval of the paired difference showed Ttype worse
+than H2 on at least one of accuracy, ECE and Brier, among them the stance final tier
+(Check-COVID) of both packs. TBtype was better than Ttype on train and validation (general) but
+had a higher log loss in 13 of the 18 held-out comparisons.
+
+**Analysis 2.** Four refinements, each fitted per question type on the train split and applied
+to Ttype's output: a temperature that grows with the disagreement between option orders
+(T = exp(alpha + beta d)), Platt scaling of the top probability, isotonic regression and 10-bin
+histogram binning. The frozen rule chose Platt, Ttype, H2 and isotonic regression in the four
+cases. Against Ttype over the 18 held-out comparisons, counting intervals of the paired log loss
+difference wholly below or above zero: Platt better in 9, worse in 6; order disagreement better
+in 2, worse in 5; isotonic better in 2, worse in 12; histogram better in 1, worse in 8. None was
+taken further. Three bugs in the analysis script were found and fixed during this run; the
+frozen protocol was not changed, and the committed script is the one that produced the committed
+output.
+
+**Own-data temperature (analysis 2's sub-study).** For each held-out family of dev and final,
+items were split into halves A and B by a hash of their group; one temperature fitted on the first
+n items of A was judged on B against the shipped per-type temperature. Mean log loss over
+families was lower than the shipped temperature's in 6 of the 8 pack, format and tier rows at
+n = 25, 7 of 8 at n = 50 and 8 of 8 at n = 100 (for example Gemma 4 12B general final: 0.628,
+0.614, 0.592 against 0.597; Qwen3-4B general final: 0.779, 0.777, 0.771 against 0.788). Per
+family it was more mixed: better in 22 of 36 families at n = 25 and at n = 50, and in 25 of 36
+at n = 100 (Gemma 4 12B stance dev: lower mean, better in one of three families).
+The full table is in the analysis README. This was exploratory and was not confirmed.
+
+**The decision to confirm.** Taking the per-type temperature to a confirmation was a judgement
+made after seeing these results, not the output of either pre-specified choice rule, and it was
+not registered in advance: analysis 1's rule chose H2 in all four cases and analysis 2's chose
+Ttype in one of four (1 of 8 pack and analysis decisions). The stated reasons were that it was
+the simplest variant, keeps the raw ranking and was not reliably beaten on the held-out tiers;
+Platt had a lower log loss than it in 9 of 18 comparisons. Because the choice departed from both
+rules, it was tested on a new tier.
+
+**How often each tier was read.** The fresh final tier and final-seen were read by the 0.1.0
+release run and then by all three analyses; final-flagged and bench by the release run and by
+analyses 1 and 2; dev during development, by all three analyses and by the confirmation
+scorer's smoke test; the fit tier's test split by the release run and, for fitting, by analysis
+0. The per-type temperature and the decision to
+test it came from these analyses, so for the comparison of the two options none of these tiers
+is untouched, and their numbers for the temperature are supporting evidence, not a held-out
+result.
+
+### The pre-registered confirmation
+
+**Protocol.** `CONFIRM.md` states that it was written and frozen before any confirmation data
+existed, with the
+temperatures under test (`temperatures.json`, analysis 2's Ttype fit rounded to three decimals).
+Amendment 1 was added after the tier was built and reviewed and before any model read it, and the
+file was re-frozen at 10:38; the scorer `score_confirm.py` was frozen at 10:40 after a smoke test
+on the 0.1.0 dev tier only. `CONFIRM.sha256` records the SHA-256 of the three files and these
+two times (none for `temperatures.json`, whose file modification time is 09:30); the SHA-256 of
+the protocol before the amendment was not kept, so the amendment's text is the record of what
+changed. The claim, in the protocol's words: "On task families that nothing in judgly was
+fitted, tuned or chosen on, the per-question-type temperature ("Ttype") is at least as good as
+the head shipped in judgly 0.1.0 ("H2"): no loss of accuracy and no worse calibration", with
+nothing refitted and the release engine settings (up to four option orders, no content-free
+pass). The criteria below test this as non-inferiority within pre-set margins.
+
+**Amendment 1.** (1) Stance intervals resample linked groups (claims joined by a shared abstract,
+70 groups) because items sharing an abstract are not independent; the 175 claim groups are a
+secondary analysis. (2) The tier review had flagged argument_quality and humour as possible
+relatives of used rating families, and code_outcome as having a language shortcut (the verdict
+goes with the programming language); the endpoints stay on all five families, and the result is
+also reported with each of the three left out, without a criterion. (3) Nothing else changed.
+
+**Data: the confirm tier.** Built after every other tier (judgly commits `ad8c91a` and `dbf1a9f`)
+from sources never used in this project, with licences that allow evaluation
+([licences.md](licences.md)), and frozen by SHA-256 in `data/tiers-confirm.sha256`:
+
+| format | family | source | type | items | resampling groups |
+|---|---|---|---|---|---|
+| general | kinship | CLUTRR | choice (17 relations, hop counts 2 to 10 balanced) | 500 | 500 |
+| general | code_outcome | CodeMMLU execution prediction (Project CodeNet programs) | choice (4 verdicts, 125 each) | 500 | 500 |
+| general | spatial | SpartQA-YN | yes/no (250 each) | 500 | 500 |
+| general | argument_quality | IBM Argument Quality 30k | score (3 levels) | 500 | 15 (topics) |
+| general | humour | Humicroedit | score (3 levels) | 500 | 417 |
+| stance | confirm_climate | ClimateCheck test split (reserved in 0.1.0) | choice (707 supports, 253 contradicts, 820 no bearing) | 1,780 | 70 (largest 837 items) |
+
+`scripts/prep_tiers.py` builds the tier last and drops every item that matches any other tier
+(fit, dev, final, final-flagged, final-seen, bench) as an exact text, a shared sentence, a shared
+passage (8-gram shingles, boilerplate included) or a near duplicate; for stance it also checks
+against the texts of every evaluation source as a whole (36,951 texts). The first build had 1,785
+ClimateCheck items; the review dropped five that quote IPCC text also held by Climate-FEVER (a dev
+source), and replaced one code_outcome item whose program was shorter than 20 characters, before
+any model read the tier. `scripts/check_contamination.py` checks the same conditions at the start
+of every pipeline run. The 0.1.0 tier files are byte-identical to `data/tiers.sha256`. Each model
+then read the tier once (`s1-features`, 10:38 to 13:12 by the run log; the first per-item output
+appeared at 11:31). Extraction began after Amendment 1 was re-frozen (10:38) and about two
+minutes before the scorer was frozen (10:40). The frozen scorer produced the confirmatory result
+from that readout once (13:13). The same readouts were later scored again, deterministically and
+after the result, by `make calibrate` (the calibration records), `confirmation_check.py` and
+`rerun.py`.
+
+**Criteria**, per pack and format, on the paired difference temperature minus H2 over the same
+items, 95% percentile interval from 1,000 bootstrap resamples of the groups (seed 20260929):
+accuracy, lower bound above -0.01; Brier score, upper bound below +0.01; ECE, upper bound below
++0.02. A case is confirmed when all three hold. Only confirmed cases switch.
+
+**Result: confirmed in 3 of 4 cases.** The scorer's values (`result-confirm.txt`; it rounds to four
+decimals, then prints three):
+
+| pack | format | items (groups) | accuracy T / H2 | ECE T / H2 | Brier T / H2 | log loss T / H2 | T - H2 accuracy | T - H2 ECE | T - H2 Brier | T - H2 log loss (no criterion) | verdict |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| gemma4-12b-q8 | general | 2,500 (1,932) | 0.509 / 0.509 | 0.087 / 0.051 | 0.579 / 0.562 | 0.959 / 0.933 | +0.000 [-0.014, +0.015] | +0.037 [+0.015, +0.048] | +0.017 [+0.010, +0.024] | +0.026 [+0.017, +0.037] | not confirmed |
+| gemma4-12b-q8 | stance | 1,780 (70) | 0.655 / 0.629 | 0.052 / 0.078 | 0.476 / 0.490 | 0.823 / 0.812 | +0.026 [+0.011, +0.049] | -0.026 [-0.045, +0.007] | -0.014 [-0.044, -0.001] | +0.012 [-0.036, +0.033] | confirmed |
+| qwen3-4b-q8 | general | 2,500 (1,932) | 0.484 / 0.463 | 0.047 / 0.076 | 0.597 / 0.624 | 1.009 / 1.041 | +0.022 [+0.008, +0.036] | -0.029 [-0.049, -0.014] | -0.027 [-0.035, -0.020] | -0.032 [-0.043, -0.023] | confirmed |
+| qwen3-4b-q8 | stance | 1,780 (70) | 0.568 / 0.526 | 0.106 / 0.183 | 0.581 / 0.612 | 0.966 / 0.989 | +0.042 [+0.023, +0.090] | -0.078 [-0.097, -0.054] | -0.031 [-0.065, -0.018] | -0.023 [-0.070, -0.001] | confirmed |
+
+For Gemma 4 12B general all three criteria were missed: equal accuracy, and H2 better
+calibrated. The raw readout was far worse than either option in every case (ECE 0.300 to 0.406).
+
+Per family (no criterion; paired intervals resample the family's own groups):
+
+| pack | family | items (groups) | accuracy T / H2 | ECE T / H2 | Brier T / H2 | T - H2 accuracy | T - H2 ECE | T - H2 Brier |
+|---|---|---|---|---|---|---|---|---|
+| gemma4-12b-q8 | argument_quality | 500 (15) | 0.444 / 0.458 | 0.105 / 0.079 | 0.633 / 0.624 | -0.014 [-0.034, +0.007] | +0.026 [-0.019, +0.053] | +0.009 [+0.002, +0.018] |
+| gemma4-12b-q8 | code_outcome | 500 (500) | 0.624 / 0.608 | 0.069 / 0.057 | 0.510 / 0.500 | +0.016 [-0.018, +0.050] | +0.012 [-0.041, +0.053] | +0.010 [-0.011, +0.031] |
+| gemma4-12b-q8 | humour | 500 (417) | 0.404 / 0.374 | 0.123 / 0.132 | 0.668 / 0.671 | +0.030 [+0.008, +0.056] | -0.009 [-0.036, +0.015] | -0.003 [-0.012, +0.006] |
+| gemma4-12b-q8 | kinship | 500 (500) | 0.538 / 0.526 | 0.061 / 0.031 | 0.586 / 0.566 | +0.012 [-0.012, +0.036] | +0.029 [-0.017, +0.061] | +0.020 [+0.009, +0.032] |
+| gemma4-12b-q8 | spatial | 500 (500) | 0.536 / 0.580 | 0.144 / 0.081 | 0.499 / 0.452 | -0.044 [-0.088, -0.002] | +0.063 [+0.012, +0.109] | +0.047 [+0.025, +0.068] |
+| gemma4-12b-q8 | confirm_climate | 1,780 (70) | 0.655 / 0.629 | 0.052 / 0.078 | 0.476 / 0.490 | +0.026 [+0.011, +0.049] | -0.026 [-0.045, +0.007] | -0.014 [-0.044, -0.001] |
+| qwen3-4b-q8 | argument_quality | 500 (15) | 0.426 / 0.422 | 0.025 / 0.088 | 0.641 / 0.651 | +0.004 [-0.004, +0.011] | -0.064 [-0.072, -0.009] | -0.011 [-0.023, +0.001] |
+| qwen3-4b-q8 | code_outcome | 500 (500) | 0.514 / 0.510 | 0.073 / 0.072 | 0.592 / 0.599 | +0.004 [-0.034, +0.044] | +0.002 [-0.056, +0.044] | -0.007 [-0.019, +0.005] |
+| qwen3-4b-q8 | humour | 500 (417) | 0.368 / 0.374 | 0.110 / 0.178 | 0.679 / 0.712 | -0.006 [-0.014, +0.000] | -0.068 [-0.088, -0.058] | -0.033 [-0.043, -0.023] |
+| qwen3-4b-q8 | kinship | 500 (500) | 0.502 / 0.520 | 0.078 / 0.058 | 0.602 / 0.598 | -0.018 [-0.038, +0.004] | +0.020 [-0.024, +0.056] | +0.004 [-0.007, +0.014] |
+| qwen3-4b-q8 | spatial | 500 (500) | 0.612 / 0.488 | 0.055 / 0.154 | 0.471 / 0.559 | +0.124 [+0.076, +0.176] | -0.099 [-0.143, -0.043] | -0.088 [-0.119, -0.058] |
+| qwen3-4b-q8 | confirm_climate | 1,780 (70) | 0.568 / 0.526 | 0.106 / 0.183 | 0.581 / 0.612 | +0.042 [+0.023, +0.090] | -0.078 [-0.097, -0.054] | -0.031 [-0.065, -0.018] |
+
+These are the scorer's values (`result-confirm.json`, rounded to four decimals, printed to
+three). The model cards' per-family tables round the calibration records' values once, so a few
+differ by 0.001 (for example Qwen3-4B argument_quality H2 Brier 0.6515: 0.651 here, 0.652 in the
+card).
+
+The largest single difference is spatial (SpartQA yes/no), where H2 lowered Qwen3-4B's accuracy
+from 0.612 to 0.488. The five families have 500 items each, so the overall accuracy difference is
+the mean of the five: for Qwen3-4B, +0.022 overall, and -0.004 as the mean of the four families
+other than spatial (post hoc arithmetic, no interval). spatial was not among the families the
+amendment leaves out in turn, and the protocol specified no analysis without it.
+
+Secondary analyses (Amendment 1, no criterion):
+
+| pack | analysis | items (groups) | T - H2 accuracy | T - H2 ECE | T - H2 Brier | all three criteria |
+|---|---|---|---|---|---|---|
+| gemma4-12b-q8 | general, without argument_quality | 2,000 (1,917) | +0.004 [-0.012, +0.020] | +0.038 [+0.012, +0.051] | +0.018 [+0.011, +0.026] | not met |
+| gemma4-12b-q8 | general, without humour | 2,000 (1,515) | -0.007 [-0.024, +0.008] | +0.038 [+0.008, +0.057] | +0.022 [+0.013, +0.030] | not met |
+| gemma4-12b-q8 | general, without code_outcome | 2,000 (1,432) | -0.004 [-0.020, +0.010] | +0.032 [+0.011, +0.048] | +0.018 [+0.012, +0.026] | not met |
+| gemma4-12b-q8 | stance, resampling the 175 claim groups | 1,780 (175) | +0.026 [+0.008, +0.045] | -0.026 [-0.048, -0.006] | -0.014 [-0.030, +0.001] | met |
+| qwen3-4b-q8 | general, without argument_quality | 2,000 (1,917) | +0.026 [+0.010, +0.043] | -0.030 [-0.051, -0.008] | -0.031 [-0.041, -0.022] | met |
+| qwen3-4b-q8 | general, without humour | 2,000 (1,515) | +0.029 [+0.011, +0.047] | -0.022 [-0.046, -0.004] | -0.026 [-0.035, -0.016] | met |
+| qwen3-4b-q8 | general, without code_outcome | 2,000 (1,432) | +0.026 [+0.013, +0.041] | -0.042 [-0.058, -0.022] | -0.032 [-0.042, -0.024] | met |
+| qwen3-4b-q8 | stance, resampling the 175 claim groups | 1,780 (175) | +0.042 [+0.023, +0.063] | -0.078 [-0.098, -0.053] | -0.031 [-0.050, -0.013] | met |
+
+**Checks of the shipped option against the confirmation.** The shipped temperature files hold
+exactly the values of `temperatures.json`; on the confirm and dev tiers the engine's per-item
+temperature output equals the frozen scorer's applied to the raw dumps (largest difference
+2.2e-16); every point value of `result-confirm.json` equals the calibration record's rounded to
+four decimals; and every committed per-item dump (both packs, both formats, every tier, raw, H2
+and temperature) is reproduced byte for byte by `s1-eval` from the committed code
+(`docs/tools/confirmation_check.py`, [reproduce.md](reproduce.md)).
+
+### What was decided
+
+Per the protocol, only confirmed cases switch. Each pack ships both options per format, and the
+default (`Engine.load(pack)`) is:
+
+| pack | general | stance |
+|---|---|---|
+| gemma4-12b-q8 | H2 (not confirmed) | temperature (confirmed) |
+| qwen3-4b-q8 | temperature (confirmed) | temperature (confirmed) |
+
+`calibration="h2"`, `"temperature"` or `"raw"` chooses one for every format.
+
+### Negative and null results of the comparison
+
+- **Gemma 4 12B general was not confirmed, and H2 was better calibrated.** On the untouched
+  general confirm tier, at equal accuracy (0.509), H2 was better calibrated than the temperature:
+  ECE 0.051 against 0.087 in the scorer's output, Brier 0.562 against 0.579, with the paired
+  intervals of ECE (+0.037 [+0.015, +0.048]), Brier (+0.017 [+0.010, +0.024]) and log loss
+  (+0.026 [+0.017, +0.037]) all excluding zero. The protocol did not pre-specify a test in that
+  direction.
+- **For Qwen3-4B general, H2 was better calibrated on most earlier tiers.** H2 had the lower ECE
+  on dev (0.055 against 0.068), final (0.030 against 0.034), final-seen (0.019 against 0.037),
+  bench (0.114 against 0.128) and test (0.040 against 0.062); the temperature only on
+  final-flagged (0.037 against 0.046). In analysis 1 the paired intervals showed the temperature
+  worse on dev (ECE), final-seen (ECE, Brier) and bench (Brier). The switch rests on the confirm
+  tier, whose accuracy gain comes mostly from spatial (below).
+- **H2 was better calibrated on the stance final tier** (Check-COVID) in both packs (ECE 0.048
+  and 0.052 against 0.087 and 0.093), although the temperature is now the stance default. On the
+  stance confirm tier (ClimateCheck) the temperature was better in both. Stance calibration
+  depends strongly on the kind of claims and evidence.
+- **Neither exploratory choice rule chose the temperature.** Validation-split log loss
+  (analysis 1) favoured H2 in all four cases; dev log loss (analysis 2) chose Ttype in one of
+  four. The temperature was taken further by a post hoc judgement on held-out results, which is
+  why it needed the confirmation.
+- **No refinement beat the plain temperature reliably** (order disagreement, Platt scaling,
+  isotonic regression, histogram binning; analysis 2), and **pooling the two packs** gave no gain
+  worth running two models (analysis 0).
+- **Position biases did not transfer** (TBtype, analysis 1).
+- **The confirmation is small.** One stance source with 70 resampling groups (wide intervals),
+  and five general families, one of which (spatial) carries the Qwen3-4B general accuracy gain:
+  without it the mean accuracy difference of the other four is -0.004 (post hoc).
+  A confirmed case means "not worse than H2 beyond the pre-set margins (accuracy -0.01, Brier
+  +0.01, ECE +0.02) on this tier", not that the temperature is better.
+
+## Comparison with dedicated decision models
+
+A descriptive comparison of judgly with three decision models that Ollama serves, on the same
+items of judgly's test tiers, scored by the same code. No criterion decides anything; every
+number is reported here. The complete record (protocol, runner, scorer, the raw answers, results,
+environment and model digests) is in
+[results/external-comparison/](results/external-comparison/README.md), and
+`make compare-score` rebuilds every result file from the committed answers, byte for byte.
+
+### The systems
+
+- **Nimble 9B** (`nimble:9b`, Ollama ID `aa4a79f08ae0`), by Bespoke Labs: a LoRA fine-tune of
+  Qwen3.5-9B, served by Ollama as a merged Q8_0 GGUF with an 8,194-token context; weights under
+  Apache-2.0 according to its model card.
+- **Tev1 4B** (`tev1:4b`, `d18e9174f4db`) and, as a secondary system, **Tev1 0.8B**
+  (`tev1:0.8b`, `c0099a86fcbd`), by Together AI: fine-tunes of Qwen3.5-4B and Qwen3.5-0.8B,
+  Q8_0, with a 2,050-token context; code under MIT, the weights' licence described by its
+  authors as being finalized.
+- **judgly**, Gemma 4 12B and Qwen3-4B, each as raw, with H2, with the per-type temperature and as
+  the pack default (Gemma 4 12B: H2 for general, temperature for stance; Qwen3-4B: temperature for
+  both). judgly was not run again: its probabilities are the committed per-item dumps of its
+  calibration records (`results/<pack>/<format>/items-<condition>-<tier>.tsv.gz`).
+
+The external models were run as a user would run them: Ollama 0.35.0's `/v1/systemone`
+endpoint, default tags and settings, one request per item, no sampling, and no calibration fitted
+by us (their probabilities are a plain softmax at T = 1). The full manifests and GGUF layer
+hashes are in [ENVIRONMENT.md](results/external-comparison/ENVIRONMENT.md).
+
+### Protocol
+
+The protocol ([PROTOCOL.md](results/external-comparison/PROTOCOL.md)), the runner and the scorer
+were written on 2026-09-29 and frozen at 16:47 with their SHA-256 in `PROTOCOL.sha256`, before any
+external model answered a test item (a smoke test before freezing used three dev items only).  The protocol was amended once before it was frozen, and only the amended text is kept. The amendment changed how items too long for Tev1's 2,050-token context are handled: the first version flagged them (by input tokens or an error) and reported results for all items and for the items that fit; a smoke test on three dev items then showed that Ollama refuses such prompts with an error instead of truncating them, so the amended version reports refused items as coverage, scores each model on the items it answered, and scores all models together on the items every model answered. The amendment was made before any external model answered a test item; no other part of the protocol changed. The protocol fixes the
+systems, the items and their order, how each item becomes a request (a choice question with the
+item's options in the tier file's order; a yes/no question as Ollama's `noul` type; a score
+question with the levels as criteria and the scale's meaning in the instructions, as judgly gives
+it), how answers are read back into probabilities, the metrics and the intervals, and it lists the
+known handicaps of the external models (below) as stated, not corrected.
+
+One decision was taken after freezing, at 16:54, while the `tev1:4b` run (started at 16:47) was
+in progress and before any of its answers were looked at
+([NOTES.md](results/external-comparison/NOTES.md)): Ollama 0.35.0's `/v1/systemone` builds a
+`{"context", "schema"}` prompt (`decision/systemone.go`), while Tev1 was trained on
+`{"state", "question", "options"}` (Tev1 model card). A second run of Tev1 with its native
+prompt was considered and declined by the author: every model is tested only through the
+systemone endpoint, and the mismatch is reported as a limitation of Tev1 as served by Ollama.
+
+The runs (`chain.sh`, `run.log`), on an Apple M3 Max with 64 GB: `tev1:4b` from 16:47 to 18:29,
+`tev1:0.8b` from 18:29 to 18:56 and `nimble:9b` from 18:56 to 21:57; scored at 21:58. The scorer
+was run once per model, on the items that model answered, and once with all three models, on the
+items every model answered (`final/result-<name>.json`, `final/score-<name>.txt`). Before that, at
+20:56, while `nimble:9b` was still running, the frozen scorer (a byte-identical copy) was run once
+on Nimble 9B's answers then available: general and stance confirm, and 7,424 of the 7,879 general
+final items. Its output is kept as `interim/result-external.json`; nothing was changed after it.
+
+### Items and how often each had been read
+
+judgly's held-out test tiers, identical for every system (17,482 items): confirm (general 2,500
+items in 1,932 groups; stance 1,780 in 70 linked groups), final (general 7,879 in 6,803 groups;
+stance 1,343 in 315), bench (2,231 in 595 groups: typed-decisions 2,000 items in 400 cases, and
+the 231 public JevBench items in 195 groups) and final-flagged (general 1,000; stance 749). The fit,
+dev and final-seen tiers were not used.
+
+judgly's calibration was fitted on the train split of the fit tier only (general 6,300 items,
+stance 14,783; sources in [data/registry.yaml](../data/registry.yaml)); its language models are
+frozen and never trained. Before this comparison, as in
+[Calibration options](calibration-options.md): each judgly model read the **confirm** tier once,
+for the pre-registered confirmation of the temperature, and each pack's default was then set from
+that read by the pre-registered rule (the temperature where it was confirmed, H2 otherwise), so on
+confirm the default rows are chosen by their own result and H2, fixed beforehand, is the untouched
+comparator; **final** was read by the 0.1.0 release run
+and by exploratory analyses 0, 1 and 2, which led to the temperature option; **bench** and
+**final-flagged** by the release run and by analyses 1 and 2. This comparison rescored those
+committed answers and changed nothing in judgly. The external models read every item once, here.
+
+### Coverage
+
+Nimble answered all 17,482 items. Both Tev1 models answered all but 36, the same 36 for both:
+JevBench items whose prompt Ollama counted at 2,410 to 4,042 tokens, over Tev1's 2,050, which
+Ollama refused with HTTP 400 ("input is never truncated"). No answered prompt exceeded a model's
+context (`items_over_context` is 0 everywhere). Tev1's per-model results and the all-model results
+therefore score general bench on 2,195 items (559 groups), JevBench on 195 (159 groups).
+
+### Metrics and intervals
+
+The frozen scorer ([score_external.py](results/external-comparison/score_external.py)) computes,
+with the same code for every system and against each item's gold label: accuracy of the top
+answer (first maximum), ECE (top-label confidence, ten equal-width bins, weighted by bin size),
+the Brier score summed over the options against the one-hot label (0 to 2), and log loss with
+probabilities floored at 1e-12. Choice probabilities are read by option key; yes/no as
+(P(true), 1 - P(true)); score questions by level. Intervals are 95% percentiles of 1,000 bootstrap
+resamples of the tier's groups (numpy `default_rng(20260929)`, one generator for all tiers in the
+order above); paired differences resample both systems on the same draws. judgly's per-item
+probabilities are in its own option order with its own gold index; the metrics do not depend on
+the order.
+
+These bench numbers use the gold label, not the benchmarks' own scoring in
+[Bench: external benchmarks](#bench-external-benchmarks) (rounded expected level for JevBench
+score questions, Brier against soft gold); so judgly Gemma 4 12B H2 has 0.844 JevBench accuracy
+here and 0.840 there, and its typed-decisions Brier is 0.401 here and 0.117 there. The judgly
+values here equal those of judgly's calibration records on the same items.
+
+The record reports bench as one tier with point values per source (`by_source`). The intervals and
+paired differences per source below were added afterwards by `scripts/make_compare_figures.py`
+(`make compare-figures`), with the scorer's own bootstrap applied to each source on its own
+(1,000 resamples of the source's groups, `default_rng(20260930)`), and are written to
+[compare-by-source.json](assets/results/compare-by-source.json). Before writing anything, that
+script rescores every item from the committed answers and dumps, replays the frozen scorer's
+bootstrap, and checks that every point value, interval and paired difference of the four result
+files is reproduced; they all are, exactly.
+
+Each external model's rows below come from its own result file (the items it answered); judgly's
+rows, and judgly Qwen3-4B minus judgly Gemma 4 12B, from Nimble's (every item). On confirm, final
+and final-flagged the three files hold the same items, so judgly's point values are the same in
+all of them; their intervals differ slightly (by at most 0.019, in log loss), because each scorer
+run draws its own resamples.
+
+### Results of the comparison
+
+**confirm, general**: 2,500 items in 1,932 groups. Nothing was fitted on this tier, but judgly's
+default rows on both confirm tiers are the options the pre-registered confirmation selected from
+this same read; the H2 rows (the 0.1.0 default) were fixed before it. The paired differences are
+against the defaults only; the record has none against H2.
+
+| system | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|
+| Nimble 9B | 0.481 [0.461, 0.501] | 0.229 [0.210, 0.249] | 0.702 [0.674, 0.728] | 1.250 [1.199, 1.305] |
+| Tev1 4B | 0.479 [0.456, 0.501] | 0.142 [0.121, 0.165] | 0.681 [0.658, 0.704] | 1.220 [1.175, 1.265] |
+| Tev1 0.8B | 0.378 [0.356, 0.398] | 0.154 [0.136, 0.177] | 0.701 [0.685, 0.716] | 1.218 [1.187, 1.248] |
+| judgly Gemma 4 12B, default | 0.509 [0.488, 0.530] | 0.051 [0.041, 0.072] | 0.562 [0.547, 0.578] | 0.933 [0.907, 0.957] |
+| judgly Gemma 4 12B, raw | 0.509 [0.489, 0.531] | 0.373 [0.351, 0.393] | 0.834 [0.799, 0.868] | 2.238 [2.116, 2.366] |
+| judgly Gemma 4 12B, H2 | 0.509 [0.488, 0.530] | 0.051 [0.041, 0.072] | 0.562 [0.547, 0.578] | 0.933 [0.907, 0.957] |
+| judgly Gemma 4 12B, temperature | 0.509 [0.489, 0.531] | 0.087 [0.069, 0.106] | 0.579 [0.563, 0.595] | 0.959 [0.934, 0.983] |
+| judgly Qwen3-4B, default | 0.484 [0.466, 0.506] | 0.047 [0.032, 0.068] | 0.597 [0.584, 0.611] | 1.009 [0.987, 1.031] |
+| judgly Qwen3-4B, raw | 0.484 [0.466, 0.506] | 0.406 [0.382, 0.428] | 0.888 [0.846, 0.928] | 4.674 [4.294, 5.072] |
+| judgly Qwen3-4B, H2 | 0.463 [0.442, 0.483] | 0.076 [0.062, 0.101] | 0.624 [0.609, 0.639] | 1.041 [1.016, 1.066] |
+| judgly Qwen3-4B, temperature | 0.484 [0.466, 0.506] | 0.047 [0.032, 0.068] | 0.597 [0.584, 0.611] | 1.009 [0.987, 1.031] |
+
+Paired differences (system minus judgly default, same items):
+
+| system | minus | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|---|
+| Nimble 9B | Gemma default | -0.028 [-0.053, -0.005] | +0.178 [+0.151, +0.196] | +0.139 [+0.117, +0.162] | +0.318 [+0.276, +0.359] |
+| Nimble 9B | Qwen default | -0.004 [-0.025, +0.016] | +0.182 [+0.159, +0.202] | +0.105 [+0.085, +0.126] | +0.242 [+0.198, +0.287] |
+| Tev1 4B | Gemma default | -0.030 [-0.054, -0.006] | +0.092 [+0.062, +0.111] | +0.118 [+0.098, +0.139] | +0.288 [+0.249, +0.324] |
+| Tev1 4B | Qwen default | -0.006 [-0.028, +0.019] | +0.095 [+0.066, +0.121] | +0.084 [+0.065, +0.104] | +0.212 [+0.174, +0.248] |
+| Tev1 0.8B | Gemma default | -0.131 [-0.159, -0.103] | +0.104 [+0.074, +0.125] | +0.139 [+0.119, +0.158] | +0.286 [+0.251, +0.320] |
+| Tev1 0.8B | Qwen default | -0.106 [-0.130, -0.083] | +0.107 [+0.080, +0.130] | +0.104 [+0.087, +0.121] | +0.210 [+0.177, +0.239] |
+| judgly Qwen3-4B default | Gemma default | -0.025 [-0.052, -0.000] | -0.003 [-0.029, +0.018] | +0.034 [+0.021, +0.048] | +0.076 [+0.054, +0.099] |
+
+**confirm, stance (ClimateCheck)**: 1,780 items in 70 groups.
+
+| system | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|
+| Nimble 9B | 0.595 [0.553, 0.640] | 0.264 [0.211, 0.296] | 0.657 [0.588, 0.721] | 1.491 [1.323, 1.631] |
+| Tev1 4B | 0.630 [0.603, 0.680] | 0.185 [0.152, 0.215] | 0.542 [0.477, 0.583] | 0.950 [0.828, 1.008] |
+| Tev1 0.8B | 0.451 [0.380, 0.481] | 0.304 [0.279, 0.364] | 0.794 [0.752, 0.870] | 1.459 [1.369, 1.597] |
+| judgly Gemma 4 12B, default | 0.655 [0.617, 0.698] | 0.052 [0.028, 0.079] | 0.476 [0.416, 0.511] | 0.823 [0.733, 0.873] |
+| judgly Gemma 4 12B, raw | 0.655 [0.617, 0.698] | 0.300 [0.255, 0.333] | 0.630 [0.541, 0.688] | 3.223 [2.588, 3.514] |
+| judgly Gemma 4 12B, H2 | 0.629 [0.590, 0.670] | 0.078 [0.046, 0.104] | 0.490 [0.446, 0.530] | 0.812 [0.741, 0.871] |
+| judgly Gemma 4 12B, temperature | 0.655 [0.617, 0.698] | 0.052 [0.028, 0.079] | 0.476 [0.416, 0.511] | 0.823 [0.733, 0.873] |
+| judgly Qwen3-4B, default | 0.568 [0.526, 0.607] | 0.106 [0.078, 0.151] | 0.581 [0.544, 0.630] | 0.966 [0.914, 1.035] |
+| judgly Qwen3-4B, raw | 0.568 [0.526, 0.607] | 0.383 [0.346, 0.423] | 0.809 [0.735, 0.883] | 6.492 [5.785, 7.258] |
+| judgly Qwen3-4B, H2 | 0.526 [0.460, 0.556] | 0.183 [0.152, 0.226] | 0.612 [0.579, 0.683] | 0.989 [0.939, 1.085] |
+| judgly Qwen3-4B, temperature | 0.568 [0.526, 0.607] | 0.106 [0.078, 0.151] | 0.581 [0.544, 0.630] | 0.966 [0.914, 1.035] |
+
+Paired differences (system minus judgly default, same items):
+
+| system | minus | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|---|
+| Nimble 9B | Gemma default | -0.060 [-0.081, -0.044] | +0.212 [+0.166, +0.227] | +0.181 [+0.160, +0.224] | +0.668 [+0.578, +0.764] |
+| Nimble 9B | Qwen default | +0.027 [+0.008, +0.060] | +0.158 [+0.104, +0.181] | +0.076 [+0.023, +0.103] | +0.525 [+0.385, +0.611] |
+| Tev1 4B | Gemma default | -0.025 [-0.040, +0.001] | +0.133 [+0.105, +0.158] | +0.065 [+0.045, +0.090] | +0.127 [+0.071, +0.162] |
+| Tev1 4B | Qwen default | +0.062 [+0.046, +0.101] | +0.079 [+0.039, +0.101] | -0.039 [-0.086, -0.019] | -0.016 [-0.119, +0.025] |
+| Tev1 0.8B | Gemma default | -0.204 [-0.279, -0.173] | +0.252 [+0.224, +0.309] | +0.317 [+0.285, +0.398] | +0.636 [+0.581, +0.763] |
+| Tev1 0.8B | Qwen default | -0.117 [-0.172, -0.096] | +0.198 [+0.178, +0.236] | +0.213 [+0.192, +0.260] | +0.493 [+0.429, +0.578] |
+| judgly Qwen3-4B default | Gemma default | -0.087 [-0.126, -0.067] | +0.054 [+0.027, +0.099] | +0.105 [+0.083, +0.159] | +0.143 [+0.111, +0.224] |
+
+**final, general (8 families)**: 7,879 items in 6,803 groups.
+
+| system | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|
+| Nimble 9B | 0.674 [0.663, 0.684] | 0.129 [0.120, 0.139] | 0.450 [0.437, 0.463] | 0.876 [0.846, 0.907] |
+| Tev1 4B | 0.657 [0.647, 0.668] | 0.052 [0.044, 0.061] | 0.431 [0.420, 0.441] | 0.785 [0.763, 0.806] |
+| Tev1 0.8B | 0.504 [0.493, 0.516] | 0.086 [0.075, 0.096] | 0.588 [0.578, 0.597] | 1.005 [0.988, 1.021] |
+| judgly Gemma 4 12B, default | 0.737 [0.727, 0.746] | 0.020 [0.015, 0.030] | 0.348 [0.338, 0.358] | 0.631 [0.613, 0.648] |
+| judgly Gemma 4 12B, raw | 0.760 [0.751, 0.770] | 0.194 [0.185, 0.204] | 0.431 [0.415, 0.448] | 1.553 [1.483, 1.630] |
+| judgly Gemma 4 12B, H2 | 0.737 [0.727, 0.746] | 0.020 [0.015, 0.030] | 0.348 [0.338, 0.358] | 0.631 [0.613, 0.648] |
+| judgly Gemma 4 12B, temperature | 0.760 [0.751, 0.770] | 0.017 [0.015, 0.027] | 0.325 [0.315, 0.334] | 0.596 [0.579, 0.613] |
+| judgly Qwen3-4B, default | 0.656 [0.645, 0.666] | 0.034 [0.025, 0.043] | 0.440 [0.430, 0.450] | 0.783 [0.767, 0.801] |
+| judgly Qwen3-4B, raw | 0.656 [0.645, 0.666] | 0.268 [0.259, 0.279] | 0.602 [0.584, 0.621] | 3.469 [3.329, 3.626] |
+| judgly Qwen3-4B, H2 | 0.639 [0.628, 0.648] | 0.029 [0.025, 0.041] | 0.450 [0.440, 0.460] | 0.797 [0.780, 0.815] |
+| judgly Qwen3-4B, temperature | 0.656 [0.645, 0.666] | 0.034 [0.025, 0.043] | 0.440 [0.430, 0.450] | 0.783 [0.767, 0.801] |
+
+Paired differences (system minus judgly default, same items):
+
+| system | minus | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|---|
+| Nimble 9B | Gemma default | -0.063 [-0.074, -0.051] | +0.109 [+0.096, +0.118] | +0.102 [+0.090, +0.115] | +0.245 [+0.220, +0.272] |
+| Nimble 9B | Qwen default | +0.018 [+0.007, +0.029] | +0.095 [+0.081, +0.107] | +0.010 [-0.001, +0.021] | +0.092 [+0.069, +0.118] |
+| Tev1 4B | Gemma default | -0.080 [-0.091, -0.069] | +0.032 [+0.019, +0.041] | +0.083 [+0.073, +0.093] | +0.154 [+0.137, +0.173] |
+| Tev1 4B | Qwen default | +0.001 [-0.009, +0.011] | +0.018 [+0.006, +0.030] | -0.009 [-0.017, -0.001] | +0.002 [-0.013, +0.016] |
+| Tev1 0.8B | Gemma default | -0.233 [-0.246, -0.220] | +0.066 [+0.051, +0.076] | +0.240 [+0.229, +0.251] | +0.374 [+0.356, +0.395] |
+| Tev1 0.8B | Qwen default | -0.152 [-0.165, -0.140] | +0.052 [+0.037, +0.065] | +0.148 [+0.137, +0.158] | +0.222 [+0.204, +0.237] |
+| judgly Qwen3-4B default | Gemma default | -0.081 [-0.092, -0.070] | +0.014 [+0.000, +0.023] | +0.092 [+0.083, +0.102] | +0.153 [+0.137, +0.168] |
+
+**final, stance (Check-COVID)**: 1,343 items in 315 groups.
+
+| system | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|
+| Nimble 9B | 0.817 [0.796, 0.837] | 0.113 [0.096, 0.136] | 0.312 [0.279, 0.348] | 0.757 [0.670, 0.857] |
+| Tev1 4B | 0.826 [0.804, 0.845] | 0.041 [0.032, 0.066] | 0.264 [0.238, 0.294] | 0.498 [0.447, 0.557] |
+| Tev1 0.8B | 0.577 [0.557, 0.598] | 0.111 [0.090, 0.135] | 0.556 [0.534, 0.578] | 0.950 [0.911, 0.989] |
+| judgly Gemma 4 12B, default | 0.827 [0.807, 0.848] | 0.087 [0.068, 0.107] | 0.280 [0.258, 0.304] | 0.536 [0.504, 0.573] |
+| judgly Gemma 4 12B, raw | 0.827 [0.807, 0.848] | 0.142 [0.123, 0.164] | 0.310 [0.273, 0.350] | 1.603 [1.384, 1.863] |
+| judgly Gemma 4 12B, H2 | 0.812 [0.792, 0.834] | 0.048 [0.034, 0.070] | 0.287 [0.264, 0.310] | 0.508 [0.472, 0.546] |
+| judgly Gemma 4 12B, temperature | 0.827 [0.807, 0.848] | 0.087 [0.068, 0.107] | 0.280 [0.258, 0.304] | 0.536 [0.504, 0.573] |
+| judgly Qwen3-4B, default | 0.778 [0.755, 0.799] | 0.093 [0.070, 0.115] | 0.357 [0.335, 0.380] | 0.650 [0.619, 0.681] |
+| judgly Qwen3-4B, raw | 0.778 [0.755, 0.799] | 0.187 [0.168, 0.211] | 0.410 [0.370, 0.453] | 3.184 [2.797, 3.586] |
+| judgly Qwen3-4B, H2 | 0.773 [0.751, 0.794] | 0.052 [0.035, 0.077] | 0.337 [0.316, 0.358] | 0.595 [0.563, 0.625] |
+| judgly Qwen3-4B, temperature | 0.778 [0.755, 0.799] | 0.093 [0.070, 0.115] | 0.357 [0.335, 0.380] | 0.650 [0.619, 0.681] |
+
+Paired differences (system minus judgly default, same items):
+
+| system | minus | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|---|
+| Nimble 9B | Gemma default | -0.010 [-0.028, +0.006] | +0.026 [-0.006, +0.066] | +0.032 [+0.012, +0.054] | +0.221 [+0.154, +0.294] |
+| Nimble 9B | Qwen default | +0.039 [+0.020, +0.057] | +0.020 [-0.015, +0.063] | -0.045 [-0.067, -0.020] | +0.107 [+0.037, +0.188] |
+| Tev1 4B | Gemma default | -0.002 [-0.021, +0.017] | -0.045 [-0.069, -0.007] | -0.016 [-0.033, +0.002] | -0.038 [-0.074, -0.000] |
+| Tev1 4B | Qwen default | +0.048 [+0.027, +0.069] | -0.051 [-0.078, -0.009] | -0.093 [-0.114, -0.072] | -0.151 [-0.191, -0.106] |
+| Tev1 0.8B | Gemma default | -0.250 [-0.275, -0.226] | +0.024 [-0.008, +0.059] | +0.276 [+0.252, +0.301] | +0.414 [+0.370, +0.454] |
+| Tev1 0.8B | Qwen default | -0.201 [-0.225, -0.173] | +0.018 [-0.015, +0.056] | +0.199 [+0.176, +0.221] | +0.301 [+0.263, +0.337] |
+| judgly Qwen3-4B default | Gemma default | -0.049 [-0.069, -0.030] | +0.006 [-0.014, +0.025] | +0.077 [+0.062, +0.093] | +0.113 [+0.091, +0.136] |
+
+**typed-decisions** (bench, one source): 2,000 items in 400 groups (cases). Intervals and paired differences from `compare-by-source.json` (seed 20260930); point values equal the record's `by_source`.
+
+| system | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|
+| Nimble 9B | 0.702 [0.678, 0.726] | 0.052 [0.040, 0.077] | 0.415 [0.387, 0.445] | 0.748 [0.692, 0.804] |
+| Tev1 4B | 0.613 [0.588, 0.638] | 0.038 [0.026, 0.063] | 0.485 [0.462, 0.510] | 0.840 [0.798, 0.882] |
+| Tev1 0.8B | 0.434 [0.411, 0.456] | 0.186 [0.164, 0.209] | 0.674 [0.647, 0.703] | 1.189 [1.141, 1.243] |
+| judgly Gemma 4 12B, default | 0.700 [0.678, 0.720] | 0.028 [0.020, 0.049] | 0.401 [0.380, 0.422] | 0.722 [0.688, 0.756] |
+| judgly Gemma 4 12B, raw | 0.702 [0.680, 0.723] | 0.251 [0.231, 0.272] | 0.535 [0.495, 0.575] | 1.951 [1.761, 2.142] |
+| judgly Gemma 4 12B, H2 | 0.700 [0.678, 0.720] | 0.028 [0.020, 0.049] | 0.401 [0.380, 0.422] | 0.722 [0.688, 0.756] |
+| judgly Gemma 4 12B, temperature | 0.702 [0.680, 0.723] | 0.025 [0.016, 0.049] | 0.409 [0.385, 0.433] | 0.735 [0.699, 0.774] |
+| judgly Qwen3-4B, default | 0.576 [0.549, 0.600] | 0.137 [0.122, 0.159] | 0.578 [0.558, 0.600] | 0.998 [0.966, 1.031] |
+| judgly Qwen3-4B, raw | 0.576 [0.549, 0.600] | 0.356 [0.333, 0.381] | 0.760 [0.716, 0.804] | 4.563 [4.212, 4.922] |
+| judgly Qwen3-4B, H2 | 0.591 [0.567, 0.613] | 0.126 [0.111, 0.148] | 0.569 [0.547, 0.592] | 0.998 [0.961, 1.037] |
+| judgly Qwen3-4B, temperature | 0.576 [0.549, 0.600] | 0.137 [0.122, 0.159] | 0.578 [0.558, 0.600] | 0.998 [0.966, 1.031] |
+
+Paired differences (system minus judgly default, same items):
+
+| system | minus | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|---|
+| Nimble 9B | Gemma default | +0.003 [-0.021, +0.027] | +0.024 [-0.003, +0.051] | +0.014 [-0.008, +0.037] | +0.025 [-0.016, +0.067] |
+| Nimble 9B | Qwen default | +0.127 [+0.100, +0.154] | -0.085 [-0.108, -0.055] | -0.163 [-0.192, -0.136] | -0.251 [-0.302, -0.203] |
+| Tev1 4B | Gemma default | -0.086 [-0.110, -0.062] | +0.010 [-0.014, +0.035] | +0.085 [+0.067, +0.103] | +0.118 [+0.086, +0.150] |
+| Tev1 4B | Qwen default | +0.037 [+0.014, +0.059] | -0.099 [-0.122, -0.071] | -0.093 [-0.111, -0.075] | -0.158 [-0.188, -0.126] |
+| Tev1 0.8B | Gemma default | -0.265 [-0.293, -0.237] | +0.158 [+0.123, +0.181] | +0.273 [+0.245, +0.302] | +0.467 [+0.418, +0.519] |
+| Tev1 0.8B | Qwen default | -0.141 [-0.166, -0.113] | +0.049 [+0.018, +0.073] | +0.096 [+0.074, +0.118] | +0.191 [+0.151, +0.232] |
+| judgly Qwen3-4B default | Gemma default | -0.124 [-0.145, -0.102] | +0.109 [+0.084, +0.130] | +0.177 [+0.160, +0.197] | +0.276 [+0.248, +0.305] |
+
+**JevBench, public items** (bench, one source): 231 items in 195 groups; Tev1 answered 195 items (159 groups). Intervals and paired differences from `compare-by-source.json` (seed 20260930); point values equal the record's `by_source`. The paired differences of Tev1 are on its 195 items.
+
+| system | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|
+| Nimble 9B | 0.779 [0.722, 0.836] | 0.118 [0.078, 0.163] | 0.283 [0.215, 0.354] | 0.505 [0.380, 0.646] |
+| Tev1 4B | 0.790 [0.729, 0.848] | 0.104 [0.068, 0.164] | 0.306 [0.227, 0.389] | 0.558 [0.414, 0.718] |
+| Tev1 0.8B | 0.672 [0.595, 0.740] | 0.093 [0.065, 0.169] | 0.455 [0.371, 0.539] | 0.807 [0.665, 0.959] |
+| judgly Gemma 4 12B, default | 0.844 [0.795, 0.887] | 0.067 [0.058, 0.117] | 0.221 [0.172, 0.272] | 0.412 [0.333, 0.500] |
+| judgly Gemma 4 12B, raw | 0.836 [0.783, 0.880] | 0.133 [0.095, 0.180] | 0.284 [0.202, 0.372] | 0.886 [0.601, 1.222] |
+| judgly Gemma 4 12B, H2 | 0.844 [0.795, 0.887] | 0.067 [0.058, 0.117] | 0.221 [0.172, 0.272] | 0.412 [0.333, 0.500] |
+| judgly Gemma 4 12B, temperature | 0.836 [0.783, 0.880] | 0.068 [0.049, 0.109] | 0.217 [0.171, 0.269] | 0.412 [0.336, 0.495] |
+| judgly Qwen3-4B, default | 0.693 [0.617, 0.752] | 0.084 [0.054, 0.142] | 0.384 [0.323, 0.451] | 0.663 [0.575, 0.761] |
+| judgly Qwen3-4B, raw | 0.693 [0.617, 0.752] | 0.251 [0.197, 0.321] | 0.512 [0.410, 0.638] | 2.709 [1.951, 3.554] |
+| judgly Qwen3-4B, H2 | 0.693 [0.625, 0.753] | 0.066 [0.045, 0.127] | 0.380 [0.324, 0.445] | 0.649 [0.560, 0.746] |
+| judgly Qwen3-4B, temperature | 0.693 [0.617, 0.752] | 0.084 [0.054, 0.142] | 0.384 [0.323, 0.451] | 0.663 [0.575, 0.761] |
+| judgly Gemma 4 12B, default, on Tev1's 195 items | 0.882 [0.836, 0.927] | 0.053 [0.046, 0.101] | 0.188 [0.132, 0.247] | 0.353 [0.263, 0.452] |
+| judgly Qwen3-4B, default, on Tev1's 195 items | 0.759 [0.694, 0.822] | 0.092 [0.062, 0.159] | 0.333 [0.265, 0.402] | 0.576 [0.480, 0.671] |
+
+Paired differences (system minus judgly default, same items):
+
+| system | minus | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|---|
+| Nimble 9B | Gemma default | -0.065 [-0.114, -0.013] | +0.051 [-0.013, +0.090] | +0.062 [-0.003, +0.127] | +0.093 [-0.019, +0.209] |
+| Nimble 9B | Qwen default | +0.087 [+0.029, +0.151] | +0.034 [-0.028, +0.072] | -0.101 [-0.161, -0.040] | -0.159 [-0.269, -0.044] |
+| Tev1 4B | Gemma default | -0.092 [-0.153, -0.040] | +0.050 [-0.013, +0.094] | +0.118 [+0.048, +0.190] | +0.205 [+0.079, +0.346] |
+| Tev1 4B | Qwen default | +0.031 [-0.032, +0.093] | +0.011 [-0.051, +0.058] | -0.027 [-0.086, +0.034] | -0.017 [-0.131, +0.108] |
+| Tev1 0.8B | Gemma default | -0.210 [-0.289, -0.144] | +0.040 [-0.012, +0.102] | +0.266 [+0.181, +0.354] | +0.454 [+0.313, +0.598] |
+| Tev1 0.8B | Qwen default | -0.087 [-0.159, -0.021] | +0.001 [-0.053, +0.067] | +0.121 [+0.053, +0.187] | +0.232 [+0.118, +0.342] |
+| judgly Qwen3-4B default | Gemma default | -0.151 [-0.220, -0.092] | +0.016 [-0.039, +0.065] | +0.163 [+0.104, +0.226] | +0.252 [+0.164, +0.341] |
+
+**final-flagged, general (politeness)**: 1,000 items in 1,000 groups.
+
+| system | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|
+| Nimble 9B | 0.390 [0.359, 0.420] | 0.327 [0.299, 0.356] | 0.812 [0.773, 0.852] | 1.501 [1.424, 1.590] |
+| Tev1 4B | 0.421 [0.391, 0.454] | 0.183 [0.152, 0.212] | 0.676 [0.648, 0.705] | 1.143 [1.095, 1.196] |
+| Tev1 0.8B | 0.339 [0.312, 0.370] | 0.105 [0.078, 0.133] | 0.680 [0.669, 0.690] | 1.115 [1.100, 1.131] |
+| judgly Gemma 4 12B, default | 0.512 [0.483, 0.541] | 0.106 [0.081, 0.137] | 0.621 [0.596, 0.647] | 1.054 [1.012, 1.102] |
+| judgly Gemma 4 12B, raw | 0.519 [0.490, 0.549] | 0.423 [0.391, 0.452] | 0.889 [0.833, 0.943] | 3.373 [3.120, 3.640] |
+| judgly Gemma 4 12B, H2 | 0.512 [0.483, 0.541] | 0.106 [0.081, 0.137] | 0.621 [0.596, 0.647] | 1.054 [1.012, 1.102] |
+| judgly Gemma 4 12B, temperature | 0.519 [0.490, 0.549] | 0.104 [0.078, 0.136] | 0.603 [0.578, 0.628] | 1.006 [0.967, 1.047] |
+| judgly Qwen3-4B, default | 0.492 [0.464, 0.522] | 0.037 [0.025, 0.068] | 0.617 [0.605, 0.631] | 1.025 [1.005, 1.047] |
+| judgly Qwen3-4B, raw | 0.492 [0.464, 0.522] | 0.442 [0.412, 0.471] | 0.935 [0.881, 0.990] | 5.688 [5.209, 6.188] |
+| judgly Qwen3-4B, H2 | 0.487 [0.458, 0.517] | 0.046 [0.033, 0.079] | 0.620 [0.602, 0.640] | 1.032 [1.001, 1.065] |
+| judgly Qwen3-4B, temperature | 0.492 [0.464, 0.522] | 0.037 [0.025, 0.068] | 0.617 [0.605, 0.631] | 1.025 [1.005, 1.047] |
+
+Paired differences (system minus judgly default, same items):
+
+| system | minus | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|---|
+| Nimble 9B | Gemma default | -0.122 [-0.158, -0.091] | +0.221 [+0.184, +0.255] | +0.192 [+0.162, +0.223] | +0.447 [+0.393, +0.503] |
+| Nimble 9B | Qwen default | -0.102 [-0.144, -0.060] | +0.290 [+0.248, +0.318] | +0.195 [+0.157, +0.233] | +0.477 [+0.407, +0.556] |
+| Tev1 4B | Gemma default | -0.091 [-0.123, -0.059] | +0.077 [+0.040, +0.110] | +0.055 [+0.035, +0.077] | +0.088 [+0.058, +0.119] |
+| Tev1 4B | Qwen default | -0.071 [-0.112, -0.029] | +0.146 [+0.100, +0.176] | +0.059 [+0.033, +0.085] | +0.118 [+0.075, +0.162] |
+| Tev1 0.8B | Gemma default | -0.173 [-0.211, -0.138] | -0.001 [-0.038, +0.036] | +0.059 [+0.035, +0.084] | +0.061 [+0.017, +0.102] |
+| Tev1 0.8B | Qwen default | -0.153 [-0.196, -0.112] | +0.068 [+0.028, +0.095] | +0.062 [+0.048, +0.077] | +0.091 [+0.070, +0.111] |
+| judgly Qwen3-4B default | Gemma default | -0.020 [-0.057, +0.016] | -0.069 [-0.099, -0.025] | -0.004 [-0.025, +0.019] | -0.030 [-0.066, +0.006] |
+
+**final-flagged, stance (HealthFC)**: 749 items in 749 groups.
+
+| system | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|
+| Nimble 9B | 0.474 [0.441, 0.510] | 0.404 [0.371, 0.436] | 0.879 [0.819, 0.934] | 2.186 [2.009, 2.344] |
+| Tev1 4B | 0.689 [0.657, 0.722] | 0.138 [0.108, 0.170] | 0.436 [0.393, 0.478] | 0.770 [0.686, 0.848] |
+| Tev1 0.8B | 0.617 [0.582, 0.652] | 0.076 [0.048, 0.110] | 0.491 [0.458, 0.523] | 0.792 [0.742, 0.842] |
+| judgly Gemma 4 12B, default | 0.750 [0.722, 0.782] | 0.069 [0.060, 0.105] | 0.369 [0.339, 0.398] | 0.670 [0.624, 0.711] |
+| judgly Gemma 4 12B, raw | 0.750 [0.722, 0.782] | 0.201 [0.170, 0.230] | 0.441 [0.384, 0.492] | 1.978 [1.659, 2.256] |
+| judgly Gemma 4 12B, H2 | 0.634 [0.600, 0.669] | 0.123 [0.094, 0.159] | 0.500 [0.467, 0.530] | 0.809 [0.760, 0.852] |
+| judgly Gemma 4 12B, temperature | 0.750 [0.722, 0.782] | 0.069 [0.060, 0.105] | 0.369 [0.339, 0.398] | 0.670 [0.624, 0.711] |
+| judgly Qwen3-4B, default | 0.718 [0.686, 0.752] | 0.052 [0.029, 0.086] | 0.410 [0.378, 0.440] | 0.705 [0.660, 0.746] |
+| judgly Qwen3-4B, raw | 0.718 [0.686, 0.752] | 0.227 [0.195, 0.259] | 0.510 [0.450, 0.570] | 3.605 [3.102, 4.097] |
+| judgly Qwen3-4B, H2 | 0.541 [0.507, 0.579] | 0.150 [0.124, 0.189] | 0.591 [0.553, 0.623] | 0.928 [0.872, 0.975] |
+| judgly Qwen3-4B, temperature | 0.718 [0.686, 0.752] | 0.052 [0.029, 0.086] | 0.410 [0.378, 0.440] | 0.705 [0.660, 0.746] |
+
+Paired differences (system minus judgly default, same items):
+
+| system | minus | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|---|
+| Nimble 9B | Gemma default | -0.276 [-0.312, -0.240] | +0.335 [+0.279, +0.363] | +0.509 [+0.466, +0.553] | +1.516 [+1.375, +1.646] |
+| Nimble 9B | Qwen default | -0.244 [-0.280, -0.210] | +0.352 [+0.295, +0.392] | +0.469 [+0.421, +0.516] | +1.481 [+1.324, +1.616] |
+| Tev1 4B | Gemma default | -0.061 [-0.085, -0.037] | +0.069 [+0.011, +0.098] | +0.067 [+0.041, +0.092] | +0.099 [+0.047, +0.152] |
+| Tev1 4B | Qwen default | -0.029 [-0.059, +0.000] | +0.086 [+0.034, +0.128] | +0.026 [-0.002, +0.056] | +0.064 [+0.005, +0.124] |
+| Tev1 0.8B | Gemma default | -0.134 [-0.170, -0.099] | +0.007 [-0.045, +0.037] | +0.122 [+0.092, +0.153] | +0.121 [+0.078, +0.166] |
+| Tev1 0.8B | Qwen default | -0.102 [-0.136, -0.067] | +0.024 [-0.028, +0.068] | +0.081 [+0.055, +0.107] | +0.086 [+0.048, +0.124] |
+| judgly Qwen3-4B default | Gemma default | -0.032 [-0.060, -0.007] | -0.017 [-0.054, +0.008] | +0.041 [+0.019, +0.063] | +0.035 [+0.005, +0.068] |
+
+### Per family
+
+Accuracy / ECE of the top answer on the families of the general confirm and final tiers (point
+values from the result files; the record gives no per-family intervals). The stance and flagged
+tiers are one family each, and bench's two families are its two sources, above.
+
+**general confirm** (accuracy / ECE)
+
+| family | Nimble 9B | Tev1 4B | Tev1 0.8B | judgly Gemma default | judgly Qwen default |
+|---|---|---|---|---|---|
+| argument_quality | 0.422 / 0.245 | 0.380 / 0.243 | 0.344 / 0.207 | 0.458 / 0.079 | 0.426 / 0.025 |
+| code_outcome | 0.514 / 0.224 | 0.434 / 0.372 | 0.324 / 0.234 | 0.608 / 0.057 | 0.514 / 0.073 |
+| humour | 0.356 / 0.350 | 0.374 / 0.105 | 0.332 / 0.046 | 0.374 / 0.132 | 0.368 / 0.110 |
+| kinship | 0.536 / 0.127 | 0.506 / 0.084 | 0.316 / 0.202 | 0.526 / 0.031 | 0.502 / 0.078 |
+| spatial | 0.576 / 0.233 | 0.700 / 0.057 | 0.574 / 0.092 | 0.580 / 0.081 | 0.612 / 0.055 |
+
+**general final** (accuracy / ECE)
+
+| family | Nimble 9B | Tev1 4B | Tev1 0.8B | judgly Gemma default | judgly Qwen default |
+|---|---|---|---|---|---|
+| difficulty | 0.317 / 0.147 | 0.215 / 0.140 | 0.218 / 0.062 | 0.390 / 0.040 | 0.287 / 0.030 |
+| ethics | 0.679 / 0.186 | 0.603 / 0.119 | 0.514 / 0.145 | 0.733 / 0.067 | 0.682 / 0.041 |
+| figurative | 0.842 / 0.113 | 0.812 / 0.099 | 0.682 / 0.135 | 0.882 / 0.037 | 0.802 / 0.113 |
+| grammar | 0.722 / 0.035 | 0.711 / 0.090 | 0.521 / 0.143 | 0.767 / 0.050 | 0.717 / 0.028 |
+| pragmatics | 0.770 / 0.125 | 0.751 / 0.036 | 0.528 / 0.088 | 0.765 / 0.047 | 0.685 / 0.055 |
+| relevance | 0.470 / 0.269 | 0.383 / 0.192 | 0.280 / 0.189 | 0.569 / 0.034 | 0.442 / 0.077 |
+| social_bias | 0.723 / 0.121 | 0.938 / 0.071 | 0.683 / 0.063 | 0.927 / 0.073 | 0.866 / 0.031 |
+| tables | 0.824 / 0.052 | 0.788 / 0.021 | 0.569 / 0.110 | 0.818 / 0.060 | 0.722 / 0.042 |
+
+On the confirm tier, judgly's defaults had the lowest ECE in four of five families; in humour
+Tev1 0.8B (0.046) and Tev1 4B (0.105) were better calibrated than both. Tev1 4B was the most
+accurate on spatial (0.700) and, with Gemma 4 12B, on social bias in the final tier (0.938 and
+0.927), and tied with judgly Gemma 4 12B for the top accuracy on humour (0.374); Nimble 9B was the
+most accurate on kinship (0.536, against 0.526 for judgly Gemma 4 12B), pragmatics (0.770) and
+tables (0.824), and after judgly
+Qwen3-4B (0.028) the best calibrated on grammar (0.035); Tev1 4B had the lowest ECE on
+pragmatics (0.036) and tables (0.021).
+
+### The items every model answered
+
+With all three models together (`result-all.json`), only bench changes: 2,195 of its 2,231 items
+(559 groups), the 36 JevBench items Tev1 refused left out. On those items:
+
+| system | accuracy | ECE | Brier | log loss |
+|---|---|---|---|---|
+| Nimble 9B | 0.711 [0.688, 0.733] | 0.056 [0.046, 0.079] | 0.401 [0.375, 0.427] | 0.720 [0.669, 0.772] |
+| Tev1 4B | 0.629 [0.607, 0.654] | 0.042 [0.029, 0.063] | 0.470 [0.446, 0.491] | 0.815 [0.776, 0.854] |
+| Tev1 0.8B | 0.456 [0.433, 0.479] | 0.178 [0.156, 0.198] | 0.655 [0.626, 0.680] | 1.155 [1.105, 1.201] |
+| judgly Gemma 4 12B, default | 0.716 [0.696, 0.735] | 0.029 [0.020, 0.048] | 0.382 [0.364, 0.401] | 0.690 [0.659, 0.721] |
+| judgly Qwen3-4B, default | 0.592 [0.570, 0.616] | 0.130 [0.116, 0.151] | 0.557 [0.535, 0.576] | 0.961 [0.927, 0.991] |
+
+The other tiers hold the same items as the per-model files, and their point values are the same.
+Leaving out the 36 long JevBench items moves Nimble 9B from 0.710 to 0.711 on bench and judgly
+Gemma 4 12B from 0.715 to 0.716; on JevBench alone judgly Gemma 4 12B's default is at 0.844 on
+all 231 items and 0.882 on Tev1's 195, so the long items were harder for judgly than the rest.
+
+### Timings
+
+Two kinds, and neither compares like with like.
+
+**In the full run** (`latency_s` in the result files): the median (95th percentile) wall-clock time
+of each answered request, one request at a time over HTTP to Ollama, in seconds:
+
+| test set | Nimble 9B | Tev1 4B | Tev1 0.8B |
+|---|---|---|---|
+| general/confirm | 0.564 (1.138) | 0.298 (0.608) | 0.090 (0.135) |
+| stance/confirm | 0.924 (1.441) | 0.561 (0.896) | 0.122 (0.176) |
+| general/final | 0.485 (1.079) | 0.224 (0.820) | 0.084 (0.134) |
+| stance/final | 0.449 (0.619) | 0.307 (0.421) | 0.085 (0.100) |
+| general/bench | 0.808 (1.170) | 0.464 (0.662) | 0.107 (0.142) |
+| general/final-flagged | 0.332 (0.431) | 0.216 (0.262) | 0.083 (0.096) |
+| stance/final-flagged | 0.395 (0.506) | 0.332 (0.425) | 0.090 (0.104) |
+
+judgly has no such figure in the record; its release runs were batched.
+
+**Single requests** (`final/timing.json`, from `time_single.py`, 2026-09-30; not part of the
+frozen protocol): 100 items (the first 50 of each confirm tier ordered by the SHA-256 of the item
+id), one question per request, one request at a time, after one warm-up request per system that is
+not counted (the warm-up item is the first of the 100 and was timed again), on the same machine.
+judgly ran in-process through its Python API with the pack
+default calibration and asked each question in up to four option orders; the Ollama models were
+asked over HTTP through the frozen runner's request code and read each question once. None of the
+100 requests was refused. The 95th percentile here is the 96th of the 100 sorted times, without
+interpolation (`time_single.py`); in `latency_s` above it is numpy's interpolated percentile.
+
+| system | median (s) | 95th percentile (s) | mean (s) |
+|---|---|---|---|
+| Nimble 9B | 0.533 | 1.039 | 0.599 |
+| Tev1 4B | 0.289 | 0.567 | 0.321 |
+| Tev1 0.8B | 0.078 | 0.153 | 0.087 |
+| judgly Gemma 4 12B, default | 0.960 | 1.732 | 0.994 |
+| judgly Qwen3-4B, default | 0.321 | 0.557 | 0.333 |
+
+### The external models' training data and overlap
+
+As documented by their providers (their model cards and repositories, as downloaded for this
+comparison):
+
+- **Tev1** is trained on the train splits of MultiNLI, BoolQ, Banking77, AG News and SST-5 and on
+  synthetic policy, routing and research-classification data generated for the project; its
+  data sources page states that no data was obtained from Jev and no JevBench items were used.
+- **Nimble**: the checkpoint Ollama serves appears to be release v3-12026, whose training
+  components include public banking77, multinli, boolq, ag_news, dbpedia and trec as well as local
+  components that are not documented. Nimble's schema configuration lists a registered
+  evaluation `jevbench-eval` (534 items; judgly uses the 231 public JevBench items) and marks its
+  own `bespoke-eval` set as `reporting_only`; whether JevBench items informed training or model
+  selection is not stated. (The frozen protocol read this as JevBench being registered as
+  reporting only; that reading was wrong.)
+- None of judgly's confirm, final or final-flagged sources is among either model's documented
+  training data, and typed-decisions is not named in either. Whether Nimble's undocumented
+  components overlap with any tier cannot be checked. The base models (Qwen3.5) may have seen any
+  public text, as may judgly's own models ([What the evaluation can and cannot
+  show](#what-the-evaluation-can-and-cannot-show)).
+
+### Caveats
+
+- **The tiers are ours.** judgly's test tiers were chosen and built by us, for judgly.
+- **Calibration.** judgly's calibration was fitted by us on question types similar to those in
+  the tiers; the external models were run as served, uncalibrated, and their providers do not
+  present these probabilities as calibrated: Tev1's README says "Logprobs are model preferences,
+  not calibrated confidence" and its model card that calibration has "not been comprehensively
+  evaluated"; Nimble's model card says "This checkpoint has not had a separate temperature fit"
+  (its scorer defaults to T = 1.0; Bespoke Labs' hosted serving of an earlier revision used a
+  fitted temperature, 2.179). Fitting a temperature for them would likely lower their ECE. It
+  would need no new runs (a temperature cross-fitted on the committed answers, split by group,
+  would do), but it was not in the frozen protocol and has not been done, so the ECE comparison
+  largely measures whether a calibration step was applied at all. Raw against served: without
+  its calibration, judgly Qwen3-4B had the highest ECE of all systems on every tier except
+  stance final-flagged (where Nimble 9B's was higher), and judgly Gemma 4 12B raw had a higher ECE
+  than every external model everywhere except stance final-flagged (Nimble 9B higher) and stance
+  confirm (Tev1 0.8B 0.304 against 0.300).
+- **Option orders.** judgly averages each question over up to four option orders, a test-time
+  ensemble known to improve both accuracy and calibration; the external models read each
+  question once.
+- **Model size.** judgly Gemma 4 12B has more parameters than any external model (9B, 4B, 0.8B);
+  the like-for-like comparison by size is judgly Qwen3-4B against Tev1 4B.
+- **Tev1's prompt format** differs from the one it was trained on (above), which may understate it.
+- **Tev1's context**: 36 JevBench items were refused.
+- **Training-data overlap** is as documented by the providers; undocumented components cannot be
+  checked.
+- **Timing** was measured differently in kind (in-process against HTTP, up to four option orders
+  against one).
+
+### What the comparison says
+
+On these test sets judgly Gemma 4 12B was the most accurate system, or level with the most
+accurate: clearly ahead on the general tiers and JevBench, and within noise of Tev1 4B on both
+stance tiers (confirm -0.025 [-0.040, +0.001], final -0.002 [-0.021, +0.017] for Tev1 minus
+Gemma) and of Nimble 9B on stance final and typed-decisions. Among the models of 4 to 9B, Nimble
+9B and Tev1 4B were level with judgly Qwen3-4B's default on general questions (Nimble 9B +0.018
+[+0.007, +0.029] on the general final tier; against Qwen3-4B's H2, the 0.1.0 default fixed before
+the confirm tier was read, both were ahead on general confirm in point value, 0.481 and 0.479
+against 0.463, with no paired interval in the record), more accurate on the confirm and final
+stance tiers (by +0.027 to +0.062) and on typed-decisions (Nimble 9B +0.127, Tev1 4B +0.037), and
+on the flagged stance tier (HealthFC) behind judgly Qwen3-4B (Nimble 9B -0.244 [-0.280, -0.210])
+or level with it (Tev1 4B -0.029 [-0.059, +0.000]); on JevBench Nimble 9B was ahead (+0.087
+[+0.029, +0.151]) and Tev1 4B level. judgly's defaults had the lowest ECE on the confirm and
+general final tiers; Tev1 4B had the lowest on stance final (0.041, 0.045 [0.007, 0.069] below
+judgly Gemma 4 12B's temperature default); on typed-decisions Tev1 4B and Nimble 9B were better
+calibrated than judgly Qwen3-4B (by 0.099 and 0.085) and level with judgly Gemma 4 12B; on JevBench
+no ECE difference is outside the noise. On the flagged tiers judgly Gemma 4 12B's default was more
+accurate than all three models; judgly Qwen3-4B's was too, except on stance, where Tev1 4B was
+level with it (above); and Tev1 0.8B was about as well calibrated as judgly Gemma 4 12B. Most of the
+ECE differences show that judgly applied a calibration step and the external models, as served,
+did not (Caveats, above). Tev1 0.8B
+was the fastest per request and the least accurate almost everywhere; judgly Gemma 4 12B was the
+slowest.
+
 ## Negative and null results
 
-These are the results that did not meet their bar or went against the head.
+These are the results that did not meet their bar or went against the head. Those of the later
+comparison of the two calibration options are listed
+[with it](#negative-and-null-results-of-the-comparison).
 
 - **The general heads cost accuracy on the fresh final tier** (paired -0.023 [-0.031, -0.016]
   and -0.017 [-0.024, -0.011], [above](#paired-differences-and-per-family-averages)). The largest
@@ -580,7 +1395,10 @@ These are the results that did not meet their bar or went against the head.
   settings, so it is not an independent test set and its figures may be somewhat optimistic;
   it is reported separately for that reason. The fresh final tier was frozen before any head
   was scored on it and is read once per release run; a tier that has been read is spent, and
-  the next untouched one (ClimateCheck, reserved) is kept for later.
+  the next untouched one, ClimateCheck, reserved in 0.1.0, has since been read once by each model as the stance
+part of the confirm tier ([The calibration comparison](#the-calibration-comparison)). After the
+release the final tier was read again by three exploratory analyses of the calibration options,
+so for comparing the two options it is no longer untouched.
 - **Clustered items.** The final-seen stance tier's 2,100 HealthVer pairs share 289
   abstracts (tier file `data/tiers/stance/final-seen.jsonl`, SHA-256 `315d67a0...`, listed in
   [INPUTS.sha256](results/INPUTS.sha256); built by `make data`, not committed). Check-COVID claims come in variants of one news item that share an abstract, and

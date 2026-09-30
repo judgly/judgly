@@ -42,14 +42,20 @@
 #               they are reported separately, as a secondary evaluation of previously seen
 #               families, never as the final result
 #   bench       external benchmarks (general format), evaluation only, scored as they define
+#   confirm     untouched families for a pre-registered confirmation (evaluation only): never
+#               used in any experiment before; built after every other tier, and an item that
+#               matches any other tier, any reserved source or (stance) any evaluation source
+#               as a whole is dropped
 #   reserved    in no tier; kept unseen for later work (every tier is checked against it)
 #   none        not used (the reason is given)
 #
 # Build order (overlap is removed against every earlier tier): reserved, final-seen, dev,
-# final, final-flagged, bench, fit. final-seen and dev are therefore built from their sources alone;
+# final, final-flagged, bench, fit, confirm. final-seen and dev are therefore built from their sources alone;
 # final drops anything matching reserved, final-seen or dev (exact, shared
 # sentence, shared passage or near duplicate), final-flagged also anything matching final;
-# bench is kept whole; fit drops anything matching any evaluation tier.
+# bench is kept whole; fit drops anything matching any evaluation tier; confirm drops anything
+# matching any other tier. A source marked `was_reserved` was reserved when the 0.1.0 tiers were
+# built: those tiers are still checked against it, so that they stay as released.
 #
 # Revisions are Hugging Face commit hashes or, for `raw` files, a commit of the source
 # repository plus the file's SHA-256 (checked 2026-09-27). `pool` caps the items a source
@@ -155,6 +161,11 @@ formats:
       yesno: final-seen
       bench_typed_decisions: bench
       bench_jevbench: bench
+      kinship: confirm
+      spatial: confirm
+      argument_quality: confirm
+      humour: confirm
+      code_outcome: confirm
   stance:
     families:
       fit_nli: fit
@@ -167,7 +178,7 @@ formats:
       final_health_claims: final-flagged
       final_scientific: final-seen
       reserved_scientific: reserved
-      reserved_climate: reserved
+      confirm_climate: confirm
       unused: none
 
 sources:
@@ -989,11 +1000,75 @@ sources:
     citation: "Wadden et al. 2020, Fact or Fiction: Verifying Scientific Claims. EMNLP."
   climatecheck:
     format: stance
-    family: reserved_climate
+    family: confirm_climate
     type: choice
     hub: rabuahmad/climatecheck
     files: {train: data/train-00000-of-00001.parquet, test: data/test-00000-of-00001.parquet}
+    item_files: [test]
+    was_reserved: true
     revision: 93d0dc5007e9f86a3fc4cfe2d7998514a94f5c88
     licence: [mit]
-    note: Reserved as the next untouched stance final tier (test gold published June 2026); in no tier. Every tier is checked against its claims and abstracts. Some ClimateCheck abstracts quote passages that Climate-FEVER (stance dev, already read) also holds (make check reports the dev items that share a sentence or a passage with the reserved texts); remove the ClimateCheck items that overlap Climate-FEVER before promoting it to a final tier.
+    note: Reserved until the confirmation (test gold published June 2026), now its stance tier. Items come from the labelled test split only; the 0.1.0 tiers stay checked against both files (was_reserved). Items whose claim or abstract matches any other tier, SciFact, or any claim or passage of Climate-FEVER, COVID-Fact, HealthVer, Check-COVID or HealthFC as a whole (exact, shared sentence, shared passage or near duplicate) are dropped. The passage check counts every shared word 8-gram, boilerplate included, so verbatim IPCC quotations that Climate-FEVER also holds are dropped. Supports, Refutes and Not Enough Information map to supports, contradicts and no_bearing. The resampling group (`group`) is the connected component of claims linked by a shared abstract (one component holds 83 of the 175 claims and 837 of the 1,780 items); the row also records its claim alone (`claim_group`).
     citation: "ClimateCheck shared task, SDP 2025 workshop (rabuahmad/climatecheck on Hugging Face)."
+
+  # ---------------------------------------------------------------- general: confirm
+  # Families never used in this project before 2026-09-29, for the pre-registered confirmation of
+  # the per-type temperature (evaluation only). 500 items each, grouped where items share a text.
+  clutrr:
+    format: general
+    family: kinship
+    type: choice
+    hub: tasksource/clutrr
+    files: {test: data/test-00000-of-00001.parquet}
+    revision: 3f0016e8d7bb5887f97bbf17dbe31c6860d4c56d
+    licence: [none on card]
+    licence_evidence: 'github.com/facebookresearch/clutrr LICENSE: "Attribution-NonCommercial 4.0 International" (CC BY-NC 4.0); the original CLUTRR/v1 card says license: unknown'
+    note: The story and the query ("How is X related to Y?"); options are the gold relation and three other relations of the same gender, drawn per item from the 18 relation names. One item per story, sampled evenly across hop counts (2 to 10). Evaluation only by licence.
+    citation: "Sinha et al. 2019, CLUTRR: A Diagnostic Benchmark for Inductive Reasoning from Text. EMNLP."
+  spartqa:
+    format: general
+    family: spatial
+    type: bool
+    hub: tasksource/spartqa-yn
+    files: {test: spartqa_YN_test.jsonl}
+    revision: 150c819e88bba1859b8a763fd40d3a15033adc58
+    licence: [apache-2.0]
+    licence_evidence: 'github.com/HLR/SpartQA_generation and HLR/SpartQA-baselines LICENSE.md: MIT'
+    note: SpartQA-Auto yes/no test questions over generated block-and-shape scenes; "DK" answers are left out; balanced Yes and No, one question per story.
+    citation: "Mirzaee et al. 2021, SPARTQA: A Textual Question Answering Benchmark for Spatial Reasoning. NAACL."
+  argument_quality:
+    format: general
+    family: argument_quality
+    type: score
+    hub: ibm-research/argument_quality_ranking_30k
+    files: {test: test.csv}
+    revision: 590726b3765b1b90c5e53a17e3b1f77d92d3aa8a
+    licence: [cc-by-3.0]
+    licence_text: "(c) Copyright IBM 2014. Released under [CC-BY-SA 3.0]"
+    confirm_caveat: A crowd quality rating of a short text on a score scale, the kind of task of the fit family helpfulness (HelpSteer2, score), whose star-rating relative (Yelp, final-seen family rating) the registry already counts as a relative. Never used and in no other tier, so it meets the confirmation's rule; the general result is reported with and without it.
+    note: The topic and the argument; the weighted-average quality score WA (crowd votes on recommending the argument as is) in three levels, 1 below 0.6, 2 below 0.85, 3 from 0.85; balanced across levels, grouped by topic (15 topics). The stance columns are not used. The card field says CC-BY-3.0, its licensing section CC-BY-SA-3.0 (and Wikipedia copyright); evaluation only either way.
+    citation: "Gretz et al. 2020, A Large-scale Dataset for Argument Quality Ranking: Construction and Analysis. AAAI."
+  humicroedit:
+    format: general
+    family: humour
+    type: score
+    hub: tasksource/humicroedit
+    files: {test: subtask-1/test-00000-of-00001.parquet}
+    revision: f5a16e65b0854032ab9b4c82ca182a6381b83bd5
+    licence: [unknown]
+    licence_evidence: the original SemEvalWorkshop/humicroedit card also says unknown, and the primary page (cs.rochester.edu/u/nhossain/humicroedit.html) states no licence; evaluation only
+    confirm_caveat: A funniness rating of an edited headline, near the dev family sentiment (tweet_irony, irony yes/no) and the final family figurative (fig_qa), though neither rates humour on a scale. Never used and in no other tier; the general result is reported with and without it.
+    note: The original and the micro-edited news headline; the mean funniness grade (0 to 3, five graders) in three levels, 1 up to 0.4, 2 from 0.6 to 1.2, 3 from 1.4 (grades between levels are left out); balanced across levels, grouped by original headline.
+    citation: "Hossain, Krumm and Gamon 2019, \"President Vows to Cut <Taxes> Hair\": Dataset and Analysis of Creative Text Editing for Humorous Headlines. NAACL; Hossain et al. 2020, SemEval-2020 Task 7. SemEval."
+  code_outcome:
+    format: general
+    family: code_outcome
+    type: choice
+    hub: Fsoft-AIC/CodeMMLU
+    files: {test: execution_prediction/test-00000-of-00001.parquet}
+    revision: f7c1221269df3609eb5c3023770126839e24e608
+    licence: [mit]
+    licence_evidence: 'github.com/FSoft-AI4Code/CodeMMLU LICENSE: MIT; the programs are Project CodeNet submissions (github.com/IBM/Project_CodeNet, Apache-2.0 repository)'
+    confirm_caveat: Inspected, by a person and not by a model, as a final-tier candidate on 2026-09-27 and left out then; and the verdict goes with the language (about 119 of the 125 compile_error items are Java, and most Java items are compile_error), so a model can score above chance without reading the program. Whether it stays is the person's decision; the general result is reported with and without it.
+    note: CodeMMLU execution prediction (Project CodeNet programs, Python and Java) with its four given verdict options; "No abnormally found" is shown as "Runs without error". Items whose verdict is Memory Limit Exceeded (18), whose program is longer than 1,500 characters or shorter than 20 (not a program, "54") are left out, and an item that nearly duplicates one already taken (another submission to the same problem) is dropped; balanced across the four verdicts. Inspected as a final-tier candidate on 2026-09-27 and left out then for its name (not an MMLU variant in its data); no model has read it. The labels depend on the judge's hidden inputs, so they are noisy.
+    citation: "Manh et al. 2025, CodeMMLU: A Multi-Task Benchmark for Assessing Code Understanding Capabilities of CodeLLMs. ICLR; Puri et al. 2021, Project CodeNet. NeurIPS Datasets and Benchmarks."

@@ -8,20 +8,30 @@
 #   make data | make check            build the tiers | check them for contamination
 #   make verify-data                  the tiers equal data/tiers.sha256 (-quick with QUICK=1), byte for byte
 #   make licences                     check every licence against its dataset card
+#   make calibrate MODEL=...          CPU only, from features already extracted: fit the per-type
+#                                     temperature, evaluate raw, h2 and temperature on every tier
+#                                     (confirm included), write the records and the pack; never
+#                                     extracts (see "Calibration options" below)
 #   make install-pack MODEL=...       copy a finished (non-QUICK) pack into src/judgly/packs
 #   make figures                      the results figures from the snapshot in docs/results
+#   make compare-figures              the external-comparison figures (needs make data)
+#   make compare-score                CPU only: rescore the committed answers of the external comparison
+#                                     with its frozen scorer and check the results equal the committed ones
+#   make compare-run                  ask the Ollama models of the external comparison again (Ollama >= 0.35.0,
+#                                     models pulled), into COMPARE_OUT (default results-compare), never the record
 #
 #   QUICK=1          small tiers (data/tiers-quick, results-quick) for a smoke run in minutes; the
-#                    fresh final and final-flagged tiers are neither extracted nor scored, since
-#                    their quick items are items of the real final tiers, read once after the heads
-#                    are frozen
+#                    fresh final and final-flagged tiers and the confirm tier are neither extracted
+#                    nor scored, since their quick items are items of the real tiers
 #   MODEL_DIR=DIR    take the GGUF file from DIR instead of downloading it (JUDGLY_MODEL_DIR)
 #
 # One pack runs: tools, tiers, contamination check, self-test gate, then per format (general,
 # stance) sharded extraction of every example set (fitdev: fit and dev; final: the fresh final
-# tier; final-flagged: fresh families with a recorded caveat, reported beside final; final-seen:
-# an earlier held-out tier; bench: external benchmarks, general only), H2 fit, eval of the raw and
-# fitted conditions on the test, dev, final, final-flagged, final-seen and bench tiers,
+# tier; final-flagged: fresh families with a recorded caveat, reported beside final; confirm: the
+# untouched tier of the pre-registered confirmation of the temperature; final-seen: an earlier
+# held-out tier; bench: external benchmarks, general only), the fit of both calibration options
+# (H2 and the per-type temperature), eval of the raw and both fitted conditions on the test, dev,
+# final, final-flagged, confirm, final-seen and bench tiers,
 # the calibration record, and at the end the pack directory RESULTS/MODEL/pack. Every target is written under a
 # temporary name and renamed when complete, so a file that exists is a file that finished.
 #
@@ -45,11 +55,14 @@ VARS       = MODEL=$(MODEL) QUICK=$(QUICK) MODEL_DIR=$(MODEL_DIR) DATA=$(DATA) R
 TOOLS      = $(BUILD)/s1-features $(BUILD)/s1-train $(BUILD)/s1-eval $(BUILD)/s1-selftest
 # Example sets per format, in extraction order; a set whose file the tiers do not have is skipped.
 # A QUICK run leaves out the fresh final tiers (see QUICK above).
-FRESH      = final final-flagged
+FRESH      = final final-flagged confirm
 SETS       = fitdev $(if $(filter 1,$(QUICK)),,$(FRESH)) final-seen bench
 # Evaluation tiers: name, example set, split (a tier whose example set is not in SETS is skipped).
 EVAL_TIERS = test:fitdev:test dev:fitdev:heldout final:final:heldout final-flagged:final-flagged:heldout \
-             final-seen:final-seen:heldout bench:bench:heldout
+             confirm:confirm:heldout final-seen:final-seen:heldout bench:bench:heldout
+# The confirm tier's features as the confirmation extracted them (one unsharded s1-features run per
+# pack and format, same engine settings); make calibrate links them into RESULTS.
+CONFIRM_FROM ?= results-confirm
 
 ifneq ($(shell echo $$(( $(SHARD) % 32 ))),0)
 $(error SHARD=$(SHARD) must be a multiple of 32 (see the top of this file))
@@ -58,7 +71,8 @@ endif
 # Self-test failures accepted per model, recorded in its selftest.txt.
 ACCEPT_FAIL ?=
 
-.PHONY: pack run stop status data check verify-data licences fetch tools install-pack features format figures
+.PHONY: pack run stop status data check verify-data licences fetch tools install-pack features format figures \
+        calibrate compare-score compare-run compare-figures
 .DELETE_ON_ERROR:
 
 # ---- control -------------------------------------------------------------------------------
@@ -209,24 +223,40 @@ $(F_DIR)/h2.bin: $(F_DIR)/fitdev/features.feat
 	    mv $@.tmp.json $@.json && mv $@.tmp $@
 	@grep -E "^[a-z]+:|^  H[12]:|^  [a-z]+: " $(F_DIR)/train-h2.log || true
 
-# Conditions: raw (no head) and h2, both with the pack's engine settings (rotations, content-free), so
-# that the numbers describe what judgly.Engine.load(pack) answers. Tiers: test (in-distribution,
-# fit tier), dev, final (the fresh held-out families), final-flagged (fresh families with a
-# recorded caveat, reported beside final), final-seen (an earlier held-out tier, its families
-# seen during development; reported separately) and bench (external benchmarks); a tier whose
-# example set the format does not have is skipped.
+# The second calibration option: one temperature per question type, fitted on the same training
+# split (log loss of the rotation-averaged raw readout; s1-train --head temperature) and applied to
+# the probabilities averaged over the option orders. Checked like the head, with the same engine
+# settings recorded in temperature.bin.json.
+$(F_DIR)/temperature.bin: $(F_DIR)/fitdev/features.feat
+	$(BUILD)/s1-train --features $< --head temperature --out $@.tmp $(ROT_FLAG) \
+	    --max-rotations $(ENGINE_MAX_ROTATIONS) $(CF_FLAG) > $(F_DIR)/train-temperature.log && \
+	    $(PY) scripts/check_heads.py $@.tmp --engine $(ENGINE_ROTATIONS) $(ENGINE_MAX_ROTATIONS) \
+	        $(ENGINE_CONTENT_FREE) && \
+	    mv $@.tmp.json $@.json && mv $@.tmp $@
+	@cat $(F_DIR)/train-temperature.log
+
+# Conditions: raw (no head), h2 and temperature, all with the pack's engine settings (rotations,
+# content-free), so that the numbers describe what judgly.Engine.load(pack, calibration=...)
+# answers. Tiers: test (in-distribution, fit tier), dev, final (the fresh held-out families),
+# final-flagged (fresh families with a recorded caveat, reported beside final), confirm (the
+# untouched tier of the pre-registered confirmation), final-seen (an earlier held-out tier, its
+# families seen during development; reported separately) and bench (external benchmarks); a tier
+# whose example set the format does not have is skipped.
 EVAL_SETS = $(filter-out fitdev,$(foreach s,$(SETS),$(if $(wildcard $(DATA)/$(FMT)/$(s).jsonl),$(s))))
-$(F_DIR)/eval.done: $(F_DIR)/h2.bin $(EVAL_SETS:%=$(F_DIR)/%/features.feat)
+$(F_DIR)/eval.done: $(F_DIR)/h2.bin $(F_DIR)/temperature.bin $(EVAL_SETS:%=$(F_DIR)/%/features.feat)
 	@set -e; for tier in $(EVAL_TIERS); do \
 	    t=$${tier%%:*}; rest=$${tier#*:}; set_=$${rest%%:*}; split=$${rest#*:}; \
 	    case " $(EVAL_SETS) fitdev " in *" $$set_ "*) ;; *) continue;; esac; \
 	    [ -f $(F_DIR)/$$set_/features.feat ] || continue; \
 	    $(BUILD)/s1-eval --features $(F_DIR)/$$set_/features.feat --split $$split $(ROT_FLAG) $(CF_FLAG) \
 	        --json $(F_DIR)/raw-$$t.json --dump-items $(F_DIR)/items-raw-$$t.tsv > $(F_DIR)/raw-$$t.txt; \
-	    $(BUILD)/s1-eval --features $(F_DIR)/$$set_/features.feat --split $$split --head $(F_DIR)/h2.bin \
-	        $(ROT_FLAG) $(CF_FLAG) --json $(F_DIR)/h2-$$t.json --dump-items $(F_DIR)/items-h2-$$t.tsv > $(F_DIR)/h2-$$t.txt; \
+	    for cond in h2 temperature; do \
+	        $(BUILD)/s1-eval --features $(F_DIR)/$$set_/features.feat --split $$split --head $(F_DIR)/$$cond.bin \
+	            $(ROT_FLAG) $(CF_FLAG) --json $(F_DIR)/$$cond-$$t.json --dump-items $(F_DIR)/items-$$cond-$$t.tsv \
+	            > $(F_DIR)/$$cond-$$t.txt; \
+	    done; \
 	done
-	$(PY) scripts/check_report.py $(F_DIR)/raw-*.json $(F_DIR)/h2-*.json
+	$(PY) scripts/check_report.py $(F_DIR)/raw-*.json $(F_DIR)/h2-*.json $(F_DIR)/temperature-*.json
 	date > $@
 
 $(F_DIR)/record.json: $(F_DIR)/eval.done
@@ -236,6 +266,26 @@ $(F_DIR)/record.json: $(F_DIR)/eval.done
 $(OUT)/pack/pack.json: $(FORMATS:%=$(OUT)/%/record.json)
 	$(PY) scripts/build_pack.py $(MODEL) $(OUT)/pack $(OUT) $(FORMATS)
 
+# ---- calibration options on CPU, from features already extracted --------------------------
+
+# make calibrate MODEL=... fits the temperature, evaluates raw, h2 and temperature on every tier and
+# writes the records and the pack, from the feature files a finished run left (and the confirm
+# tier's from CONFIRM_FROM, linked into RESULTS). It never runs the model: every feature file is
+# passed to make as old (-o), so nothing that makes one is run, and a missing one stops it. H2 is
+# refitted only if h2.bin is missing.
+CAL_FEATS = $(foreach f,$(FORMATS),$(foreach s,$(SETS),$(if $(wildcard $(DATA)/$(f)/$(s).jsonl),$(OUT)/$(f)/$(s)/features.feat)))
+calibrate:
+	@[ -f $(OUT)/pack-info.mk ] || { echo "no $(OUT)/pack-info.mk: make pack has not run for $(MODEL)"; exit 1; }
+	@for f in $(FORMATS); do c=$(CONFIRM_FROM)/$(MODEL)/$$f/confirm.feat; d=$(OUT)/$$f/confirm; \
+	    if [ -f $$c ] && [ ! -e $$d/features.feat ]; then mkdir -p $$d && \
+	        ln -s $(CURDIR)/$$c $$d/features.feat && ln -s $(CURDIR)/$$c.names.tsv $$d/features.feat.names.tsv && \
+	        echo "linked $$d/features.feat -> $$c"; fi; done
+	@missing=; for x in $(CAL_FEATS); do [ -f $$x ] || missing="$$missing $$x"; done; \
+	    [ -z "$$missing" ] || { echo "features not extracted (make pack extracts them, on the GPU):$$missing"; exit 1; }
+	@for f in $(FORMATS); do \
+	    $(MAKE) --no-print-directory format $(VARS) FMT=$$f $(CAL_FEATS:%=-o %) || exit 1; done
+	$(MAKE) --no-print-directory $(OUT)/pack/pack.json $(VARS) $(CAL_FEATS:%=-o %)
+
 install-pack:
 	@[ "$(QUICK)" != 1 ] || { echo "a QUICK pack is a smoke test and is never installed"; exit 1; }
 	@[ -f $(OUT)/pack/pack.json ] || { echo "no finished pack in $(OUT)/pack; make pack MODEL=$(MODEL) first"; exit 1; }
@@ -244,6 +294,32 @@ install-pack:
 # ---- figures -----------------------------------------------------------------------------
 
 # From the committed snapshot only (docs/results, made by scripts/snapshot_results.py); every
-# plotted number is checked against record.json. Reruns give byte-identical files.
+# plotted number is checked against record.json. Reruns give byte-identical files. Both figure
+# targets use the figures group only (the locked matplotlib and numpy): the scripts never import
+# judgly, so the native package is not built and the llama.cpp submodule is not needed.
 figures:
-	uv run --group figures python scripts/make_figures.py
+	uv run --only-group figures python scripts/make_figures.py
+
+# The external-comparison figures (docs/results/external-comparison); needs the tier files from
+# make data, rescores every item and checks every plotted number against the record's results.
+compare-figures:
+	uv run --only-group figures python scripts/make_compare_figures.py
+
+# ---- external comparison ---------------------------------------------------------------------
+
+# docs/results/external-comparison: judgly and the Ollama decision models on the same test items.
+# compare-score rebuilds every result from the committed answers with the frozen scorer (a
+# hash-checked copy run in a scratch workspace; needs the tiers from make data) and checks that
+# each equals the committed one, byte for byte. compare-run asks the models again (Ollama >= 0.35.0
+# with nimble:9b, tev1:4b and tev1:0.8b pulled; tags can move, so the model IDs are compared with
+# the recorded ones) and writes answers and results to COMPARE_OUT, never into the record.
+# numpy and Python are pinned to the versions the byte-for-byte check was made with: the scorer's
+# bootstrap uses numpy's default_rng, whose draws numpy does not promise to keep across versions.
+COMPARE_OUT ?= results-compare
+COMPARE     = uv run --no-project --python 3.13 --with numpy==2.5.3 python docs/results/external-comparison/reproduce.py
+
+compare-score:
+	$(COMPARE) score
+
+compare-run:
+	$(COMPARE) run --out $(COMPARE_OUT)

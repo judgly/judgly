@@ -16,6 +16,10 @@ when:
   - a fit item shares a sentence or a passage with, or is a near duplicate of, a dev,
     final-seen or reserved text
   - a bench item matches the fit tier in any of these ways
+  - an item of the confirm tier matches any other tier (fit, dev, final, final-flagged,
+    final-seen, bench) or the texts it is built against (prep_tiers.confirm_texts: the
+    reserved sources and, for stance, every evaluation source as a whole) in any of these ways,
+    its passage check counting boilerplate n-grams too
   - a family appears in more than one tier
   - a fit-tier item comes from a source the licence policy does not allow for fitting, or
     any item from a source the registry puts in another tier
@@ -39,8 +43,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import registry  # noqa: E402
-from prep_tiers import OUT_FILE, STRICT, reserved_texts  # noqa: E402  the same reading of the reserved sources
-from texthash import (NearIndex, ShingleIndex, digest, digests_of, segment_digests, segments_of,  # noqa: E402
+from prep_tiers import OUT_FILE, STRICT, confirm_texts, reserved_texts  # noqa: E402  the same reading of the sources
+from texthash import (SHINGLE_DF, NearIndex, ShingleIndex, digest, digests_of, segment_digests, segments_of,  # noqa: E402
                       texts_of)
 
 SPLITS = ("train", "validation", "test")
@@ -92,11 +96,11 @@ def shingle_index(examples: list[dict]) -> ShingleIndex:
     return idx
 
 
-def shingle_pairs(examples: list[dict], idx: ShingleIndex) -> list[tuple[str, str]]:
+def shingle_pairs(examples: list[dict], idx: ShingleIndex, df: int | None = SHINGLE_DF) -> list[tuple[str, str]]:
     out = []
     for ex in examples:
         for name, text in texts_of(ex).items():
-            for key, n in idx.shared(text) if text else ():
+            for key, n in idx.shared(text, df) if text else ():
                 out.append((f"{ex['id']}#{name}", f"{key} ({n} shared 8-grams)"))
     return out
 
@@ -108,7 +112,8 @@ def tiers_of(data: Path, fmt: str) -> dict[str, list[dict]]:
     fitdev = read(data / fmt / f"{OUT_FILE['fit']}.jsonl")
     return {"fit": [e for e in fitdev if e["split"] in SPLITS],
             "dev": [e for e in fitdev if e["split"] == "heldout"],
-            **{t: read(data / fmt / f"{OUT_FILE[t]}.jsonl") for t in ("final", "final-flagged", "final-seen", "bench")}}
+            **{t: read(data / fmt / f"{OUT_FILE[t]}.jsonl") for t in ("final", "final-flagged", "final-seen", "bench",
+                                                                      "confirm")}}
 
 
 def check_format(reg: dict, data: Path, fmt: str, other_fit: list[dict] | None = None) -> int:
@@ -118,7 +123,7 @@ def check_format(reg: dict, data: Path, fmt: str, other_fit: list[dict] | None =
     texts = reserved_texts(reg, fmt)
     reserved = {d: "reserved" for d in (digest(t) for t in texts) if d}
     reserved_seg = {d: "reserved" for t in texts for d in segment_digests(t)}
-    near = {t: near_index(tiers[t]) for t in ("fit", "dev", "final-seen", "final")}
+    near = {t: near_index(tiers[t]) for t in ("fit", "dev", "final-seen", "final", "final-flagged", "bench")}
     shing = {t: shingle_index(tiers[t]) for t in tiers}
     near["reserved"], shing["reserved"] = NearIndex(), ShingleIndex()
     for i, t in enumerate(texts):
@@ -139,7 +144,7 @@ def check_format(reg: dict, data: Path, fmt: str, other_fit: list[dict] | None =
         return {f"{name} shares a sentence with {b}": overlap(seg[a], seg[b]),
                 f"{name} near duplicate of {b}": near_pairs(tiers[a], near[b])}
 
-    failures = {f"reserved in {t}": overlap(reserved, idx[t]) for t in tiers}
+    failures = {f"reserved in {t}": overlap(reserved, idx[t]) for t in tiers if t != "confirm"}
     failures |= {"final-seen in fit": overlap(idx["final-seen"], idx["fit"]),
                  "final-seen in dev": overlap(idx["final-seen"], idx["dev"]),
                  "fit in dev": overlap(idx["fit"], idx["dev"])}
@@ -157,6 +162,21 @@ def check_format(reg: dict, data: Path, fmt: str, other_fit: list[dict] | None =
     failures["bench in fit"] = overlap(idx["bench"], idx["fit"])
     failures |= against("bench", "bench", "fit")
     failures["bench shares a passage with fit"] = shingle_pairs(tiers["bench"], shing["fit"])
+    if tiers["confirm"]:
+        # The confirm tier against every other tier and against its source texts (not the
+        # was_reserved sources, one of which it is built from).
+        extra = confirm_texts(reg, fmt)
+        idx["sources"] = {d: "sources" for d in (digest(t) for t in extra) if d}
+        seg["sources"] = {d: "sources" for t in extra for d in segment_digests(t)}
+        near["sources"], shing["sources"] = NearIndex(), ShingleIndex()
+        for i, t in enumerate(extra):
+            near["sources"].add(f"sources-{i}", t)
+            shing["sources"].add(f"sources-{i}", t)
+        for t in ("fit", "dev", "final", "final-flagged", "final-seen", "bench", "sources"):
+            failures[f"confirm in {t}"] = overlap(idx["confirm"], idx[t])
+            failures |= against("confirm", "confirm", t)
+        failures[f"confirm shares a passage with another tier ({', '.join(STRICT['confirm'])})"] = \
+            shingle_pairs(tiers["confirm"], joined(STRICT["confirm"]), None)   # boilerplate n-grams count too
 
     families: dict[str, set[str]] = {}
     for tier, exs in tiers.items():
@@ -182,6 +202,8 @@ def check_format(reg: dict, data: Path, fmt: str, other_fit: list[dict] | None =
     print(f"{fmt}: fit splits sharing a text (reported, allowed): train/test {len(overlap(splits['train'], splits['test']))}, "
           f"train/validation {len(overlap(splits['train'], splits['validation']))}")
     reported = [f"bench equal to {t} {len(overlap(idx['bench'], idx[t]))}" for t in ("dev", "final", "final-flagged", "final-seen")]
+    if tiers["confirm"]:
+        reported.append(f"confirm texts in the 0.1.0 reserved set (was_reserved) {len(overlap(reserved, idx['confirm']))}")
     if other_fit is not None:
         other_idx, other_seg = index(other_fit), index(other_fit, segments_of)
         reported += [f"{f} equal to the other format's fit {len(overlap(idx[f], other_idx))}, "

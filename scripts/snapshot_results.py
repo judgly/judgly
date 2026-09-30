@@ -3,16 +3,17 @@
     uv run python scripts/snapshot_results.py [RESULTS] [PACK ...]
 
 RESULTS defaults to results/ and the packs to gemma4-12b-q8 and qwen3-4b-q8. For each pack and
-format (general, stance) it copies record.json, tables.md, train-h2.log, the per-item dumps
-items-{raw,h2}-{test,dev,final,final-flagged,final-seen,bench}.tsv and the names sidecars of the fitdev,
-final, final-flagged, final-seen and bench feature files (family ids to names; a tier the format does not have
-is skipped), the last two gzipped without a timestamp so the same inputs give the same
-bytes; per pack it copies selftest.txt. It then writes
+format (general, stance) it copies record.json, tables.md, train-h2.log, train-temperature.log,
+the per-item dumps items-{raw,h2,temperature}-{test,dev,final,final-flagged,confirm,final-seen,bench}.tsv
+and the names sidecars of the fitdev, final, final-flagged, confirm, final-seen and bench feature
+files (family ids to names; a tier the format does not have is skipped), the last two gzipped
+without a timestamp so the same inputs give the same bytes; per pack it copies selftest.txt. It
+then writes
 
   docs/results/MANIFEST        SHA-256 of every snapshot file   (cd docs/results && shasum -a 256 -c MANIFEST)
   docs/results/INPUTS.sha256   SHA-256 of the large inputs that are not committed: the merged
-                               features.feat per format and tier, the h2 heads and the tier
-                               files                            (shasum -a 256 -c docs/results/INPUTS.sha256)
+                               features.feat per format and tier, the h2 and temperature
+                               heads and the tier files                            (shasum -a 256 -c docs/results/INPUTS.sha256)
 
 scripts/make_figures.py reads only docs/results.
 """
@@ -26,10 +27,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs" / "results"
 FORMATS = ("general", "stance")
-PLAIN = ("record.json", "tables.md", "train-h2.log")
-TIERS = ("test", "dev", "final", "final-flagged", "final-seen", "bench")
-PARTS = ("fitdev", "final", "final-flagged", "final-seen", "bench")
-DUMPS = [f"items-{c}-{t}.tsv" for c in ("raw", "h2") for t in TIERS]
+PLAIN = ("record.json", "tables.md", "train-h2.log", "train-temperature.log")
+TIERS = ("test", "dev", "final", "final-flagged", "confirm", "final-seen", "bench")
+PARTS = ("fitdev", "final", "final-flagged", "confirm", "final-seen", "bench")
+DUMPS = [f"items-{c}-{t}.tsv" for c in ("raw", "h2", "temperature") for t in TIERS]
 
 
 def sha256(path: Path) -> str:
@@ -65,12 +66,13 @@ def main(results: Path, packs: list[str]) -> None:
                     continue
                 gz(src / part / "features.feat.names.tsv", dst / f"names-{part}.tsv.gz")
                 inputs.append(src / part / "features.feat")
-            inputs.append(src / "h2.bin")
+            inputs += [src / "h2.bin", src / "temperature.bin"]
     for fmt in FORMATS:
         for part in PARTS:
             if (ROOT / "data" / "tiers" / fmt / f"{part}.jsonl").is_file():
                 inputs.append(ROOT / "data" / "tiers" / fmt / f"{part}.jsonl")
-    files = sorted(p for p in OUT.rglob("*") if p.is_file() and p.name not in ("MANIFEST", "INPUTS.sha256"))
+    files = sorted(p for p in OUT.rglob("*") if p.is_file() and p.name not in ("MANIFEST", "INPUTS.sha256")
+                   and "__pycache__" not in p.parts)
     (OUT / "MANIFEST").write_text("".join(f"{sha256(p)}  {p.relative_to(OUT)}\n" for p in files))
     (OUT / "INPUTS.sha256").write_text(
         "".join(f"{sha256(p)}  {p.resolve().relative_to(ROOT)}\n" for p in inputs))

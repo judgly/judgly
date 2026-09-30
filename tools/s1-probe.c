@@ -260,11 +260,16 @@ int main(int argc, char **argv)
                         s1_sha256_file(tpl_path, tpl_sha) == 0 &&
                         s1_head_check(&head, sha, tpl_sha, p.slot) == 0))) {
         p.head = head_path ? &head : NULL;
-        printf("probes for %s on %d items\n", head_path ? head_path : "H0", p.n);
-        status = probe_isolation(&p) == 0 && probe_order(&p) == 0 && probe_irrelevant(&p) == 0 &&
-                         probe_repeatability(&p) == 0
-                     ? 0
-                     : 1;
+        if (head_path && head.temperature) {
+            fprintf(stderr, "s1-probe: a temperature head acts on the mean over rotations, not on "
+                            "one readout; probe without --head\n");
+        } else {
+            printf("probes for %s on %d items\n", head_path ? head_path : "H0", p.n);
+            status = probe_isolation(&p) == 0 && probe_order(&p) == 0 &&
+                             probe_irrelevant(&p) == 0 && probe_repeatability(&p) == 0
+                         ? 0
+                         : 1;
+        }
     }
     for (int i = 0; i < p.n; i++) {
         s1_example_free(&p.x[i]);
