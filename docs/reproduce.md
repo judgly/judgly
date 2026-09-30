@@ -265,8 +265,10 @@ descriptive comparison of judgly with three decision models served by Ollama (`n
 `tev1:4b`, `tev1:0.8b`) on the same items of the confirm, final, bench and final-flagged tiers:
 the frozen protocol, runner and scorer (`PROTOCOL.sha256`), the raw responses
 (`answers/<model>/<format>-<tier>.jsonl.gz`), the results (`final/`) and the environment
-(`ENVIRONMENT.md`). Two targets reproduce it; both run hash-checked copies of the frozen files in
-another directory and never edit or write into the record.
+(`ENVIRONMENT.md`). Its subdirectory `calibrated/` is a later control with its own frozen
+protocol: the same per-type temperature fitted for every system on the same sample of judgly's
+training split, scored on the same items. Two targets reproduce them; both run hash-checked copies
+of the frozen files in another directory and never edit or write into the record.
 
 **Rescore (CPU, seconds).** Needs the tier files (`make data`):
 
@@ -278,9 +280,15 @@ It runs the frozen scorer on the committed answers and on judgly's committed per
 once per model and once with all three, and checks that every `final/result-*.json` and
 `final/score-*.txt` it rebuilds equals the committed one byte for byte (`reproduce.py score`;
 `tests/test_external_comparison.py` runs the same check and skips without the tier files). It
-runs with numpy 2.5.3 on Python 3.13, the versions the check was made with: the scorer's bootstrap
-uses numpy's `default_rng`, whose draws numpy does not promise to keep across versions, so
-another numpy may give other intervals.
+then rescores the control in `calibrated/` with its frozen scorer, from the committed training
+answers and judgly's committed train-split readout of the sampled items
+(`calibrated/judgly-train/`, which a stand-in for `s1-eval` hands to the scorer; when judgly's own
+`s1-eval` and cached feature files are present, those rows are first checked against a fresh
+dump), and checks that `calibrated/result.json` and `result.txt` are rebuilt byte for byte
+(`reproduce.py score --part control`; the test runs it through uv with the pinned versions). It
+runs with numpy 2.5.3 and scipy 1.18.1 on Python 3.13, the versions the checks were made with:
+the scorers' bootstrap uses numpy's `default_rng`, whose draws numpy does not promise to keep
+across versions, so another numpy may give other intervals.
 
 **Rerun the models (Ollama, about five hours on an Apple M3 Max).** Needs Ollama 0.35.0 or later
 and the three models pulled by the recorded tags:
@@ -300,18 +308,21 @@ that those items are asked again, and it warns if any are left at the end. Run i
 warning is printed before comparing with the record. No tolerance has been set for what counts as the same result on other hardware
 or Ollama versions.
 
-**Figures (CPU, under a minute).** Needs the tier files (`make data`); it runs with the figures
-group only, so it neither builds the native library nor needs the llama.cpp submodule:
+**Figures (CPU, about a minute and a half).** Needs the tier files (`make data`); it runs with
+the figures group only (plus scipy 1.18.1, to fit the control's temperatures again), so it neither
+builds the native library nor needs the llama.cpp submodule:
 
 ```bash
 make compare-figures
 ```
 
 It rescores every item from the committed answers and dumps, checks every point value, interval
-and paired difference of the four result files (replaying the frozen scorer's bootstrap), adds
-intervals for bench split by source, and writes `docs/assets/results/compare-tiers.{svg,png}`,
-`compare-reliability.{svg,png}`, `compare-by-source.json` and the comparison section of
-`CAPTIONS.md`. A rerun gives byte-identical files.
+and paired difference of the four result files (replaying the frozen scorer's bootstrap), fits
+the control's temperatures again and checks every number of `calibrated/result.json` the same
+way, adds intervals for bench split by source and the control's point values by question type,
+and writes `docs/assets/results/compare-tiers.{svg,png}`, `compare-reliability.{svg,png}`,
+`compare-timing.{svg,png}`, `compare-by-source.json`, `compare-control-by-type.json` and the
+comparison section of `CAPTIONS.md`. A rerun gives byte-identical files.
 
 ## Checks that must pass
 
@@ -325,10 +336,11 @@ intervals for bench split by source, and writes `docs/assets/results/compare-tie
 - `scripts/calibration_record.py` stops if its recomputed metrics differ from the evaluator's.
 - `docs/tools/confirmation_check.py`: the shipped temperatures are the confirmed ones, and the
   engine's temperature output equals the frozen confirmation scorer's.
-- `make compare-score`: all 8 rebuilt result files of the external comparison are identical to
-  the committed ones.
-- `make compare-figures`: the four result files are reproduced, and the figures, `compare-by-source.json`
-  and `CAPTIONS.md` are byte-identical to the committed ones (`git status docs/assets/results`).
+- `make compare-score`: all 8 rebuilt result files of the external comparison, and the control's
+  `result.json` and `result.txt`, are identical to the committed ones.
+- `make compare-figures`: the four result files and the control's `result.json` are reproduced,
+  and the figures, `compare-by-source.json`, `compare-control-by-type.json` and `CAPTIONS.md` are
+  byte-identical to the committed ones (`git status docs/assets/results`).
 
 ## Data sources
 

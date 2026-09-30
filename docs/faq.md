@@ -26,7 +26,7 @@ stance (Check-COVID, n = 1,343), a little below the raw readout; see the
 bias questions (BBQ, 0.927, n = 1,000) and figurative language (Fig-QA, 0.882, n = 1,000), and
 worst on sentence difficulty (CEFR-SP, six levels, 0.390, n = 874) and search relevance (ESCI,
 0.569, n = 1,000). The point is that the probabilities tell you *when* an answer is likely
-right. See the [README results](../README.md#results) and [calibration.md](calibration.md).
+right. See the [results of the two calibration options](calibration.md#results-of-the-two-options).
 
 **Can I trust a probability of 0.9?**
 Not blindly. On the fresh final tier with the Gemma 4 12B general head, answers above 0.9 were

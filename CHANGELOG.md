@@ -4,6 +4,42 @@ All notable changes to judgly. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/) (0.x: the API may still change).
 
+## Unreleased (0.2.1)
+
+No change to the package, the packs or any judgly number.
+
+### Added
+
+- An equal-calibration control for the comparison with the Ollama decision models
+  (`docs/results/external-comparison/calibrated/`): the same per-type temperature (temperature
+  scaling, Guo et al. 2017) fitted for Nimble 9B, Tev1 4B, Tev1 0.8B and judgly on the same
+  sample of judgly's training split (1,500 general and 500 stance items), and all of them scored
+  again on the comparison's test items. Protocol, sampler, runner and scorer frozen on 2026-09-30
+  at 09:24, before any external model answered a training item; the 6,000 raw training answers
+  (the three models refused the same 49 general items that have no text), the results, and
+  judgly's train-split readout of the sampled items, so that the results can be rebuilt from the
+  repository. Four fitted temperatures reached the search's upper bound (54.6).
+- `make compare-score` also rebuilds the control's `result.json` and `result.txt` byte for byte
+  (`reproduce.py score --part control`; scipy 1.18.1 is now pinned there), with a test.
+- `compare-control-by-type.json`: the control's point values by question type.
+
+### Changed
+
+- `compare-tiers` shows each Ollama model both as served and with the equal calibration;
+  `make compare-figures` fits the control's temperatures again and checks every number of its
+  `result.json` before drawing.
+- README restructured and shortened: what judgly is (Gemma 4 12B or Qwen3-4B, unchanged, run
+  through llama.cpp, with a thin layer on top), a short "Results at a glance", and one comparison
+  section with the models as served and with the equal calibration. The 0.1.0 H2 results
+  (tables and the reliability and selective-accuracy figures) moved to `docs/calibration.md`, the
+  reliability figure of the comparison to `docs/methods.md`, and the quoted figures of other
+  systems to a shorter table (their calibration figures to `docs/methods.md`).
+- The comparison's caveats: the statement that no temperature had been fitted for the external
+  models is replaced by the control's results. With the same temperature fitted on the same data,
+  the external models' ECE came close to judgly's defaults on most test sets, but stayed above
+  them on general final, and the temperature made Nimble 9B and Tev1 4B worse calibrated on
+  typed-decisions.
+
 ## 0.2.0 - 2026-09-30
 
 ### Added

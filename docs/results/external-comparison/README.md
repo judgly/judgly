@@ -79,6 +79,7 @@ kept as the protocol fixed it.
 | `time_single.py`, `final/timing.json` | single-request timings (below) |
 | `reproduce.py` | the wrapper behind `make compare-score` and `make compare-run` (below) |
 | `ENVIRONMENT.md` | hardware, versions, model digests, dates and commands |
+| `calibrated/` | the equal-calibration control, a separate record with its own frozen protocol: the same per-type temperature fitted for every system on the same training sample, scored on the same test items ([its README](calibrated/README.md)) |
 
 Every number in `final/` was computed by `score_external.py` from the per-item probabilities,
 with the same code for every system: accuracy (top answer), ECE (top label, ten equal-width
@@ -119,9 +120,11 @@ Two kinds of timing are recorded, and neither compares like with like:
   the tiers; the external models were run as served, uncalibrated (plain softmax), and their
   providers do not present these probabilities as calibrated (Tev1's README: "Logprobs are model
   preferences, not calibrated confidence"; Nimble's model card: "This checkpoint has not had a
-  separate temperature fit"). Fitting a temperature for them would likely lower their ECE. It
-  would need no new runs (a temperature cross-fitted on these answers would do), but it was not
-  in the protocol and has not been done.
+  separate temperature fit"). The protocol fitted no temperature for them. A later control with
+  its own frozen protocol, [calibrated/](calibrated/README.md), gives every system the same
+  per-type temperature (temperature scaling, Guo et al. 2017), fitted on the same sample of
+  judgly's training split; with it the external models' ECE came close to judgly's defaults on
+  most test sets, not all.
 - **Option orders.** judgly averages each question over up to four option orders, which is known
   to improve accuracy and calibration; the external models read each question once.
 - **Model size.** judgly's Gemma 4 12B is larger than every external model; the like-for-like
@@ -144,7 +147,7 @@ make data              # the tier files (not committed); make verify-data checks
 make compare-score
 ```
 
-`make compare-score` runs `reproduce.py score` with numpy 2.5.3 on Python 3.13 (pinned: the
+`make compare-score` runs `reproduce.py score` with numpy 2.5.3 (and scipy 1.18.1, for the control) on Python 3.13 (pinned: the
 scorer's bootstrap uses numpy's `default_rng`, whose draws numpy does not promise to keep across
 versions, so another numpy may break the byte identity): it checks the frozen scorer against
 `PROTOCOL.sha256` and the tier files against `data/tiers.sha256` and
@@ -152,7 +155,8 @@ versions, so another numpy may break the byte identity): it checks the frozen sc
 gunzipped, and a copy of the scorer with the answers gunzipped next to it), runs the scorer once
 per model and once with all three, and checks that every `result-*.json` and `score-*.txt` it
 produces equals the committed one byte for byte. `tests/test_external_comparison.py` runs the
-same check. The frozen files are never edited.
+same check. It then rescores the equal-calibration control in `calibrated/` the same way (see
+its README). The frozen files are never edited.
 
 ## Rerunning the models (Ollama, hours)
 

@@ -72,7 +72,7 @@ On the fresh final tier (Check-COVID, n = 1,343 pairs), the stance heads reached
 [0.034, 0.072] (Gemma 4 12B) and 0.052 [0.034, 0.077] (Qwen3-4B), around the bar of 0.05, but
 **both missed the dev-tier bar** (ECE 0.122 and 0.209 against 0.08, worst on scientific
 abstracts), and on HealthVer (final-seen) head ECE was 0.067 and 0.100
-([README results](../README.md#results)). The general head (leave `format` unset) was not
+([calibration.md](calibration.md#results-of-the-two-options)). The general head (leave `format` unset) was not
 scored on stance questions, so whether it would do better is not known.
 
 The stance head is fitted on states of the form

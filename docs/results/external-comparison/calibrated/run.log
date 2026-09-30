@@ -1,0 +1,32 @@
+=== start 2026-09-30 09:24
+nimble:9b general/train: 1500 items, 1500 to ask
+  250/1500
+  500/1500
+  750/1500
+  1000/1500
+  1250/1500
+  1500/1500
+nimble:9b stance/train: 500 items, 500 to ask
+  250/500
+  500/500
+tev1:4b general/train: 1500 items, 1500 to ask
+  250/1500
+  500/1500
+  750/1500
+  1000/1500
+  1250/1500
+  1500/1500
+tev1:4b stance/train: 500 items, 500 to ask
+  250/500
+  500/500
+tev1:0.8b general/train: 1500 items, 1500 to ask
+  250/1500
+  500/1500
+  750/1500
+  1000/1500
+  1250/1500
+  1500/1500
+tev1:0.8b stance/train: 500 items, 500 to ask
+  250/500
+  500/500
+=== done 2026-09-30 09:58
