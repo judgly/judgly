@@ -535,6 +535,13 @@ These do not measure the same thing. judgly ran in-process through its Python AP
 each question in up to four option orders; the Ollama models were asked over HTTP and read each
 question once. The timings were taken after the run and were not part of the frozen protocol.
 
+<!-- RESULTS:FIGURE-5 -->
+<p align="center"><img src="https://raw.githubusercontent.com/judgly/judgly/v0.2.0/docs/assets/results/compare-timing.svg" alt="Median seconds per request with the 95th percentile, for Tev1 0.8B, Tev1 4B, judgly Qwen3-4B, Nimble 9B and judgly Gemma 4 12B" width="640"></p>
+
+**Figure 5. Time per request.** The median (bar) and 95th percentile (whisker) from the table
+above; judgly in blue, the other models in grey. The same caveats apply: judgly asks each
+question in up to four option orders in-process, the others once over HTTP.
+
 **How judgly was fitted, and the test sets.** judgly's language models are frozen and never
 trained. Its calibration (the H2 heads and the per-type temperatures) was fitted on the train
 split of its fit tier only: 6,300 general and 14,783 stance items from the sources listed in

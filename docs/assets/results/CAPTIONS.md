@@ -87,3 +87,14 @@ ECE was 0.076 (Qwen3-4B) on general and 0.078 (Gemma 4 12B) and 0.183 (Qwen3-4B)
 defaults lie closer to the diagonal, but both are overconfident on stance above 0.5 (Gemma 4 12B
 by 0.03 to 0.13 per bin, Qwen3-4B by 0.09 to 0.14), and Gemma 4 12B on general questions in the
 0.5 to 0.6 bin (by 0.12, 796 items). ECE: general (n = 2,500): Nimble 9B 0.229, Tev1 4B 0.142, judgly Gemma 4 12B, default 0.051, judgly Qwen3-4B, default 0.047; stance (n = 1,780): Nimble 9B 0.264, Tev1 4B 0.185, judgly Gemma 4 12B, default 0.052, judgly Qwen3-4B, default 0.106.
+
+## compare-timing.svg
+
+*What it shows:* the median time per request (bar) and its 95th percentile (whisker) for each
+system, from final/timing.json: 100 items (the first 50 of each confirm tier by the SHA-256 of
+their id), one question per request, one request at a time, one uncounted warm-up request per
+system, on an Apple M3 Max (64 GB). *How to read it:* shorter is faster. The bars do not measure
+the same thing: judgly ran in-process through its Python API and asked each question in up to
+four option orders; the Ollama models were asked over HTTP and read each question once. The
+timings were taken after the comparison run and were not part of its frozen protocol. *What it
+says:* medians: Tev1 0.8B 0.078 s; Tev1 4B 0.289 s; judgly Qwen3-4B 0.321 s; Nimble 9B 0.533 s; judgly Gemma 4 12B 0.960 s.

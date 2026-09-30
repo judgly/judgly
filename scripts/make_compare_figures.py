@@ -3,7 +3,7 @@
     make data                      # the tier files (not committed; checked against data/tiers*.sha256)
     uv run --group figures python scripts/make_compare_figures.py        (or: make compare-figures)
 
-Writes docs/assets/results/{compare-tiers,compare-reliability}.{svg,png}, the bench-by-source
+Writes docs/assets/results/{compare-tiers,compare-reliability,compare-timing}.{svg,png}, the bench-by-source
 intervals docs/assets/results/compare-by-source.json, and the comparison section of CAPTIONS.md
 (the text after the marker below; make_figures.py keeps it).
 
@@ -407,9 +407,40 @@ def fig_reliability(per_tier: dict, results: dict) -> None:
     save(fig, "compare-reliability")
 
 
+TIMING = {"tev1:0.8b": "tev1:0.8b", "tev1:4b": "tev1:4b", "judgly-qwen-default": "judgly qwen3-4b-q8",
+          "nimble:9b": "nimble:9b", "judgly-gemma-default": "judgly gemma4-12b-q8"}
+
+
+def fig_timing(timing: dict) -> None:
+    """Median single-request time per system, with the 95th percentile as a whisker, straight from
+    final/timing.json (checked: every system present, 100 timed requests, no refusals)."""
+    rows = []
+    for system, key in TIMING.items():
+        t = timing["systems"][key]
+        if t["n"] != 100 or t.get("refused", 0) != 0 or not t["median_s"] <= t["p95_s"]:
+            raise Mismatch(f"make_compare_figures: timing for {key} is not 100 answered requests: {t}")
+        rows.append((system, t["median_s"], t["p95_s"]))
+    if set(timing["systems"]) != set(TIMING.values()):
+        raise Mismatch(f"make_compare_figures: timing.json systems {sorted(timing['systems'])}")
+    rows.sort(key=lambda r: r[1])
+    fig, ax = plt.subplots(figsize=(6.4, 2.9))
+    for y, (system, median, p95) in enumerate(rows):
+        ax.barh(y, median, color=COLOUR[system], height=0.62, zorder=3)
+        ax.errorbar([median], [y], xerr=[[0], [p95 - median]], color="#222222", capsize=3, elinewidth=0.9,
+                    linestyle="none", zorder=4)
+        ax.text(p95 + 0.03, y, f"{median:.2f} s", va="center", fontsize=8, fontfamily="DejaVu Sans")
+    ax.set_yticks(range(len(rows)))
+    ax.set_yticklabels([LABEL[r[0]].replace(", default", "") for r in rows], fontsize=8.5)
+    ax.set_xlabel("seconds per request (bar: median; whisker: 95th percentile)", fontsize=8.5)
+    ax.set_xlim(0, 2.0)
+    ax.grid(axis="y", visible=False)
+    fig.tight_layout()
+    save(fig, "compare-timing")
+
+
 # ---- captions -------------------------------------------------------------------------------
 
-def captions(results: dict, by_source: dict) -> str:
+def captions(results: dict, by_source: dict, timing: dict) -> str:
     def c(v: list) -> str:
         return f"{v[0]:.3f} [{v[1]:.3f}, {v[2]:.3f}]"
 
@@ -471,6 +502,16 @@ def captions(results: dict, by_source: dict) -> str:
         "defaults lie closer to the diagonal, but both are overconfident on stance above 0.5 (Gemma 4 12B",
         "by 0.03 to 0.13 per bin, Qwen3-4B by 0.09 to 0.14), and Gemma 4 12B on general questions in the",
         "0.5 to 0.6 bin (by 0.12, 796 items). ECE: " + "; ".join(rel) + ".", "",
+        "## compare-timing.svg", "",
+        "*What it shows:* the median time per request (bar) and its 95th percentile (whisker) for each",
+        "system, from final/timing.json: 100 items (the first 50 of each confirm tier by the SHA-256 of",
+        "their id), one question per request, one request at a time, one uncounted warm-up request per",
+        "system, on an Apple M3 Max (64 GB). *How to read it:* shorter is faster. The bars do not measure",
+        "the same thing: judgly ran in-process through its Python API and asked each question in up to",
+        "four option orders; the Ollama models were asked over HTTP and read each question once. The",
+        "timings were taken after the comparison run and were not part of its frozen protocol. *What it",
+        "says:* medians: " + "; ".join(f"{LABEL[s].replace(', default', '')} {timing['systems'][k]['median_s']:.3f} s"
+                                  for s, k in TIMING.items()) + ".", "",
     ])
 
 
@@ -504,14 +545,16 @@ def main() -> None:
     plt.rcParams.update(RC)
     fig_tiers(results, by_source)
     fig_reliability(per_tier, results)
+    timing = json.loads((FINAL / "timing.json").read_text())
+    fig_timing(timing)
     (OUT / "compare-by-source.json").write_text(json.dumps(
         {"what": "bench split by source: point values (equal to the record's by_source), 95% percentile "
                  "bootstrap intervals and paired differences against judgly's defaults, 1,000 resamples of "
                  f"each source's groups, numpy default_rng({SOURCE_SEED}); per scorer run (the result file "
                  "whose items are used)",
          "runs": {FILES[r]: by_source[r] for r in RUNS}}, indent=1) + "\n")
-    write_captions(captions(results, by_source))
-    print(f"make_compare_figures: checked against the record; wrote compare-tiers, compare-reliability, "
+    write_captions(captions(results, by_source, timing))
+    print(f"make_compare_figures: checked against the record; wrote compare-tiers, compare-reliability, compare-timing, "
           f"compare-by-source.json and CAPTIONS.md in {OUT.relative_to(ROOT)}")
 
 
