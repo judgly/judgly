@@ -17,7 +17,10 @@ criterion decides anything.
    were written, `sample.py` wrote `sample.json`, and the five files were frozen with their
    SHA-256 in `PROTOCOL.sha256`, before any external model answered a training item.
    `shasum -a 256 -c PROTOCOL.sha256` checks them (its last line, the freeze time, is not a hash
-   line and is reported as improperly formatted).
+   line and is reported as improperly formatted). The freeze time is that last line, written by
+   the author, to the minute; the run log starts in the same minute. The frozen files were first
+   committed together with the answers and results (commit 9b96604), so git does not timestamp
+   the freeze independently of the run.
 2. **09:24 to 09:58, the runs.** `run.sh` ran `run_calibration.py` for `nimble:9b`, `tev1:4b` and
    `tev1:0.8b`, one after the other (`run.log`), with the same models (tags and digests) and the
    same request code as the comparison (`run_external.py`'s `ask`, imported from the frozen file),
@@ -25,8 +28,8 @@ criterion decides anything.
 3. **Before the scoring, a preview.** A provisional, informal preview of Nimble 9B's calibrated
    numbers was computed with the same functions before the frozen scorer was run. It is not part
    of the record, and the frozen files still match `PROTOCOL.sha256`.
-4. **09:59, scored.** `score_calibrated.py` was run once. It wrote `result.json`; its printed
-   output is `result.txt`.
+4. **Scored, after the runs finished at 09:58.** `score_calibrated.py` was run once. It wrote
+   `result.json`; its printed output is `result.txt`.
 
 The external models' answers were then gzipped for the record (`gzip -n -9`, byte-reproducible;
 the frozen runner and scorer read them uncompressed), and judgly's train-split readout of the
@@ -132,14 +135,25 @@ What this shows, and does not:
 
 - **Most of judgly's calibration lead came from its calibration step.** Given the same
   temperature fitted on the same data, the external models' ECE came close to judgly's defaults:
-  level with them on general confirm (every paired interval includes 0), between judgly's two
-  packs or below both on the confirm and final stance tiers (except Tev1 0.8B on stance confirm,
-  0.204), within their range on general final-flagged, and still above them on general final (by
-  0.006 to 0.050) and, for Nimble 9B, on stance final-flagged (HealthFC, 0.215).
-- **judgly on the same footing.** judgly's own temperature refitted on this sample gave ECE 0.072
-  (Gemma 4 12B) and 0.020 (Qwen3-4B) on general confirm and 0.038 and 0.044 on general final, in
-  the same range as the calibrated external models; part of Gemma 4 12B's lower general ECE as
-  served comes from H2, a trained head the external models cannot be given here.
+  level with them on general confirm (every paired interval includes 0); better than both judgly
+  packs on stance final; between them on stance confirm (except Tev1 0.8B, 0.204); within their
+  range or below it on general final-flagged (Tev1 0.8B's 0.004 is nearly flat answers at the
+  temperature bound, mean top probability 0.335); on general final above judgly Gemma 4 12B's
+  default for all three and, against judgly Qwen3-4B's, clearly above for Tev1 4B, marginally for
+  Nimble 9B (+0.009 [+0.001, +0.022]) and level for Tev1 0.8B (+0.006 [-0.004, +0.018]); and, for
+  Nimble 9B, far above both on stance final-flagged (HealthFC, 0.215).
+- **judgly on the same footing.** judgly's defaults were fitted on the whole train split, 4 to 30
+  times this sample, and are H2 for Gemma 4 12B general questions. judgly's own temperature
+  refitted on this sample gave ECE 0.072 (Gemma 4 12B) and 0.020 (Qwen3-4B) on general confirm,
+  0.044 and 0.092 on stance confirm, 0.038 and 0.044 on general final, 0.114 and 0.111 on stance
+  final, 0.048 and 0.154 on bench, 0.107 and 0.104 on general final-flagged and 0.093 and 0.065 on
+  stance final-flagged (`result.txt`). On general final, judgly's shipped temperature gave 0.017
+  (Gemma 4 12B; H2, its default, 0.020) and 0.034 (Qwen3-4B), so the rise to 0.038 and 0.044 comes
+  with the smaller fitting sample, not with H2; the remaining general-final gap of Nimble 9B
+  (0.043) and Tev1 0.8B (0.040) matches it. For Gemma 4 12B's general questions, H2 was better
+  calibrated than the shipped temperature only on the confirm tier (0.051 against 0.087). On
+  stance final and general final-flagged the calibrated external models had a lower ECE than
+  judgly's refit.
 - **The temperature does not always carry over.** It made Tev1 4B worse calibrated on general
   final (0.052 to 0.070) and slightly on stance final (0.041 to 0.048), where it was already well
   calibrated as served, and Nimble 9B and Tev1 4B clearly worse on bench (0.057 to 0.164 and 0.042
@@ -149,8 +163,16 @@ What this shows, and does not:
   score questions 0.046 to 0.367 and 0.051 to 0.244; `compare-control-by-type.json`). Nimble 9B's
   and Tev1 4B's choice answers on bench also became worse calibrated (0.051 to 0.118 and 0.059 to
   0.094).
-- **Accuracy is unchanged**, and with it most of the Brier difference: the calibrated models'
-  Brier scores stay above judgly Gemma 4 12B's wherever it is more accurate.
+- **Accuracy is unchanged; the Brier score is not.** For Nimble 9B and Tev1 4B the temperature
+  closed much of the Brier gap to judgly's defaults on the confirm tiers, and for Nimble 9B on
+  general final-flagged (Nimble 9B on general confirm: +0.139 as served to +0.045 against judgly
+  Gemma 4 12B's default; Tev1 4B on stance confirm +0.065 to +0.019). What remains, mainly
+  on the final tiers, follows accuracy: the calibrated models' Brier scores stay above judgly Gemma
+  4 12B's wherever it is clearly more accurate. On stance final, where Tev1 4B and judgly Gemma 4
+  12B are level in accuracy (0.826 and 0.827), Tev1 4B's calibrated Brier score (0.265) is below
+  Gemma 4 12B's (0.280; paired -0.014 [-0.030, +0.002]). By the Brier score the temperature also
+  made Tev1 4B slightly worse on the final tiers (0.431 to 0.442 and 0.264 to 0.265) and Nimble 9B
+  and Tev1 4B worse on bench (0.402 to 0.479 and 0.470 to 0.529).
 - **Flat answers.** Some of the lowest ECE values (Tev1 0.8B on politeness, 0.004) are those of
   nearly uniform answers at the temperature bound (above).
 

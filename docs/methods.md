@@ -1350,13 +1350,17 @@ exp(4) = 54.598; a type without training items keeps T = 1. A temperature never 
 answer is on top, so accuracy is unchanged.
 
 **The protocol and the order of events** (2026-09-30). The protocol, the sampler, the runner and
-the scorer, and the sample's ids, were frozen at 09:24 with their SHA-256
-(`calibrated/PROTOCOL.sha256`), before any external model answered a training item. The runner
-asked `nimble:9b`, `tev1:4b` and `tev1:0.8b` the sample from 09:24 to 09:58, through the
-comparison's frozen request code (one request per item, same tags and digests). Before the
-frozen scorer was run, a provisional, informal preview of Nimble 9B's calibrated numbers was
-computed with the same functions; it is not part of the record, and the frozen files still
-match their hashes. The frozen scorer was then run once, at 09:59.
+the scorer, and the sample's ids, were frozen with their SHA-256 (`calibrated/PROTOCOL.sha256`),
+whose last line records the freeze at 09:24, before any external model answered a training item.
+The runner asked `nimble:9b`, `tev1:4b` and `tev1:0.8b` the sample from 09:24 to 09:58
+(`calibrated/run.log`), through the comparison's frozen request code (one request per item, same
+tags and digests). The freeze time and the run times are the author's own records, to the minute,
+and the freeze and the start of the run fall in the same minute; the frozen files were first
+committed together with the answers and results (commit 9b96604), so git does not timestamp the
+freeze independently. The hashes themselves verify. Before the frozen scorer was run, a
+provisional, informal preview of Nimble 9B's calibrated numbers was computed with the same
+functions; it is not part of the record, and the frozen files still match their hashes. The
+frozen scorer was then run once, after the runs finished at 09:58.
 
 **The training sample.** From judgly's fit tier, train split (the items judgly's calibration was
 fitted on), the first 500 items of each question type by the SHA-256 of the item id: 1,500
@@ -1640,23 +1644,42 @@ Paired differences (same items, same resamples):
 
 **What the control shows.** Given the same temperature fitted on the same data, the external
 models came close to judgly's defaults in ECE: level with them on general confirm (every paired
-interval includes 0), between judgly's two packs or below both on the confirm and final stance
-tiers (Tev1 0.8B on stance confirm excepted, +0.153 [+0.126, +0.204] against Gemma 4 12B's
-default), within their range or below it on general final-flagged, level on JevBench (no paired
-difference outside the noise), and still above them on
-general final (by +0.006 to +0.050) and, for Nimble 9B, on stance final-flagged (0.215). judgly's
-own temperature refitted on the same sample was in the same range (general final 0.038 and
-0.044); part of Gemma 4 12B's lower general ECE comes from H2, a trained head the external models
-cannot be given here. Most of judgly's calibration lead over the models as served therefore came
-from its calibration step rather than from its models. The temperature did not always carry over
+interval includes 0); below both on stance final; between judgly's two packs on stance confirm
+(Nimble 9B and Tev1 4B; Tev1 0.8B excepted, +0.153 [+0.126, +0.204] against Gemma 4 12B's
+default); within their range or below it on general final-flagged; level on JevBench (no paired
+difference outside the noise); on general final above judgly Gemma 4 12B's default for all three
+(+0.020 to +0.050) and, against judgly Qwen3-4B's, clearly above for Tev1 4B (+0.037 [+0.024,
++0.048]), marginally for Nimble 9B (+0.009 [+0.001, +0.022]) and level for Tev1 0.8B (+0.006
+[-0.004, +0.018]); and, for Nimble 9B, far above both on stance final-flagged (0.215). The
+remaining general-final gap is not H2's doing: there judgly Gemma 4 12B's shipped temperature
+(fitted on the whole train split, 6,300 general items) gave 0.017 [0.014, 0.027], against H2's
+0.020, and judgly Qwen3-4B's (its default) 0.034; refitted on the 1,500-item sample by the
+control's code, they gave 0.038 and 0.044, close to Nimble 9B (0.043) and Tev1 0.8B (0.040).
+For those two, the gap therefore matches the difference between fitting on the whole train split
+and on the sample; Tev1 4B (0.070), already well calibrated as served (0.052), stays above. The
+refit was also worse than the shipped temperature on stance final (Gemma 4 12B 0.087 to 0.114,
+Qwen3-4B 0.093 to 0.111). For Gemma 4 12B's general questions, H2 was better calibrated than the
+shipped temperature only on the confirm tier (0.051 against 0.087). On the same footing, judgly's refitted
+temperature had a higher ECE than all three calibrated external models on stance final (0.114 and
+0.111 against 0.027 to 0.061) and general final-flagged (0.107 and 0.104 against 0.004 to 0.082).
+Most of judgly's calibration lead over the models as served therefore came from its calibration
+step rather than from its models. The temperature did not always carry over
 from the training sample to other kinds of questions: Tev1 4B, already well calibrated as served
 on the final tiers, became worse calibrated on general final (0.052 to 0.070) and slightly on
 stance final (0.041 to 0.048), and Nimble 9B and Tev1 4B became clearly worse calibrated on
 typed-decisions (0.052 to 0.181 and 0.038 to 0.127), mostly on its score questions: the large
 score temperatures, fitted mostly on toxicity ratings, flatten bench's score answers, of which
-these models got 65% and 49% right, so that they become underconfident. Accuracy, and with it most of the Brier difference, is unchanged by a
-temperature: judgly Gemma 4 12B's accuracy is Gemma 4 12B's own readout, averaged over option
-orders (with H2 for general questions slightly below it, 0.737 against 0.760 on general final).
+these models got 65% and 49% right, so that they become underconfident. By the Brier score the
+temperature also made Nimble 9B and Tev1 4B slightly worse on JevBench (0.283 to 0.299 and 0.306
+to 0.322), where their ECE fell, and Tev1 4B on general final (0.431 to 0.442) and stance final
+(0.264 to 0.265). Accuracy is unchanged by a temperature: judgly Gemma 4 12B's accuracy is Gemma
+4 12B's own readout, averaged over option orders (with H2 for general questions slightly below it,
+0.737 against 0.760 on general final). The Brier score is not: for Nimble 9B and Tev1 4B the
+temperature closed much of the Brier gap to judgly's defaults on the confirm tiers, and for Nimble
+9B on general final-flagged (for example Nimble 9B on general confirm, +0.139 as served to +0.045
+against Gemma 4 12B's default and +0.105 to +0.010 against Qwen3-4B's; Tev1 4B on stance confirm
++0.065 to +0.019; Nimble 9B on general final-flagged +0.192 to +0.030), while the gap that
+remains, mainly on the final tiers and for Tev1 0.8B, follows accuracy.
 
 ### What the comparison says
 
@@ -1680,8 +1703,10 @@ accurate than all three models; judgly Qwen3-4B's was too, except on stance, whe
 level with it (above); and Tev1 0.8B was about as well calibrated as judgly Gemma 4 12B. Most of the
 ECE differences show that judgly applied a calibration step and the external models, as served,
 did not (Caveats, above): given the same temperature fitted on the same data, the external models
-came close to judgly's defaults, except on general final, where they stayed above them, and on
-typed-decisions, where the temperature made Nimble 9B and Tev1 4B worse calibrated
+came close to judgly's defaults, except on general final, where they stayed above judgly Gemma 4
+12B's default (a gap that judgly's own temperature, refitted on the same sample, shows too), for
+Nimble 9B on stance final-flagged, and on typed-decisions, where the temperature made Nimble 9B
+and Tev1 4B worse calibrated
 ([The same calibration for every system](#the-same-calibration-for-every-system)). Tev1 0.8B
 was the fastest per request and the least accurate almost everywhere; judgly Gemma 4 12B was the
 slowest.
@@ -1768,7 +1793,7 @@ so for comparing the two options it is no longer untouched.
 judgly is one of several attempts to get typed, calibrated decisions from a language model
 without generating text. **Jev** (TypeSafe, commercial, closed) is the model whose public
 description gave the idea: typed questions, probabilities for every allowed answer, questions
-isolated and branched from one reading of the state. The closest open design is
+isolated and branched from one reading of the state. A close open design is
 **open-alternative-jev** ([ikermoel/open-alternative-jev](https://github.com/ikermoel/open-alternative-jev),
 Apache-2.0): it also keeps the model frozen, reads the option-letter logits at fixed positions
 and normalises them over the options only, with no training beyond an optional single-scalar
@@ -1786,9 +1811,13 @@ level on score questions and has not been checked against JevBench's tool. Cygne
 to 0.07 s per decision (median, serial, standard tier) on 48 GB GPUs; the board measures it at
 0.23 s. It is joint leader of the live JevBench board with Winnow-12B Q8, in a statistical tie
 (v1.5.0 as of 29 September 2026: Cygnet 73.7, Winnow-12B Q8 73.2, Jev 1.13.0 72.1; the board calls
-75 of its 88 neighbouring pairs statistical ties). judgly differs from
-both mainly in fitting small per-type heads (slot biases and a state-dependent correction) on
-licence-checked data and in evaluating them on many fresh task families. It is not the only
+75 of its 88 neighbouring pairs statistical ties). judgly's defaults use the same technique as
+these two projects, temperature scaling (Guo et al. 2017), with one temperature per question type
+instead of one in all; only Gemma 4 12B's general questions use a fitted head (H2: slot biases
+and a state-dependent correction). What remains different is small: judgly applies the
+temperature after averaging over up to four option orders (open-alternative-jev also reports
+averaging two), fits it on licence-checked public data, and evaluates it on many held-out task
+families. It is not the only
 project that measures calibration on data its fit never saw: **Kev**
 ([jaredpalmer/kev](https://github.com/jaredpalmer/kev), Apache-2.0; a LoRA adapter and pointer
 head on a fixed Qwen base) reports ECE on frozen, checksummed new sources (for Kev-9B, 0.106 raw and 0.042 with a

@@ -270,7 +270,9 @@ protocol: the same per-type temperature fitted for every system on the same samp
 training split, scored on the same items. Two targets reproduce them; both run hash-checked copies
 of the frozen files in another directory and never edit or write into the record.
 
-**Rescore (CPU, seconds).** Needs the tier files (`make data`):
+**Rescore (CPU, about a minute).** Needs the tier files from `make data`, a one-time step of
+several minutes that runs with the pipeline group and so builds the judgly package, which needs
+the llama.cpp submodule (clone with `--recurse-submodules`):
 
 ```bash
 make compare-score
@@ -308,9 +310,10 @@ that those items are asked again, and it warns if any are left at the end. Run i
 warning is printed before comparing with the record. No tolerance has been set for what counts as the same result on other hardware
 or Ollama versions.
 
-**Figures (CPU, about a minute and a half).** Needs the tier files (`make data`); it runs with
-the figures group only (plus scipy 1.18.1, to fit the control's temperatures again), so it neither
-builds the native library nor needs the llama.cpp submodule:
+**Figures (CPU, about a minute and a half).** Needs the tier files from `make data`, which builds
+the judgly package and so needs the llama.cpp submodule (above). `make compare-figures` itself
+runs with the figures group only (plus scipy 1.18.1, to fit the control's temperatures again), so
+it does not build the native library:
 
 ```bash
 make compare-figures
@@ -319,7 +322,7 @@ make compare-figures
 It rescores every item from the committed answers and dumps, checks every point value, interval
 and paired difference of the four result files (replaying the frozen scorer's bootstrap), fits
 the control's temperatures again and checks every number of `calibrated/result.json` the same
-way, adds intervals for bench split by source and the control's point values by question type,
+way, adds intervals for bench split by source (with judgly's temperature refitted on the control's sample) and the control's point values by question type,
 and writes `docs/assets/results/compare-tiers.{svg,png}`, `compare-reliability.{svg,png}`,
 `compare-timing.{svg,png}`, `compare-by-source.json`, `compare-control-by-type.json` and the
 comparison section of `CAPTIONS.md`. A rerun gives byte-identical files.

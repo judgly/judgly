@@ -58,7 +58,12 @@ scaling (Guo et al. 2017): one temperature per question type, fitted for each mo
 code on the same sample of judgly's training split (1,500 general and 500 stance items; the
 record in docs/results/external-comparison/calibrated). A temperature never changes which answer
 is on top, so both points of a model share one accuracy. judgly's two packs are shown with their
-default calibration (filled blue) and raw, without calibration (hollow, faint blue). Bars are 95%
+default calibration as shipped (filled blue) and raw, without calibration (hollow, faint blue).
+judgly's defaults were not fitted on the control's sample: they were fitted by judgly's own trainer
+on the whole train split (6,300 general and 14,783 stance items, 4 to 30 times the sample), and
+for Gemma 4 12B on general questions the default is H2, not the temperature. Only the external
+models and judgly's temperature refitted on the sample (not drawn; its values are in
+docs/methods.md and compare-by-source.json) share the sample and the code. Bars are 95%
 percentile bootstrap intervals over the tier's groups of related items (1,000 resamples): for the
 confirm and final tiers they are the record's (score_external.py for the models as served and
 judgly, score_calibrated.py for the calibrated models); for typed-decisions and JevBench, which
@@ -75,10 +80,14 @@ differences in docs/methods.md are the sharper test. ECE is never negative, so i
 upward near 0. *What it says:* accuracy comes from the models, and the temperature does not move
 it; judgly Gemma 4 12B is the most accurate or level with the most accurate on every set. Given
 the same temperature fitted on the same data, the external models come close to judgly's defaults
-in ECE: level with them on general confirm, between judgly's two packs or below both on the stance
-tiers (Tev1 0.8B on stance confirm excepted), and still above them on general final. Most of
-judgly's calibration lead over the models as served therefore came from its calibration step, not
-from its models. The temperature does not always carry over to new kinds of questions: it made
+in ECE: level with them on general confirm; better calibrated than both judgly packs on stance
+final; between judgly's two packs on stance confirm (Tev1 0.8B excepted, 0.204); on general final
+above judgly Gemma 4 12B's default for all three and, against judgly Qwen3-4B's, Tev1 4B clearly
+above, Nimble 9B marginally and Tev1 0.8B level. On general final judgly's own temperature gave
+0.017 (Gemma 4 12B) and 0.034 (Qwen3-4B) as shipped and 0.038 and 0.044 refitted on the sample, so
+much of that remaining gap comes with the fitting sample, not with H2. Most of judgly's calibration
+lead over the models as served therefore came from its calibration step, not from its models. The
+temperature does not always carry over to new kinds of questions: it made
 Tev1 4B slightly worse calibrated on the final tiers, where it was already well calibrated as
 served, and Nimble 9B and Tev1 4B clearly worse on typed-decisions, mostly on its score questions
 (compare-control-by-type.json). Some fitted temperatures reached the search's upper bound,
