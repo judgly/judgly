@@ -115,6 +115,44 @@
      "calibrated brier": 0.6661,
      "calibrated mean top probability": 0.3359
     }
+   },
+   "clef_27b": {
+    "choice": {
+     "n": 1000,
+     "temperature": 1.4116,
+     "as served accuracy": 0.594,
+     "as served ece": 0.0834,
+     "as served brier": 0.5546,
+     "as served mean top probability": 0.6598,
+     "calibrated accuracy": 0.594,
+     "calibrated ece": 0.0451,
+     "calibrated brier": 0.5466,
+     "calibrated mean top probability": 0.5665
+    },
+    "bool": {
+     "n": 500,
+     "temperature": 50.338,
+     "as served accuracy": 0.632,
+     "as served ece": 0.143,
+     "as served brier": 0.4786,
+     "as served mean top probability": 0.775,
+     "calibrated accuracy": 0.632,
+     "calibrated ece": 0.1245,
+     "calibrated brier": 0.4933,
+     "calibrated mean top probability": 0.5075
+    },
+    "score": {
+     "n": 1000,
+     "temperature": 1.4993,
+     "as served accuracy": 0.417,
+     "as served ece": 0.1558,
+     "as served brier": 0.6679,
+     "as served mean top probability": 0.562,
+     "calibrated accuracy": 0.417,
+     "calibrated ece": 0.0892,
+     "calibrated brier": 0.6399,
+     "calibrated mean top probability": 0.4937
+    }
    }
   },
   "stance/confirm": {
@@ -158,6 +196,20 @@
      "calibrated ece": 0.2042,
      "calibrated brier": 0.7026,
      "calibrated mean top probability": 0.6505
+    }
+   },
+   "clef_27b": {
+    "choice": {
+     "n": 1780,
+     "temperature": 1.3932,
+     "as served accuracy": 0.6449,
+     "as served ece": 0.1503,
+     "as served brier": 0.5103,
+     "as served mean top probability": 0.7952,
+     "calibrated accuracy": 0.6449,
+     "calibrated ece": 0.0759,
+     "calibrated brier": 0.4796,
+     "calibrated mean top probability": 0.7141
     }
    }
   },
@@ -275,6 +327,44 @@
      "calibrated brier": 0.7883,
      "calibrated mean top probability": 0.214
     }
+   },
+   "clef_27b": {
+    "choice": {
+     "n": 4005,
+     "temperature": 1.4116,
+     "as served accuracy": 0.8385,
+     "as served ece": 0.0311,
+     "as served brier": 0.2456,
+     "as served mean top probability": 0.859,
+     "calibrated accuracy": 0.8385,
+     "calibrated ece": 0.0455,
+     "calibrated brier": 0.2487,
+     "calibrated mean top probability": 0.7931
+    },
+    "bool": {
+     "n": 2000,
+     "temperature": 50.338,
+     "as served accuracy": 0.8205,
+     "as served ece": 0.0656,
+     "as served brier": 0.2526,
+     "as served mean top probability": 0.8861,
+     "calibrated accuracy": 0.8205,
+     "calibrated ece": 0.3067,
+     "calibrated brier": 0.4782,
+     "calibrated mean top probability": 0.5138
+    },
+    "score": {
+     "n": 1874,
+     "temperature": 1.4993,
+     "as served accuracy": 0.5267,
+     "as served ece": 0.0413,
+     "as served brier": 0.5863,
+     "as served mean top probability": 0.5173,
+     "calibrated accuracy": 0.5267,
+     "calibrated ece": 0.0959,
+     "calibrated brier": 0.6018,
+     "calibrated mean top probability": 0.4308
+    }
    }
   },
   "stance/final": {
@@ -318,6 +408,20 @@
      "calibrated ece": 0.0266,
      "calibrated brier": 0.5364,
      "calibrated mean top probability": 0.5814
+    }
+   },
+   "clef_27b": {
+    "choice": {
+     "n": 1343,
+     "temperature": 1.3932,
+     "as served accuracy": 0.8258,
+     "as served ece": 0.0466,
+     "as served brier": 0.2671,
+     "as served mean top probability": 0.8665,
+     "calibrated accuracy": 0.8258,
+     "calibrated ece": 0.035,
+     "calibrated brier": 0.2661,
+     "calibrated mean top probability": 0.7912
     }
    }
   },
@@ -435,6 +539,44 @@
      "calibrated brier": 0.7518,
      "calibrated mean top probability": 0.2486
     }
+   },
+   "clef_27b": {
+    "choice": {
+     "n": 739,
+     "temperature": 1.4116,
+     "as served accuracy": 0.7118,
+     "as served ece": 0.044,
+     "as served brier": 0.3823,
+     "as served mean top probability": 0.7317,
+     "calibrated accuracy": 0.7118,
+     "calibrated ece": 0.0692,
+     "calibrated brier": 0.3893,
+     "calibrated mean top probability": 0.6426
+    },
+    "bool": {
+     "n": 674,
+     "temperature": 50.338,
+     "as served accuracy": 0.819,
+     "as served ece": 0.0643,
+     "as served brier": 0.2564,
+     "as served mean top probability": 0.8833,
+     "calibrated accuracy": 0.819,
+     "calibrated ece": 0.3055,
+     "calibrated brier": 0.4786,
+     "calibrated mean top probability": 0.5135
+    },
+    "score": {
+     "n": 818,
+     "temperature": 1.4993,
+     "as served accuracy": 0.6785,
+     "as served ece": 0.0262,
+     "as served brier": 0.4341,
+     "as served mean top probability": 0.6777,
+     "calibrated accuracy": 0.6785,
+     "calibrated ece": 0.1137,
+     "calibrated brier": 0.4529,
+     "calibrated mean top probability": 0.5662
+    }
    }
   },
   "general/final-flagged": {
@@ -479,6 +621,20 @@
      "calibrated brier": 0.6665,
      "calibrated mean top probability": 0.3352
     }
+   },
+   "clef_27b": {
+    "score": {
+     "n": 1000,
+     "temperature": 1.4993,
+     "as served accuracy": 0.472,
+     "as served ece": 0.1733,
+     "as served brier": 0.6582,
+     "as served mean top probability": 0.6453,
+     "calibrated accuracy": 0.472,
+     "calibrated ece": 0.0879,
+     "calibrated brier": 0.6206,
+     "calibrated mean top probability": 0.5571
+    }
    }
   },
   "stance/final-flagged": {
@@ -522,6 +678,20 @@
      "calibrated ece": 0.039,
      "calibrated brier": 0.4875,
      "calibrated mean top probability": 0.581
+    }
+   },
+   "clef_27b": {
+    "choice": {
+     "n": 749,
+     "temperature": 1.3932,
+     "as served accuracy": 0.6409,
+     "as served ece": 0.1485,
+     "as served brier": 0.4856,
+     "as served mean top probability": 0.7877,
+     "calibrated accuracy": 0.6409,
+     "calibrated ece": 0.091,
+     "calibrated brier": 0.4555,
+     "calibrated mean top probability": 0.7066
     }
    }
   }

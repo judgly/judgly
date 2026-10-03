@@ -41,7 +41,7 @@ def test_compare_score_rebuilds_committed_results(tmp_path):
                            "--work", str(tmp_path)], capture_output=True, text=True, check=False)
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "all rebuilt results identical to the committed ones" in proc.stdout
-    assert proc.stdout.count("identical to the committed file") == 8
+    assert proc.stdout.count("identical to the committed file") == 10   # 4 models and "all", .json and .txt
 
 
 def test_control_frozen_files_match_protocol_hashes():

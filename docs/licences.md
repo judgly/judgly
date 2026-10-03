@@ -19,7 +19,7 @@ I am not a lawyer; this records what the sources say, not legal advice.
 
 ## 1. What ships
 
-### Wheel (`judgly-0.2.1-py3-none-macosx_*_arm64.whl`)
+### Wheel (`judgly-0.2.2-py3-none-macosx_*_arm64.whl`)
 
 | File(s) | Origin | Licence | Licence text present |
 |---|---|---|---|
@@ -38,7 +38,7 @@ The in-source notices inside ggml that apply to compiled code are llamafile
 sgemm (Mozilla Foundation, MIT) and YaRN RoPE (Quesnelle and Peng, MIT);
 `scripts/check_licenses.py` fails if either notice changes.
 
-### sdist (`judgly-0.2.1.tar.gz`)
+### sdist (`judgly-0.2.2.tar.gz`)
 
 | Path | Origin | Licence | Licence text present |
 |---|---|---|---|
@@ -191,13 +191,14 @@ Candidates for fitting, final or bench data that were checked and are not used:
 Models run only for the comparison with dedicated decision models
 ([results/external-comparison/](results/external-comparison/README.md)). They are not shipped,
 not used by judgly, and their weights are not redistributed; the record holds only their answers
-(probabilities, token counts and timings) as served by Ollama 0.35.0:
+(probabilities, token counts and timings) as served by Ollama 0.35.0 (Nimble, Tev1) and 0.35.1 (Clef):
 
 | Model | Source | Licence evidence | Notes |
 |---|---|---|---|
 | Nimble 9B (`nimble:9b`), Bespoke Labs | Ollama library; card `bespokelabs/Bespoke-Nimble-9B`, code and data recipe `bespokelabsai/nimble` | Hugging Face card: `license: apache-2.0`, "**License:** Apache 2.0"; a LoRA adapter on Qwen3.5-9B (Apache-2.0). The GitHub repository's `LICENSE` returned 404 when checked, so the code's licence is not confirmed here. | outputs only |
 | Tev1 4B and 0.8B (`tev1:4b`, `tev1:0.8b`), Together AI | Ollama library; cards `togethercomputer/Tev1-4B-experimental` and `-0.8B-experimental`, code `togethercomputer/tev1` | Code: MIT (`LICENSE`, "Copyright (c) 2026 open-jev contributors"). Weights: the cards say "The release license for these fine-tuned weights is being finalized"; the base Qwen3.5 models are Apache-2.0. | outputs only |
-| Ollama 0.35.0 | `ollama/ollama` | MIT | used to serve the two models above |
+| Clef 27B (`clef:27b`), Cloudflare | Ollama library (`clef:27b`, ID `2bb11a61d1fb`); card and weights `Cloudflare/clef`; announced at blog.cloudflare.com/clef-decision-models (2026-10-01) | Hugging Face card: `license: apache-2.0`, `base_model: Qwen/Qwen3.8-27B`; the repository's `LICENSE` is the Apache 2.0 text with "Copyright 2026 Alibaba Cloud", identical in substance to the licence layer of the Ollama manifest; no NOTICE or use-policy file in the repository (checked 2026-10-04). Base model Qwen3.8-27B: Apache-2.0 (its card). | outputs only |
+| Ollama 0.35.0 and 0.35.1 | `ollama/ollama` | MIT | used to serve the models above |
 
 Trademarks: "Gemma" is a trademark of Google LLC. judgly uses "Gemma" and
 "Qwen" only to name the model a pack runs; the project name, logo and text do
@@ -235,7 +236,7 @@ come from evaluation sets with non-commercial or unconfirmed licences (for examp
 HealthVer, COVID-Fact, HealthFC, CEFR-SP); if you reuse the per-item files for more than checking the reported
 numbers, check the licence of the source dataset too.
 
-`docs/results/external-comparison/` also holds the answers of Nimble 9B and Tev1 (4B and 0.8B),
+`docs/results/external-comparison/` also holds the answers of Nimble 9B, Tev1 (4B and 0.8B) and Clef 27B,
 served by Ollama: item ids, the models' probabilities, token counts and timings, with no model
 weights and no dataset text. They are the outputs of models under their own terms (above); the
 record around them (protocol, scripts, results) is licensed like the rest of the snapshot.
@@ -246,7 +247,7 @@ Thanks to TypeSafe's Jev for the idea; to Georgi Gerganov and the ggml
 authors for llama.cpp and ggml; to Google DeepMind for Gemma; to the Qwen team
 for Qwen3; to YaoYuan for yyjson; to open-alternative-jev (ikermoel), Cygnet (blockbrain-ai), Kev (jaredpalmer),
 decider-4b (Mapika), Laya (convaiinnovations) and CLM-v0.1-8B (Contrastive-LM); to Bespoke Labs for
-Nimble, Together AI for Tev1 and the Ollama project for Ollama, which made the comparison with
+Nimble, Together AI for Tev1, Cloudflare for Clef and the Ollama project for Ollama, which made the comparison with
 dedicated decision models possible; to Florian Standhartinger and contributors for JevBench and the
 authors of typed-decisions (LocalLLaMA) for their benchmarks; and to the authors of
 every dataset above for releasing their work openly.

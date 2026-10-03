@@ -4,6 +4,41 @@ All notable changes to judgly. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/) (0.x: the API may still change).
 
+## 0.2.2 - 2026-10-04
+
+No change to the package, the packs or any judgly number.
+
+### Added
+
+- A fourth model in the comparison with the Ollama decision models: Cloudflare's Clef 27B
+  (`clef:27b`, Ollama ID `2bb11a61d1fb`; post-trained from Qwen3.8-27B, Apache-2.0, served at
+  Q4_K_M), asked the same 17,482 test
+  items and the control's 2,000 training items with the same frozen runner, scored by the same
+  frozen scorer, and timed on the same 100 items; decided and recorded in `NOTES.md` before it
+  answered any item. It needs Ollama 0.35.1, which refuses the other three models' recorded tags
+  ("does not support decision"), so they were not rerun: their answers are from 0.35.0, Clef's
+  from 0.35.1. Clef answered every item. It was the most accurate system on general confirm,
+  general final, typed-decisions and JevBench, clearly ahead of judgly Gemma 4 12B's default
+  only on general final (+0.023 [+0.014, +0.032], against H2) and behind it on both flagged
+  tiers; as served it had a lower ECE than both judgly defaults on stance final and was level with
+  judgly Gemma 4 12B on typed-decisions and JevBench. The equal calibration made it clearly worse
+  calibrated on general final, typed-decisions and JevBench (its yes/no temperature, 50.3). It is
+  the slowest system per request (median 1.87 s). Cloudflare reports evaluating Clef on
+  Humicroedit and Amazon ESCI, the sources of judgly's humour (confirm) and relevance (final)
+  families, where Clef was the most accurate; whether they informed its training is not stated.
+  Clef is credited in NOTICE, CITATION.cff and docs/licences.md (outputs only; no weights).
+
+### Changed
+
+- `final/result-all.json` and `score-all.txt` are now the four-model run (no number of the
+  earlier systems changed); the control's `score_calibrated.py` lists Clef (re-hashed, with a
+  dated line in its `PROTOCOL.sha256`), and its `result.json` and `result.txt` were rebuilt: the
+  earlier systems' point values are unchanged and 2,245 of their intervals moved in the third
+  decimal, because the scorer draws all resamples from one generator in order.
+- `reproduce.py` checks five result files and records Clef's ID; `time_single.py` takes
+  `--only MODEL ...`; the README, docs/methods.md (every comparison table rebuilt from the
+  record), the figures and their captions include Clef.
+
 ## 0.2.1 - 2026-09-30
 
 No change to the package, the packs or any judgly number.

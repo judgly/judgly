@@ -12,7 +12,7 @@ wrapper therefore builds a workspace and runs hash-checked copies there:
                                           scorer run (<name>: a model, or "all")
 
 score   rescore the committed answers (answers/<model>/*.jsonl.gz) with the frozen scorer, once
-        per model and once with all three models, and check that every result-*.json and
+        per model and once with all four models, and check that every result-*.json and
         score-*.txt equals the committed one in final/, byte for byte. Then rescore the
         equal-calibration control (calibrated/, frozen with calibrated/PROTOCOL.sha256) from its
         committed files and check that its result.json and result.txt are rebuilt byte for byte
@@ -21,7 +21,9 @@ score   rescore the committed answers (answers/<model>/*.jsonl.gz) with the froz
 run     ask the Ollama models again (needs Ollama >= 0.35.0 and the models pulled by the
         recorded tags), with a copy of the frozen runner in OUT (default: results-compare/),
         then score OUT's answers the same way into OUT/final/ and compare them with the record.
-        Never writes into this directory. The frozen runner treats every line it has written as
+        Never writes into this directory. nimble:9b, tev1:4b and tev1:0.8b were answered under
+        Ollama 0.35.0 and clef:27b under 0.35.1 (NOTES.md, 2026-10-03); 0.35.1 refuses the first
+        three ("does not support decision"), so a full rerun needs both versions. The frozen runner treats every line it has written as
         done, including a failed request; before each resume this wrapper moves lines whose
         error is not an HTTP 400 refusal (a connection error, a timeout, a server error) to
         <format>-<tier>.transient.jsonl next to the answers, so that those items are asked again.
@@ -68,12 +70,13 @@ HERE = Path(__file__).resolve().parent
 CAL = HERE / "calibrated"
 REPO = HERE.parents[2]
 SNAPSHOT = REPO / "docs" / "results"
-MODELS = ("nimble:9b", "tev1:4b", "tev1:0.8b")  # the order of the recorded "all" run
+MODELS = ("nimble:9b", "tev1:4b", "tev1:0.8b", "clef:27b")  # the order of the recorded "all" run
 PACKS = ("gemma4-12b-q8", "qwen3-4b-q8")
 FORMATS = ("general", "stance")
 TIERS = ("confirm", "final", "bench", "final-flagged")
 # The Ollama model IDs (the first 12 hex digits of the manifest's SHA-256) the record was made with.
-RECORDED_IDS = {"nimble:9b": "aa4a79f08ae0", "tev1:4b": "d18e9174f4db", "tev1:0.8b": "c0099a86fcbd"}
+RECORDED_IDS = {"nimble:9b": "aa4a79f08ae0", "tev1:4b": "d18e9174f4db", "tev1:0.8b": "c0099a86fcbd",
+                "clef:27b": "2bb11a61d1fb"}
 OLLAMA_MIN = (0, 35, 0)
 
 
@@ -175,7 +178,10 @@ def compare(results: dict[str, tuple[bytes, bytes]], out: Path | None) -> bool:
         for fname, mine in ((f"result-{name}.json", js), (f"score-{name}.txt", txt)):
             if out is not None:
                 (out / fname).write_bytes(mine)
-            if mine == (HERE / "final" / fname).read_bytes():
+            if not (HERE / "final" / fname).exists():
+                same = False
+                print(f"   {fname}: not in final/")
+            elif mine == (HERE / "final" / fname).read_bytes():
                 print(f"   {fname}: identical to the committed file")
             else:
                 same = False

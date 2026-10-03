@@ -1,4 +1,4 @@
-<p align="center"><img src="https://raw.githubusercontent.com/judgly/judgly/v0.2.1/docs/assets/banner.svg" alt="judgly: calibrated, deterministic judgments from an open language model" width="720"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/judgly/judgly/v0.2.2/docs/assets/banner.svg" alt="judgly: calibrated, deterministic judgments from an open language model" width="720"></p>
 
 # judgly
 
@@ -22,12 +22,12 @@ are at the end of this page.
 
 ## Results at a glance
 
-<p align="center"><img src="https://raw.githubusercontent.com/judgly/judgly/v0.2.1/docs/assets/results/compare-tiers.svg" alt="Accuracy against ECE on six test sets for Nimble 9B, Tev1 4B and Tev1 0.8B, as served and with the same calibration as judgly, and judgly's two packs" width="860"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/judgly/judgly/v0.2.2/docs/assets/results/compare-tiers.svg" alt="Accuracy against ECE on six test sets for Nimble 9B, Tev1 4B, Tev1 0.8B and Clef 27B, as served and with the same calibration as judgly, and judgly's two packs" width="860"></p>
 
-judgly and three open decision models served by Ollama (Nimble 9B, Tev1 4B and Tev1 0.8B) on
-the same held-out items of judgly's test sets: accuracy (up is better) against calibration error
-(ECE, left is better), with 95% intervals. Grey hollow points are the Ollama models as served;
-filled grey points are the same models given judgly's kind of calibration step (temperature
+judgly and four open decision models served by Ollama (Nimble 9B, Tev1 4B, Tev1 0.8B and Clef
+27B) on the same held-out items of judgly's test sets: accuracy (up is better) against
+calibration error (ECE, left is better), with 95% intervals. Hollow grey points (orange for Clef
+27B) are the Ollama models as served; filled points are the same models given judgly's kind of calibration step (temperature
 scaling, Guo et al. 2017: one temperature per question type, fitted by the same code on the same
 sample of 1,500 general and 500 stance items from judgly's training split). Blue is judgly with
 its default calibration as shipped, pale blue judgly without it. judgly's blue points were not
@@ -37,40 +37,46 @@ general questions it is H2, not the temperature. judgly's temperature refitted o
 which shares the sample and the code with the grey points, is in the tables below, not in the
 figure.
 
-- **Accuracy comes from the base model.** judgly's calibration does not raise it. judgly Gemma
-  4 12B, the largest model compared, was the most accurate or level with the most accurate on
-  every set: that is Gemma 4 12B's accuracy. At similar size, the trained decision models matched
-  or beat judgly Qwen3-4B on several sets (stance, typed-decisions, and Nimble 9B on JevBench).
+- **Accuracy comes from the base model.** judgly's calibration does not raise it. The two
+  largest models, Clef 27B and judgly Gemma 4 12B, were the most accurate: Clef 27B was ahead of
+  judgly Gemma 4 12B's default on general final (where that default is H2; Gemma 4 12B's own
+  temperature readout was level with it), level with it on general confirm, typed-decisions,
+  JevBench and stance, and behind it on the two flagged tiers. At similar size, the trained
+  decision models matched or beat judgly Qwen3-4B on several sets (stance, typed-decisions, and
+  Nimble 9B on JevBench).
 - **judgly's calibration lead came from its calibration step.** Against the models as served,
   judgly's defaults had the lowest calibration error on most sets, but not all: as served, Tev1 4B
-  had a lower ECE than both judgly defaults on stance final (0.041 against 0.087 and 0.093), and
-  Nimble 9B and Tev1 4B were better calibrated than judgly Qwen3-4B on typed-decisions. Given the
-  same temperature fitted on the same data, Nimble 9B and Tev1 land in the same range as judgly on
-  most sets, sometimes better and sometimes worse. judgly's own temperature, refitted on that same
-  sample, had a higher ECE than all three calibrated external models on stance final and on general
-  final-flagged.
+  and Clef 27B had a lower ECE than both judgly defaults on stance final (0.041 and 0.047 against
+  0.087 and 0.093), Nimble 9B, Tev1 4B and Clef 27B were better calibrated than judgly Qwen3-4B on
+  typed-decisions, and Clef 27B was level with judgly Gemma 4 12B on typed-decisions and JevBench.
+  Given the same temperature fitted on the same data, the external models land in the same range
+  as judgly on most sets, sometimes better and sometimes worse. judgly's own temperature, refitted
+  on that same sample, had a higher ECE than all four calibrated external models on stance final
+  and on general final-flagged.
 - **The temperature usually carries over to unseen kinds of questions, but not always.** It made
-  Nimble 9B and Tev1 4B worse calibrated on typed-decisions (ECE and Brier score), raised their
+  Nimble 9B, Tev1 4B and Clef 27B worse calibrated on typed-decisions (ECE and Brier score), and
+  Clef 27B also on general final and JevBench, where it was well calibrated as served (its yes/no
+  temperature, fitted on toxicity questions, flattened answers it mostly got right); it raised
   Brier scores on JevBench although their ECE fell there, and made Tev1 4B slightly worse on the
   final tiers, where it was already well calibrated as served. Some of the ECE gains are nearly
   flat answers at the search's upper bound for the temperature (below).
-- **judgly Gemma 4 12B is the slowest per request** (below; judgly asks each question in up to
-  four option orders, in process; the Ollama models read it once, over HTTP).
+- **Clef 27B is the slowest per request, then judgly Gemma 4 12B** (below; judgly asks each
+  question in up to four option orders, in process; the Ollama models read it once, over HTTP).
 
 These are judgly's own test sets, with the caveats listed under
-[Comparison with dedicated decision models](https://github.com/judgly/judgly/blob/v0.2.1/README.md#comparison-with-dedicated-decision-models),
+[Comparison with dedicated decision models](https://github.com/judgly/judgly/blob/v0.2.2/README.md#comparison-with-dedicated-decision-models),
 which has the tables. Every accuracy and calibration number for judgly on this page can be
 recomputed from the per-item results committed in docs/results/.
 
-<p align="center"><img src="https://raw.githubusercontent.com/judgly/judgly/v0.2.1/docs/assets/results/compare-timing.svg" alt="Median seconds per request with the 95th percentile, for Tev1 0.8B, Tev1 4B, judgly Qwen3-4B, Nimble 9B and judgly Gemma 4 12B" width="640"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/judgly/judgly/v0.2.2/docs/assets/results/compare-timing.svg" alt="Median seconds per request with the 95th percentile, for Tev1 0.8B, Tev1 4B, judgly Qwen3-4B, Nimble 9B, judgly Gemma 4 12B and Clef 27B" width="640"></p>
 
 Median time per request (bar) and 95th percentile (whisker) on 100 items, one request at a time,
 on an Apple M3 Max: Tev1 0.8B 0.08 s, Tev1 4B 0.29 s, judgly Qwen3-4B 0.32 s, Nimble 9B 0.53 s,
-judgly Gemma 4 12B 0.96 s.
+judgly Gemma 4 12B 0.96 s, Clef 27B 1.87 s.
 
 ## How it works
 
-<p align="center"><img src="https://raw.githubusercontent.com/judgly/judgly/v0.2.1/docs/assets/how-it-works.svg" alt="The state is read once and cached; each question branches from the cached state; the option-letter probabilities go through a calibration step (a temperature per question type, or a small head) to become calibrated probabilities." width="860"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/judgly/judgly/v0.2.2/docs/assets/how-it-works.svg" alt="The state is read once and cached; each question branches from the cached state; the option-letter probabilities go through a calibration step (a temperature per question type, or a small head) to become calibrated probabilities." width="860"></p>
 
 1. The model reads your text (the *state*) once, and llama.cpp caches it.
 2. Every question branches from that cache on its own, so questions never see each other.
@@ -85,7 +91,7 @@ judgly Gemma 4 12B 0.96 s.
    in the model). Neither changes the model.
 
 For a fixed model file, build and hardware, the same request gives the same numbers every
-time. [docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/methods.md)
+time. [docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/methods.md)
 describes the method and the evaluation in detail.
 
 ## Installation
@@ -117,7 +123,7 @@ pip install judgly
 ```
 
 The model file is downloaded from Hugging Face the first time a pack is loaded, and its
-SHA-256 is checked. See [docs/installation.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/installation.md) for building from source,
+SHA-256 is checked. See [docs/installation.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/installation.md) for building from source,
 using a model file you already have, and troubleshooting.
 
 ## Quickstart
@@ -149,17 +155,17 @@ Gemma 4 12B on an M3 Max, loading takes about 22 seconds with the file already d
 > calibration, the per-type temperature. On the fresh final tier (Check-COVID, n = 1,343) its ECE
 > was 0.087 for Gemma 4 12B and 0.093 for Qwen3-4B, worse than the H2 stance heads' 0.048 and
 > 0.052; on the untouched confirm tier (ClimateCheck, n = 1,780) it was 0.052 and 0.106, better
-> than H2's 0.078 and 0.183 ([docs/calibration.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/calibration.md#results-of-the-two-options)). Stance calibration varies a lot between kinds of
+> than H2's 0.078 and 0.183 ([docs/calibration.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/calibration.md#results-of-the-two-options)). Stance calibration varies a lot between kinds of
 > claims and evidence: treat its probabilities with more caution than the general ones.
 > `heads=False` gives the raw letter probabilities, which rank the answers but are overconfident.
 
-More examples are in [examples/](https://github.com/judgly/judgly/tree/v0.2.1/examples):
-[stance_check.py](https://github.com/judgly/judgly/blob/v0.2.1/examples/stance_check.py),
-[many_questions.py](https://github.com/judgly/judgly/blob/v0.2.1/examples/many_questions.py),
-[async_usage.py](https://github.com/judgly/judgly/blob/v0.2.1/examples/async_usage.py),
-[thresholds.py](https://github.com/judgly/judgly/blob/v0.2.1/examples/thresholds.py) (choosing a confidence threshold) and
-[own_calibration.py](https://github.com/judgly/judgly/blob/v0.2.1/examples/own_calibration.py) (checking calibration on your own labelled
-data). [docs/usage.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/usage.md) is the guide.
+More examples are in [examples/](https://github.com/judgly/judgly/tree/v0.2.2/examples):
+[stance_check.py](https://github.com/judgly/judgly/blob/v0.2.2/examples/stance_check.py),
+[many_questions.py](https://github.com/judgly/judgly/blob/v0.2.2/examples/many_questions.py),
+[async_usage.py](https://github.com/judgly/judgly/blob/v0.2.2/examples/async_usage.py),
+[thresholds.py](https://github.com/judgly/judgly/blob/v0.2.2/examples/thresholds.py) (choosing a confidence threshold) and
+[own_calibration.py](https://github.com/judgly/judgly/blob/v0.2.2/examples/own_calibration.py) (checking calibration on your own labelled
+data). [docs/usage.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/usage.md) is the guide.
 
 ## Question types
 
@@ -173,9 +179,9 @@ A question may name a `format`, which selects a calibration head. `"stance"` (do
 support the claim, contradict it, or neither?) has its own calibration. By default that is the
 per-type temperature, whose ECE on the final tier (Check-COVID) was 0.087 (Gemma 4 12B) and 0.093
 (Qwen3-4B), well above the 0.05 bar; the H2 stance heads were around the bar there (0.048 and
-0.052) and missed the dev-tier bar ([docs/calibration.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/calibration.md#results-of-the-two-options)). A question with `format` unset, or with a format the pack has no head
+0.052) and missed the dev-tier bar ([docs/calibration.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/calibration.md#results-of-the-two-options)). A question with `format` unset, or with a format the pack has no head
 for, uses the general head (the pack's heads entry `"*"`); "general" in this page means exactly
-that. See [docs/question-formats.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/question-formats.md).
+that. See [docs/question-formats.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/question-formats.md).
 
 ## Switching models
 
@@ -188,7 +194,7 @@ Engine.load("qwen3-4b-q8")          # a built-in pack
 Engine.load("path/to/my-pack")      # a pack directory you built
 ```
 
-[docs/model-packs.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/model-packs.md) explains how to build a pack for another model.
+[docs/model-packs.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/model-packs.md) explains how to build a pack for another model.
 
 ## Calibration options
 
@@ -206,32 +212,36 @@ pre-registered comparison of the two on a tier nothing had read before:
 | `qwen3-4b-q8` | temperature (confirmed) | temperature (confirmed) |
 
 `Engine.load(pack)` uses these defaults; `calibration="h2"`, `"temperature"` or `"raw"` chooses
-one for every format. [docs/calibration.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/calibration.md#results-of-the-two-options)
+one for every format. [docs/calibration.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/calibration.md#results-of-the-two-options)
 has the results of both options (including the 0.1.0 H2 results on the fresh final tier), and
-[docs/calibration-options.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/calibration-options.md)
+[docs/calibration-options.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/calibration-options.md)
 how they were fitted and compared, with every number.
 
 ## Comparison with dedicated decision models
 
-Ollama 0.35.0 serves three open models trained for this kind of typed decision: **Nimble 9B**
-(`nimble:9b`, Bespoke Labs, a fine-tune of Qwen3.5-9B) and **Tev1 4B** and **Tev1 0.8B**
-(`tev1:4b`, `tev1:0.8b`, Together AI, fine-tunes of Qwen3.5-4B and Qwen3.5-0.8B). Each was asked
-every item of judgly's held-out test sets (17,482 items) through Ollama's `/v1/systemone`
+Ollama serves open models trained for this kind of typed decision. Four were compared:
+**Nimble 9B** (`nimble:9b`, Bespoke Labs, a fine-tune of Qwen3.5-9B), **Tev1 4B** and **Tev1
+0.8B** (`tev1:4b`, `tev1:0.8b`, Together AI, fine-tunes of Qwen3.5-4B and Qwen3.5-0.8B), and
+**Clef 27B** (`clef:27b`, Cloudflare, post-trained from Qwen3.8-27B, served at 4 bits; added
+on 2026-10-03). Each was
+asked every item of judgly's held-out test sets (17,482 items) through Ollama's `/v1/systemone`
 endpoint, with default tags and settings, as a user would run them, and their probabilities were
-scored by the same code as judgly's. The protocol, runner and scorer were frozen before any of
-these models answered a test item. judgly was not run again: its rows are the pack defaults from
+scored by the same code as judgly's. The protocol, runner and scorer were frozen before the first
+three models answered a test item; Clef was run with the same files, unchanged, after a decision
+recorded before it answered any item. The first three were served by Ollama 0.35.0 and Clef by
+0.35.1, which Clef requires and which no longer serves the first three's recorded tags. judgly was not run again: its rows are the pack defaults from
 the committed per-item dumps. The comparison is descriptive: no criterion was set, and every
 number is reported. The record is in
-[docs/results/external-comparison/](https://github.com/judgly/judgly/tree/v0.2.1/docs/results/external-comparison),
+[docs/results/external-comparison/](https://github.com/judgly/judgly/tree/v0.2.2/docs/results/external-comparison),
 and `make compare-score` rebuilds every result from the committed answers, byte for byte.
 
 **The same calibration for every system.** As served, the Ollama models have no calibration step,
 while judgly's defaults do. A control with its own protocol
-([calibrated/](https://github.com/judgly/judgly/tree/v0.2.1/docs/results/external-comparison/calibrated))
+([calibrated/](https://github.com/judgly/judgly/tree/v0.2.2/docs/results/external-comparison/calibrated))
 therefore gave each of them judgly's kind of temperature step: one temperature per question type
 (temperature scaling, Guo et al. 2017), fitted by the same code on the same sample of judgly's
-training split (1,500 general and 500 stance items; the models refused 49 general items that
-have no text, so theirs were fitted on 1,451). The protocol's files were hashed at 09:24 by the
+training split (1,500 general and 500 stance items; Nimble 9B and Tev1 refused 49 general items
+that have no text, so theirs were fitted on 1,451). The protocol's files were hashed at 09:24 by the
 author's own record, the same minute the run log starts; they were first committed together with
 the results, so nothing in the repository timestamps the freeze independently. judgly's H2
 cannot be fitted for the external models, because Ollama does not expose their internal state.
@@ -245,11 +255,13 @@ final from 0.087 and 0.093 to 0.114 and 0.111. On that footing (point values; th
 paired intervals only against judgly's defaults), the calibrated external models' ECE was below
 both refitted judgly packs on stance final and general final-flagged, and for Tev1 4B and Tev1
 0.8B on stance final-flagged; above both for Tev1 4B on stance confirm and general final, Tev1
-0.8B on stance confirm, and Nimble 9B on typed-decisions and stance final-flagged; and otherwise
-between the two, or within 0.002 of them (Tev1 on JevBench). Four fitted temperatures (Tev1 4B
-score, Tev1 0.8B yes/no and score, and judgly Qwen3-4B score when refitted on the sample) reached
-the search's upper bound, 54.6; at that temperature the answers of that type are almost flat, so
-a low ECE for them means uninformative answers, not good ones.
+0.8B on stance confirm, Nimble 9B on typed-decisions and stance final-flagged, and Clef 27B on
+general final and JevBench; and otherwise between the two, or within 0.002 of them (Tev1 on
+JevBench). Four fitted temperatures (Tev1 4B score, Tev1 0.8B yes/no and score, and judgly
+Qwen3-4B score when refitted on the sample) reached the search's upper bound, 54.6, and Clef
+27B's yes/no temperature (50.3) came close to it; at such a temperature the answers of that type
+are almost flat, so a low ECE for them means uninformative answers, not good ones, and answers
+that were mostly right become underconfident (Clef 27B on general final and JevBench).
 
 **The tables.** Accuracy is the top answer against the gold label (a temperature does not change
 it), ECE uses the top label and ten bins, and the Brier score is summed over the options against
@@ -263,7 +275,7 @@ score together; `make compare-figures` splits them. Scored against the gold labe
 numbers differ slightly from the benchmarks' own scoring in docs/calibration.md (judgly Gemma 4
 12B's JevBench accuracy is 0.844 here and 0.840 there). The 95% intervals, paired differences, the final-flagged tiers and judgly's other
 calibrations are in
-[docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/methods.md#comparison-with-dedicated-decision-models).
+[docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/methods.md#comparison-with-dedicated-decision-models).
 
 **confirm, general (5 families new to judgly)**
 
@@ -272,6 +284,7 @@ calibrations are in
 | Nimble 9B | 2,500 | 0.481 | 0.229 | 0.059 | 0.702 | 0.607 |
 | Tev1 4B | 2,500 | 0.479 | 0.142 | 0.065 | 0.681 | 0.620 |
 | Tev1 0.8B | 2,500 | 0.378 | 0.154 | 0.043 | 0.701 | 0.678 |
+| Clef 27B | 2,500 | 0.531 | 0.114 | 0.047 | 0.585 | 0.573 |
 | judgly Gemma 4 12B, default | 2,500 | 0.509 | 0.051 | — | 0.562 | — |
 | judgly Qwen3-4B, default | 2,500 | 0.484 | 0.047 | — | 0.597 | — |
 | judgly Gemma 4 12B, temperature refitted on the sample | 2,500 | 0.509 | — | 0.072 | — | 0.578 |
@@ -284,6 +297,7 @@ calibrations are in
 | Nimble 9B | 1,780 | 0.595 | 0.264 | 0.068 | 0.657 | 0.545 |
 | Tev1 4B | 1,780 | 0.630 | 0.185 | 0.104 | 0.542 | 0.495 |
 | Tev1 0.8B | 1,780 | 0.451 | 0.304 | 0.204 | 0.794 | 0.703 |
+| Clef 27B | 1,780 | 0.645 | 0.150 | 0.076 | 0.510 | 0.480 |
 | judgly Gemma 4 12B, default | 1,780 | 0.655 | 0.052 | — | 0.476 | — |
 | judgly Qwen3-4B, default | 1,780 | 0.568 | 0.106 | — | 0.581 | — |
 | judgly Gemma 4 12B, temperature refitted on the sample | 1,780 | 0.655 | — | 0.044 | — | 0.474 |
@@ -296,6 +310,7 @@ calibrations are in
 | Nimble 9B | 7,879 | 0.674 | 0.129 | 0.043 | 0.450 | 0.429 |
 | Tev1 4B | 7,879 | 0.657 | 0.052 | 0.070 | 0.431 | 0.442 |
 | Tev1 0.8B | 7,879 | 0.504 | 0.086 | 0.040 | 0.588 | 0.570 |
+| Clef 27B | 7,879 | 0.760 | 0.032 | 0.124 | 0.328 | 0.391 |
 | judgly Gemma 4 12B, default | 7,879 | 0.737 | 0.020 | — | 0.348 | — |
 | judgly Qwen3-4B, default | 7,879 | 0.656 | 0.034 | — | 0.440 | — |
 | judgly Gemma 4 12B, temperature refitted on the sample | 7,879 | 0.760 | — | 0.038 | — | 0.326 |
@@ -308,6 +323,7 @@ calibrations are in
 | Nimble 9B | 1,343 | 0.817 | 0.113 | 0.061 | 0.312 | 0.297 |
 | Tev1 4B | 1,343 | 0.826 | 0.041 | 0.048 | 0.264 | 0.265 |
 | Tev1 0.8B | 1,343 | 0.577 | 0.111 | 0.027 | 0.556 | 0.536 |
+| Clef 27B | 1,343 | 0.826 | 0.047 | 0.035 | 0.267 | 0.266 |
 | judgly Gemma 4 12B, default | 1,343 | 0.827 | 0.087 | — | 0.280 | — |
 | judgly Qwen3-4B, default | 1,343 | 0.778 | 0.093 | — | 0.357 | — |
 | judgly Gemma 4 12B, temperature refitted on the sample | 1,343 | 0.827 | — | 0.114 | — | 0.288 |
@@ -320,6 +336,7 @@ calibrations are in
 | Nimble 9B | 2,000 | 0.702 | 0.052 | 0.181 | 0.415 | 0.500 |
 | Tev1 4B | 2,000 | 0.613 | 0.038 | 0.127 | 0.485 | 0.550 |
 | Tev1 0.8B | 2,000 | 0.434 | 0.186 | 0.074 | 0.674 | 0.647 |
+| Clef 27B | 2,000 | 0.715 | 0.032 | 0.155 | 0.387 | 0.459 |
 | judgly Gemma 4 12B, default | 2,000 | 0.700 | 0.028 | — | 0.401 | — |
 | judgly Qwen3-4B, default | 2,000 | 0.576 | 0.137 | — | 0.578 | — |
 | judgly Gemma 4 12B, temperature refitted on the sample | 2,000 | 0.702 | — | 0.044 | — | 0.407 |
@@ -332,6 +349,7 @@ calibrations are in
 | Nimble 9B | 231 | 0.779 | 0.118 | 0.072 | 0.283 | 0.299 |
 | Tev1 4B | 195 | 0.790 | 0.104 | 0.099 | 0.306 | 0.322 |
 | Tev1 0.8B | 195 | 0.672 | 0.093 | 0.079 | 0.455 | 0.451 |
+| Clef 27B | 231 | 0.883 | 0.035 | 0.181 | 0.162 | 0.270 |
 | judgly Gemma 4 12B, default | 231 | 0.844 | 0.067 | — | 0.221 | — |
 | judgly Qwen3-4B, default | 231 | 0.693 | 0.084 | — | 0.384 | — |
 | judgly Gemma 4 12B, temperature refitted on the sample | 231 | 0.836 | — | 0.105 | — | 0.225 |
@@ -342,20 +360,21 @@ calibrations are in
 | judgly Qwen3-4B, temperature refitted on the sample, on Tev1's items | 195 | 0.759 | — | 0.081 | — | 0.358 |
 
 On the final-flagged tiers (politeness and HealthFC, fresh families with known caveats), judgly's
-defaults were the more accurate on general questions (0.512 and 0.492 against 0.339 to 0.421). On
-stance (HealthFC) judgly Gemma 4 12B's default was the more accurate (0.750 against 0.474 to
-0.689); judgly Qwen3-4B's (0.718) was ahead of Nimble 9B and Tev1 0.8B and level with Tev1 4B
+defaults were the more accurate on general questions (0.512 and 0.492 against 0.339 to 0.472;
+Clef 27B's 0.472 was level with judgly Qwen3-4B's, -0.020 [-0.059, +0.016]). On stance (HealthFC)
+judgly Gemma 4 12B's default was the more accurate (0.750 against 0.474 to 0.689); judgly
+Qwen3-4B's (0.718) was ahead of Nimble 9B, Tev1 0.8B and Clef 27B (0.641) and level with Tev1 4B
 (0.689; paired difference -0.029, interval -0.059 to +0.000). With the equal calibration, ECE on
-general final-flagged was 0.042 (Nimble 9B), 0.082 (Tev1 4B) and 0.004 (Tev1 0.8B, nearly flat
-answers at the temperature bound, mean top probability 0.335), against 0.106 and 0.037 for
-judgly's defaults and 0.107 and 0.104 for its refitted temperature; on stance final-flagged it
-was 0.215, 0.062 and 0.039, against 0.069 and 0.052 for judgly's defaults and 0.093 and 0.065
-refitted. Nimble 9B on HealthFC is the largest calibration gap that the equal calibration left
+general final-flagged was 0.042 (Nimble 9B), 0.082 (Tev1 4B), 0.004 (Tev1 0.8B, nearly flat
+answers at the temperature bound, mean top probability 0.335) and 0.088 (Clef 27B), against 0.106
+and 0.037 for judgly's defaults and 0.107 and 0.104 for its refitted temperature; on stance
+final-flagged it was 0.215, 0.062, 0.039 and 0.091, against 0.069 and 0.052 for judgly's defaults
+and 0.093 and 0.065 refitted. Nimble 9B on HealthFC is the largest calibration gap that the equal calibration left
 (+0.146 [+0.094, +0.181] against judgly Gemma 4 12B's default).
 
 **How judgly was fitted, and the test sets.** judgly's language models are never trained. Its
 calibration (H2 and the per-type temperatures) was fitted on the train split of its fit tier
-only ([data/registry.yaml](https://github.com/judgly/judgly/blob/v0.2.1/data/registry.yaml) lists
+only ([data/registry.yaml](https://github.com/judgly/judgly/blob/v0.2.2/data/registry.yaml) lists
 the sources); none of the test sets was used for fitting. The **confirm** tiers (five general
 families never used before, and ClimateCheck for stance) were built last; each judgly model read
 them once, for the pre-registered confirmation of the temperature, and each pack's default was
@@ -369,7 +388,11 @@ external benchmarks that judgly read in its release run and in two exploratory a
 external models read every item once, in this comparison.
 
 **What is known of the other models' training data.** As their providers document it, none of
-the confirm, final or final-flagged items is in either model's fine-tuning data. Nimble is a LoRA
+the confirm, final or final-flagged items is in Nimble's or Tev1's fine-tuning data. Cloudflare describes Clef's training data only as internal synthetic
+datasets, but reports evaluating Clef on Humicroedit and Amazon ESCI, the sources of two of
+judgly's test families (humour in general confirm, relevance in general final), on both of which
+Clef was the most accurate system; whether those items informed its training or model selection
+is not stated. Nimble is a LoRA
 fine-tune of Qwen3.5-9B; the checkpoint Ollama serves appears to be release v3-12026, whose
 training components include public banking77, multinli, boolq, ag_news, dbpedia and trec, as well
 as local components that are not documented and cannot be checked. Nimble's schema configuration
@@ -393,8 +416,11 @@ among the sources of the control's training sample (112 and 18 items).
 - **Option orders.** judgly averages each question over up to four option orders, a test-time
   ensemble known to improve both accuracy and calibration; the external models read each question
   once.
-- **Model size.** judgly's Gemma 4 12B has more parameters than any of the external models (9B,
-  4B and 0.8B). The like-for-like comparison by size is judgly Qwen3-4B against Tev1 4B.
+- **Model size.** judgly's Gemma 4 12B has more parameters than Nimble and Tev1 (9B, 4B and
+  0.8B), and Clef 27B more than any other system (at 4 bits against judgly's 8). The
+  like-for-like comparison by size is judgly Qwen3-4B against Tev1 4B.
+- **Two Ollama versions.** Clef 27B was answered under Ollama 0.35.1, the others under 0.35.0,
+  which could not be compared on the same model: 0.35.1 refuses the other models' recorded tags.
 - **Tev1's prompt.** Ollama's `/v1/systemone` sends a `{"context", "schema"}` prompt, while Tev1
   was trained on `{"state", "question", "options"}`, so Tev1 is measured as Ollama serves it,
   which may understate what it does with its own format. A run with its native format was
@@ -413,34 +439,41 @@ an Apple M3 Max (64 GB). The 95th percentile is the 96th of the 100 sorted times
 | Nimble 9B | 0.533 | 1.039 | 0.599 |
 | Tev1 4B | 0.289 | 0.567 | 0.321 |
 | Tev1 0.8B | 0.078 | 0.153 | 0.087 |
+| Clef 27B | 1.868 | 3.885 | 2.165 |
 | judgly Gemma 4 12B (default) | 0.960 | 1.732 | 0.994 |
 | judgly Qwen3-4B (default) | 0.321 | 0.557 | 0.333 |
 
 judgly ran in-process through its Python API and asked each question in up to four option
-orders; the Ollama models were asked over HTTP and read each question once.
+orders; the Ollama models were asked over HTTP and read each question once. Clef 27B was timed
+on 2026-10-04 under Ollama 0.35.1 (and macOS 27.0.1), the others on 2026-09-30.
 
-**In short.** judgly Gemma 4 12B was clearly the most accurate on general questions and
-JevBench and level with the best dedicated model on stance (Tev1 4B) and typed-decisions (Nimble
-9B). The dedicated models of 4 to 9B were level with judgly Qwen3-4B on general questions (Nimble
-9B slightly ahead on general final) and more accurate on the confirm and final stance tiers, on
-typed-decisions and, for Nimble 9B, on JevBench. As served, Tev1 4B had a lower ECE than both
-judgly defaults on stance final, and Nimble 9B and Tev1 4B were better calibrated than judgly
-Qwen3-4B on typed-decisions. With the same temperature, the dedicated models' ECE was level with
-judgly's defaults on general confirm. On stance final all three were better calibrated than both
-judgly packs; on stance confirm Nimble 9B and Tev1 4B fell between judgly's two packs, and Tev1
-0.8B was worse (0.204). On general final all three were above judgly Gemma 4 12B's default;
-against judgly Qwen3-4B's, Tev1 4B was clearly above, Nimble 9B marginally
-(+0.009 [+0.001, +0.022]) and Tev1 0.8B level (+0.006 [-0.004, +0.018]). judgly's own temperature, refitted on the
-same sample, also rose above its shipped calibration there (0.038 and 0.044 against 0.017 for
-Gemma 4 12B's shipped temperature and 0.034 for Qwen3-4B's), so much of that remaining gap comes
-with the fitting sample, not with H2. Nimble 9B stayed far above both judgly defaults on stance
-final-flagged (HealthFC, 0.215), and the temperature made Nimble 9B and Tev1 4B worse than as
-served on typed-decisions. On other data, the picture may differ.
+**In short.** Clef 27B, the largest model compared, and judgly Gemma 4 12B were the most
+accurate: Clef 27B was ahead of judgly Gemma 4 12B's default (H2) on general final, level with it
+on general confirm, typed-decisions, JevBench and stance, and behind it on the flagged tiers.
+judgly Gemma 4 12B was clearly more accurate than the dedicated models of 4 to 9B on general
+questions and JevBench and level with the best of them on stance (Tev1 4B) and typed-decisions
+(Nimble 9B). Those models were level with judgly Qwen3-4B on general questions (Nimble 9B
+slightly ahead on general final) and more accurate on the confirm and final stance tiers, on
+typed-decisions and, for Nimble 9B, on JevBench. As served, Tev1 4B and Clef 27B had a lower ECE
+than both judgly defaults on stance final, and Nimble 9B, Tev1 4B and Clef 27B were better
+calibrated than judgly Qwen3-4B on typed-decisions. With the same temperature, the dedicated
+models' ECE was level with judgly's defaults on general confirm. On stance final all four were
+better calibrated than both judgly packs; on stance confirm Nimble 9B, Tev1 4B and Clef 27B fell
+between judgly's two packs, and Tev1 0.8B was worse (0.204). On general final all four were above
+judgly Gemma 4 12B's default; against judgly Qwen3-4B's, Tev1 4B and Clef 27B were clearly above,
+Nimble 9B marginally (+0.009 [+0.001, +0.022]) and Tev1 0.8B level (+0.006 [-0.004, +0.018]).
+judgly's own temperature, refitted on the same sample, also rose above its shipped calibration
+there (0.038 and 0.044 against 0.017 for Gemma 4 12B's shipped temperature and 0.034 for
+Qwen3-4B's), so much of the remaining gap of Nimble 9B and Tev1 comes with the fitting sample,
+not with H2; Clef 27B's (0.124) comes from its yes/no temperature. Nimble 9B stayed far above both
+judgly defaults on stance final-flagged (HealthFC, 0.215), and the temperature made Nimble 9B,
+Tev1 4B and Clef 27B worse than as served on typed-decisions, and Clef 27B also on general final
+and JevBench. On other data, the picture may differ.
 
 **Other systems' published figures.** The only benchmark on which several other systems report
 is typed-decisions (gold is a teacher model's output; the card gives the teacher's
 self-agreement as 0.735). These figures are quoted from their sources and were not reproduced
-here ([docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/methods.md#related-work)
+here ([docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/methods.md#related-work)
 has the sources, the calibration figures and the JevBench board):
 
 | system | how it works | accuracy | who measured |
@@ -480,19 +513,19 @@ Please read these before using judgly for anything that matters.
   judgly's Qwen3-4B (0.591 with H2, 0.576 with its default, the temperature) is at or below
   open-alternative-jev's untrained Qwen3.5-4B (0.593 to 0.595) in accuracy and worse calibrated
   (ECE 0.126 with H2 and 0.137 with the temperature, against 0.062 to 0.118)
-  ([other systems' published figures](https://github.com/judgly/judgly/blob/v0.2.1/docs/methods.md#related-work)).
+  ([other systems' published figures](https://github.com/judgly/judgly/blob/v0.2.2/docs/methods.md#related-work)).
   On judgly's own test tiers, the dedicated decision models Nimble 9B and Tev1 4B, run as served,
   were more accurate than judgly's Qwen3-4B on the confirm and final stance tiers and on
   typed-decisions, and Nimble 9B also on JevBench (on the flagged HealthFC stance tier judgly's
   Qwen3-4B was ahead of Nimble 9B and level with Tev1 4B)
-  ([Comparison with dedicated decision models](https://github.com/judgly/judgly/blob/v0.2.1/README.md#comparison-with-dedicated-decision-models)).
+  ([Comparison with dedicated decision models](https://github.com/judgly/judgly/blob/v0.2.2/README.md#comparison-with-dedicated-decision-models)).
 - **judgly's calibration lead is its calibration step, not its models.** Against the dedicated
   decision models as served, judgly's defaults were the best calibrated on most test sets, but
   Tev1 4B was better calibrated than both judgly defaults on stance final, and Nimble 9B and Tev1 4B than judgly
   Qwen3-4B on typed-decisions; given the same temperature fitted on the same data, those models
   came close to judgly on most sets, and on stance final and general final-flagged they were better
   calibrated than judgly's own temperature refitted on the same sample
-  ([Comparison with dedicated decision models](https://github.com/judgly/judgly/blob/v0.2.1/README.md#comparison-with-dedicated-decision-models)).
+  ([Comparison with dedicated decision models](https://github.com/judgly/judgly/blob/v0.2.2/README.md#comparison-with-dedicated-decision-models)).
   The step is temperature scaling (Guo et al. 2017), or H2 for Gemma 4 12B general questions;
   anyone can apply the former to another model's probabilities.
 - **A temperature fitted on one kind of question may not suit another.** judgly's temperatures
@@ -503,7 +536,7 @@ Please read these before using judgly for anything that matters.
   0.306 to 0.322). Check calibration on your own questions (below).
 - **Accuracy is modest, and calibration does not raise it.** On the fresh final tier, accuracy
   with H2 was 0.737 (Gemma 4 12B) and 0.639 (Qwen3-4B) on general questions and 0.812 and 0.773
-  on stance, slightly below the raw readout ([docs/calibration.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/calibration.md#results-of-the-two-options)); the temperature leaves the top
+  on stance, slightly below the raw readout ([docs/calibration.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/calibration.md#results-of-the-two-options)); the temperature leaves the top
   answer, and so the accuracy, at the raw readout's (0.760, 0.656, 0.827, 0.778). Calibration
   tells you *when* to trust an answer; it does not make the model know more. The general H2
   heads cost 1.7 to 2.3 points there and changed accuracy by -2.2 to +1.5 points on
@@ -514,11 +547,11 @@ Please read these before using judgly for anything that matters.
   head is overconfident on typed-decisions (answers at about 0.85 were right 61% of the time; ECE
   0.126, and 0.137 with Qwen3-4B's default, the temperature), and both stance H2 heads are
   overconfident on HealthVer and HealthFC. The pooled numbers hide weaker families 
-  ([docs/calibration.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/calibration.md#results-of-the-two-options)), and some stay poorly calibrated: financial tweets with the Qwen3-4B H2 head (ECE
+  ([docs/calibration.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/calibration.md#results-of-the-two-options)), and some stay poorly calibrated: financial tweets with the Qwen3-4B H2 head (ECE
   0.253), WiC with either H2 head (0.325 Gemma 4 12B, 0.259 Qwen3-4B) and legal reasoning with
   the Gemma 4 12B H2 head (0.151), on the final-seen and dev tiers. The per-family tables of
   the calibration records (`tables.md` in
-  [docs/results/](https://github.com/judgly/judgly/tree/v0.2.1/docs/results)) give the
+  [docs/results/](https://github.com/judgly/judgly/tree/v0.2.2/docs/results)) give the
   temperature's numbers for the same families.
 - **Stance calibration misses its bar with the default option.** With the default stance
   calibration, the per-type temperature, ECE on Check-COVID was 0.087 (Gemma 4 12B) and 0.093
@@ -535,14 +568,14 @@ Please read these before using judgly for anything that matters.
   0.96 s (Gemma 4 12B) and 0.32 s (Qwen3-4B) on 100 items, against 0.08 to 0.53 s for the Ollama
   decision models (judgly asks up to four option orders per question, in process; they read one,
   over HTTP)
-  ([Comparison with dedicated decision models](https://github.com/judgly/judgly/blob/v0.2.1/README.md#comparison-with-dedicated-decision-models)).
+  ([Comparison with dedicated decision models](https://github.com/judgly/judgly/blob/v0.2.2/README.md#comparison-with-dedicated-decision-models)).
 - **Weak spots:** score questions such as sentence difficulty (CEFR-SP, six levels: 0.390 and
   0.253 accuracy with H2) and similarity ratings, word sense (the heads lowered WiC accuracy
   on the dev tier), legal reasoning (CaseHOLD near chance), stance on scientific abstracts and on
   health questions, and politeness ratings (a relative of a fit family; Gemma 4 12B H2 ECE 0.106)
-  ([model cards](https://github.com/judgly/judgly/blob/v0.2.1/docs/model-cards/gemma4-12b-q8.md#known-weaknesses)).
+  ([model cards](https://github.com/judgly/judgly/blob/v0.2.2/docs/model-cards/gemma4-12b-q8.md#known-weaknesses)).
 - **Calibration was measured on public benchmarks.** On your task it may differ; check it on a
-  few hundred labelled cases ([docs/calibration.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/calibration.md)).
+  few hundred labelled cases ([docs/calibration.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/calibration.md)).
 - **macOS on Apple Silicon only** (Metal). Linux and CUDA builds are not set up.
 - **English only.** All fitting and evaluation data is English.
 - **One request at a time per engine.** The native handle is not re-entrant. `Engine`
@@ -551,49 +584,49 @@ Please read these before using judgly for anything that matters.
   (`truncated`).
 - **The model may have seen the benchmarks.** judgly holds whole task families out from the
   head, but it cannot hold anything out from the model's own training data
-  ([docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/methods.md#what-the-evaluation-can-and-cannot-show)).
+  ([docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/methods.md#what-the-evaluation-can-and-cannot-show)).
 - **Only the fresh final and final-flagged tiers are held out from development.** The
   final-seen numbers are on families read during development and may be optimistic. One smoke
   run with a throwaway head scored 173 items drawn from the fresh tiers (80 general, 93 stance);
   the tiers were not changed because of it
-  ([docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/methods.md#what-the-evaluation-can-and-cannot-show)).
+  ([docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/methods.md#what-the-evaluation-can-and-cannot-show)).
 
 ## Reproducing the numbers
 
 Everything that produced the release numbers is in this repository: the data registry
 with pinned dataset revisions and licences, the tier builder, the contamination checker, the
-resumable pipeline and the self-tests. [docs/reproduce.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/reproduce.md) lists the exact
+resumable pipeline and the self-tests. [docs/reproduce.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/reproduce.md) lists the exact
 commands, the hardware and where the outputs go. The outputs behind every accuracy and calibration
-number above are committed in [docs/results/](https://github.com/judgly/judgly/tree/v0.2.1/docs/results), with SHA-256 checksums of the large inputs that are
+number above are committed in [docs/results/](https://github.com/judgly/judgly/tree/v0.2.2/docs/results), with SHA-256 checksums of the large inputs that are
 not committed; the speed figures come from the run logs, which are not committed, except the
 single-request timings of the comparison with dedicated decision models, which are in
-[docs/results/external-comparison/](https://github.com/judgly/judgly/tree/v0.2.1/docs/results/external-comparison)
+[docs/results/external-comparison/](https://github.com/judgly/judgly/tree/v0.2.2/docs/results/external-comparison)
 with the comparison's record and its equal-calibration control (`make compare-score`,
 `make compare-figures`).
 
 ## Documentation
 
-- [Installation](https://github.com/judgly/judgly/blob/v0.2.1/docs/installation.md)
-- [Usage](https://github.com/judgly/judgly/blob/v0.2.1/docs/usage.md)
-- [Question formats](https://github.com/judgly/judgly/blob/v0.2.1/docs/question-formats.md)
-- [Model packs](https://github.com/judgly/judgly/blob/v0.2.1/docs/model-packs.md)
-- [Calibration](https://github.com/judgly/judgly/blob/v0.2.1/docs/calibration.md): what ECE and selective accuracy mean, the results of
+- [Installation](https://github.com/judgly/judgly/blob/v0.2.2/docs/installation.md)
+- [Usage](https://github.com/judgly/judgly/blob/v0.2.2/docs/usage.md)
+- [Question formats](https://github.com/judgly/judgly/blob/v0.2.2/docs/question-formats.md)
+- [Model packs](https://github.com/judgly/judgly/blob/v0.2.2/docs/model-packs.md)
+- [Calibration](https://github.com/judgly/judgly/blob/v0.2.2/docs/calibration.md): what ECE and selective accuracy mean, the results of
   both calibration options, and how to check or fit calibration on your own data
-- [Calibration options](https://github.com/judgly/judgly/blob/v0.2.1/docs/calibration-options.md): the H2 head and the
+- [Calibration options](https://github.com/judgly/judgly/blob/v0.2.2/docs/calibration-options.md): the H2 head and the
   per-type temperature, how they were compared, and every number of both
-- [Methods](https://github.com/judgly/judgly/blob/v0.2.1/docs/methods.md): the method and the evaluation design
-- [Reproduce](https://github.com/judgly/judgly/blob/v0.2.1/docs/reproduce.md)
-- [FAQ](https://github.com/judgly/judgly/blob/v0.2.1/docs/faq.md)
-- Model cards: [Gemma 4 12B](https://github.com/judgly/judgly/blob/v0.2.1/docs/model-cards/gemma4-12b-q8.md),
-  [Qwen3-4B](https://github.com/judgly/judgly/blob/v0.2.1/docs/model-cards/qwen3-4b-q8.md)
-- [Licences](https://github.com/judgly/judgly/blob/v0.2.1/docs/licences.md): the code, heads, results, models and datasets
-- [Security](https://github.com/judgly/judgly/blob/v0.2.1/SECURITY.md)
+- [Methods](https://github.com/judgly/judgly/blob/v0.2.2/docs/methods.md): the method and the evaluation design
+- [Reproduce](https://github.com/judgly/judgly/blob/v0.2.2/docs/reproduce.md)
+- [FAQ](https://github.com/judgly/judgly/blob/v0.2.2/docs/faq.md)
+- Model cards: [Gemma 4 12B](https://github.com/judgly/judgly/blob/v0.2.2/docs/model-cards/gemma4-12b-q8.md),
+  [Qwen3-4B](https://github.com/judgly/judgly/blob/v0.2.2/docs/model-cards/qwen3-4b-q8.md)
+- [Licences](https://github.com/judgly/judgly/blob/v0.2.2/docs/licences.md): the code, heads, results, models and datasets
+- [Security](https://github.com/judgly/judgly/blob/v0.2.2/SECURITY.md)
 
 ## Contributing
 
-Issues and pull requests are welcome. See [CONTRIBUTING.md](https://github.com/judgly/judgly/blob/v0.2.1/CONTRIBUTING.md) for building,
-testing and the rules for changes, [CODE_OF_CONDUCT.md](https://github.com/judgly/judgly/blob/v0.2.1/CODE_OF_CONDUCT.md),
-[CHANGELOG.md](https://github.com/judgly/judgly/blob/v0.2.1/CHANGELOG.md) for what changed, and [SECURITY.md](https://github.com/judgly/judgly/blob/v0.2.1/SECURITY.md) for reporting a
+Issues and pull requests are welcome. See [CONTRIBUTING.md](https://github.com/judgly/judgly/blob/v0.2.2/CONTRIBUTING.md) for building,
+testing and the rules for changes, [CODE_OF_CONDUCT.md](https://github.com/judgly/judgly/blob/v0.2.2/CODE_OF_CONDUCT.md),
+[CHANGELOG.md](https://github.com/judgly/judgly/blob/v0.2.2/CHANGELOG.md) for what changed, and [SECURITY.md](https://github.com/judgly/judgly/blob/v0.2.2/SECURITY.md) for reporting a
 vulnerability privately.
 
 ## Credits and acknowledgements
@@ -618,7 +651,7 @@ judgly is built on other people's work. Thank you to:
   Apache-2.0), a close open design: a frozen model whose option-letter logits are read
   at fixed positions, with an optional temperature and no other training. It reports 0.737
   accuracy on typed-decisions with Qwen3.6-27B (self-measured; see
-  [docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/methods.md#related-work)).
+  [docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/methods.md#related-work)).
 - **Cygnet** by blockbrain-ai
   ([blockbrain-ai/cygnet-recipe](https://github.com/blockbrain-ai/cygnet-recipe), MIT), the
   closest open design (the same model): a frozen Gemma-4-12B-it with one temperature, joint
@@ -640,7 +673,7 @@ judgly is built on other people's work. Thank you to:
   Qwen3-8B that score each candidate answer against the state by contrastive similarity,
   trained on about 91 million examples and aimed at agent decisions and verification. Its model
   card reports parity with Jev on computer-use, gaming and tool-calling tasks; I have not run
-  it on judgly's benchmark (see [docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/methods.md#related-work)).
+  it on judgly's benchmark (see [docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/methods.md#related-work)).
 - **Nimble** by Bespoke Labs and Maheswaran Sathiamoorthy
   ([bespokelabs/Bespoke-Nimble-9B](https://huggingface.co/bespokelabs/Bespoke-Nimble-9B),
   weights Apache-2.0; [bespokelabsai/nimble](https://github.com/bespokelabsai/nimble); the
@@ -662,7 +695,7 @@ judgly is built on other people's work. Thank you to:
   **Ninja**. The **Hugging Face Hub** hosts the models and most of the datasets.
 - **The datasets** the heads are fitted and evaluated on, and their authors. Each one is listed
   with its licence, pinned revision and citation in
-  [docs/reproduce.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/reproduce.md#data-sources).
+  [docs/reproduce.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/reproduce.md#data-sources).
 - **The papers behind the method**: reading and calibrating answer-letter probabilities on
   multiple-choice questions (Kadavath et al. 2022), option-order bias and averaging over
   option orders (Zheng et al. 2024; Pezeshkpour and Hruschka 2024), contextual calibration
@@ -670,20 +703,20 @@ judgly is built on other people's work. Thank you to:
   2017; judgly's per-type temperature is their method, applied per question type), proper
   scoring rules (Gneiting and Raftery 2007), and the observation in the GPT-4
   technical report (OpenAI 2023) that post-training makes models overconfident. See
-  [docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/methods.md#references).
+  [docs/methods.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/methods.md#references).
 
-The full licence notices are in [NOTICE](https://github.com/judgly/judgly/blob/v0.2.1/NOTICE) and [LICENSES/](https://github.com/judgly/judgly/tree/v0.2.1/LICENSES).
+The full licence notices are in [NOTICE](https://github.com/judgly/judgly/blob/v0.2.2/NOTICE) and [LICENSES/](https://github.com/judgly/judgly/tree/v0.2.2/LICENSES).
 
 ## Citation
 
-If judgly is useful in your work, the metadata in [CITATION.cff](https://github.com/judgly/judgly/blob/v0.2.1/CITATION.cff) gives a
+If judgly is useful in your work, the metadata in [CITATION.cff](https://github.com/judgly/judgly/blob/v0.2.2/CITATION.cff) gives a
 citation (GitHub shows it under "Cite this repository"). Please also cite llama.cpp, the model
 you used, and the datasets behind any number you quote.
 
 ## Licence
 
-The code is under the Apache License 2.0 ([LICENSE](https://github.com/judgly/judgly/blob/v0.2.1/LICENSE), [NOTICE](https://github.com/judgly/judgly/blob/v0.2.1/NOTICE)). Model weights
+The code is under the Apache License 2.0 ([LICENSE](https://github.com/judgly/judgly/blob/v0.2.2/LICENSE), [NOTICE](https://github.com/judgly/judgly/blob/v0.2.2/NOTICE)). Model weights
 are not included; they are downloaded under their own licences. The general head is under
 Apache-2.0. The stance head is under CC-BY-SA-4.0 because it is fitted on share-alike data
 (MNLI, VitaminC, FEVER, SNLI and SciNLI). The results snapshot and figures are under CC-BY-4.0; see
-[docs/licences.md](https://github.com/judgly/judgly/blob/v0.2.1/docs/licences.md).
+[docs/licences.md](https://github.com/judgly/judgly/blob/v0.2.2/docs/licences.md).

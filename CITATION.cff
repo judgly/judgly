@@ -3,8 +3,8 @@ message: "If you use judgly, please cite it as below. Please also cite llama.cpp
 title: "judgly: calibrated, deterministic judgments from open language models"
 abstract: "A weekend hobby project that asks a frozen open language model typed questions about a text, reads the answer-letter probabilities at one position via llama.cpp, and calibrates them with a small fitted head or a per-question-type temperature. Questions branch from one cached reading of the text and are isolated from each other. The idea of typed, calibrated decisions comes from TypeSafe's Jev. Calibration was measured on public benchmarks for two model packs (Gemma 4 12B and Qwen3-4B); heads do not transfer between models, and the stance heads missed their pre-set calibration bar."
 type: software
-version: "0.2.1"
-date-released: "2026-09-30"
+version: "0.2.2"
+date-released: "2026-10-04"
 authors:
   - family-names: Lassmann
     given-names: Timo
@@ -195,6 +195,14 @@ references:
     repository-code: "https://github.com/togethercomputer/tev1"
     license: MIT
     notes: "The MIT licence of the code names the open-jev contributors as copyright holder; the model cards (https://huggingface.co/togethercomputer/Tev1-4B-experimental, https://huggingface.co/togethercomputer/Tev1-0.8B-experimental) describe the weights' licence as being finalized. Introduced in Together AI's blog post 'How to train your own Jev for $17' by Hassan El Mghari (https://www.together.ai/blog/how-to-train-your-own-jev). Run through Ollama as tev1:4b and tev1:0.8b in the external comparison; no weights are redistributed."
+  - type: software
+    title: "Clef"
+    authors:
+      - name: "Cloudflare"
+    year: 2026
+    url: "https://huggingface.co/Cloudflare/clef"
+    license: Apache-2.0
+    notes: "A decision model post-trained from Qwen/Qwen3.8-27B; weights licence and copyright line (Alibaba Cloud) as in the repository's LICENSE. Announced in Cloudflare's blog post 'Introducing Clef: our open-source decision models, and new RL fine-tuning platform' (https://blog.cloudflare.com/clef-decision-models/, 2026-10-01). Run through Ollama as clef:27b (Ollama ID 2bb11a61d1fb, Q4_K_M) in the external comparison; no weights are redistributed."
   - type: software
     title: Ollama
     authors:

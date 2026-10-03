@@ -20,7 +20,7 @@ from scipy.optimize import minimize_scalar
 HERE = Path(__file__).parent
 REC = HERE.parent
 ROOT = Path(sys.argv[1])
-MODELS = ["nimble:9b", "tev1:4b", "tev1:0.8b"]
+MODELS = ["nimble:9b", "tev1:4b", "tev1:0.8b", "clef:27b"]
 PACKS = {"gemma": "gemma4-12b-q8", "qwen": "qwen3-4b-q8"}
 DEFAULT = {("gemma", "general"): "h2", ("gemma", "stance"): "temperature",
            ("qwen", "general"): "temperature", ("qwen", "stance"): "temperature"}

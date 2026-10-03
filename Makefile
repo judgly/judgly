@@ -18,8 +18,9 @@
 #   make compare-score                CPU only: rescore the committed answers of the external comparison
 #                                     and of its equal-calibration control with their frozen scorers and
 #                                     check the results equal the committed ones
-#   make compare-run                  ask the Ollama models of the external comparison again (Ollama >= 0.35.0,
-#                                     models pulled), into COMPARE_OUT (default results-compare), never the record
+#   make compare-run                  ask the Ollama models of the external comparison again (Ollama 0.35.0 for
+#                                     nimble/tev1, 0.35.1 for clef; models pulled), into COMPARE_OUT (default
+#                                     results-compare), never the record
 #
 #   QUICK=1          small tiers (data/tiers-quick, results-quick) for a smoke run in minutes; the
 #                    fresh final and final-flagged tiers and the confirm tier are neither extracted
@@ -312,8 +313,9 @@ compare-figures:
 # docs/results/external-comparison: judgly and the Ollama decision models on the same test items.
 # compare-score rebuilds every result from the committed answers with the frozen scorer (a
 # hash-checked copy run in a scratch workspace; needs the tiers from make data) and checks that
-# each equals the committed one, byte for byte. compare-run asks the models again (Ollama >= 0.35.0
-# with nimble:9b, tev1:4b and tev1:0.8b pulled; tags can move, so the model IDs are compared with
+# each equals the committed one, byte for byte. compare-run asks the models again (Ollama 0.35.0
+# for nimble:9b, tev1:4b and tev1:0.8b, 0.35.1 for clef:27b, which refuses the first three; the
+# models pulled; tags can move, so the model IDs are compared with
 # the recorded ones) and writes answers and results to COMPARE_OUT, never into the record.
 # compare-score also rescores the equal-calibration control (external-comparison/calibrated: the
 # same per-type temperature fitted for every system on the same training sample) from its

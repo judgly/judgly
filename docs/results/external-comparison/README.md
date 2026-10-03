@@ -1,7 +1,8 @@
 # External comparison: judgly and the Ollama decision models on the same test items
 
-This directory is the complete record of one descriptive comparison: three decision models
-served by Ollama (`nimble:9b`, `tev1:4b`, `tev1:0.8b`) and judgly's two packs (Gemma 4 12B and
+This directory is the complete record of one descriptive comparison: four decision models
+served by Ollama (`nimble:9b`, `tev1:4b`, `tev1:0.8b`, and `clef:27b`, added on 2026-10-03) and
+judgly's two packs (Gemma 4 12B and
 Qwen3-4B) on the same held-out items of judgly's test tiers, scored by the same code. No
 criterion decides anything; every number is reported. Hardware, versions, model digests, dates
 and commands are in [ENVIRONMENT.md](ENVIRONMENT.md).
@@ -15,6 +16,11 @@ and commands are in [ENVIRONMENT.md](ENVIRONMENT.md).
   Qwen3.5-4B and Qwen3.5-0.8B; code under MIT, the weights' licence is described by Together AI
   as being finalized ([Hugging Face](https://huggingface.co/togethercomputer/Tev1-4B-experimental),
   [code and data recipe](https://github.com/togethercomputer/tev1)).
+- **Clef** (`clef:27b`), by Cloudflare, added on 2026-10-03 ([NOTES.md](NOTES.md)): a 27B
+  decision model post-trained from Qwen/Qwen3.8-27B, weights under Apache-2.0
+  ([Hugging Face](https://huggingface.co/Cloudflare/clef),
+  [announcement](https://blog.cloudflare.com/clef-decision-models/)); served by Ollama as a
+  Q4_K_M GGUF with a 16,384-token context.
 - **judgly**, Gemma 4 12B (`gemma4-12b-q8`) and Qwen3-4B (`qwen3-4b-q8`), each as raw, with the
   H2 head, with the per-type temperature and as the pack default (Gemma: H2 for general,
   temperature for stance; Qwen: temperature for both). judgly's language models are frozen and
@@ -24,8 +30,9 @@ and commands are in [ENVIRONMENT.md](ENVIRONMENT.md).
   comparison: its probabilities are the committed per-item dumps
   (`docs/results/<pack>/<format>/items-{raw,h2,temperature}-<tier>.tsv.gz`).
 
-The external models were run as a user would run them: through Ollama 0.35.0's `/v1/systemone`
-endpoint, default tags and settings, one request per item, no calibration fitted by us. The
+The external models were run as a user would run them: through Ollama's `/v1/systemone`
+endpoint (0.35.0 for Nimble and Tev1, 0.35.1 for Clef, which requires it; [ENVIRONMENT.md](ENVIRONMENT.md)),
+default tags and settings, one request per item, no calibration fitted by us. The
 base models are by the Qwen team (Alibaba Cloud); Ollama is by the Ollama project. We thank all
 of them for releasing their work openly.
 
@@ -57,7 +64,14 @@ to be release v3-12026, whose training components include public banking77, mult
 ag_news, dbpedia and trec as well as local components that are not documented. Its schema
 configuration lists a registered evaluation "jevbench-eval" (534 items; judgly uses the 231
 public JevBench items) and marks its own "bespoke-eval" set as "reporting_only"; whether JevBench
-items informed training or model selection is not stated. The frozen protocol read this as
+items informed training or model selection is not stated. Cloudflare describes Clef's
+training data only as internal synthetic datasets. Its model card reports an evaluation on the
+Decision Index 0.2.1 suite, which includes Humicroedit (the whole `humour` family of the general
+confirm tier) and Amazon ESCI (the whole `relevance` family of the general final tier), as well
+as BANKING77 and MMLU (sources of the control's training sample); whether those items are
+judgly's, or whether they informed Clef's training or model selection, is not stated
+([NOTES.md](NOTES.md), 2026-10-04). Clef was the most accurate system on both families
+(relevance 0.643, humour 0.428). The frozen protocol read this as
 Bespoke registering JevBench as "reporting only", and gives that as its reason for reporting bench
 split into typed-decisions and JevBench (`by_source`); that reading was wrong, and the split is
 kept as the protocol fixed it.
@@ -68,13 +82,14 @@ kept as the protocol fixed it.
 |---|---|
 | `PROTOCOL.md` | the protocol, written before any external model answered a test item and amended once before it was frozen: the handling of items too long for Tev1's context changed from flagging them to reporting them as coverage, after a smoke test on three dev items showed that Ollama refuses such prompts instead of truncating them |
 | `PROTOCOL.sha256` | SHA-256 of `PROTOCOL.md`, `run_external.py` and `score_external.py`, and the time they were frozen (2026-09-29 16:47) |
-| `NOTES.md` | the one decision taken after freezing, at 16:54, while the `tev1:4b` run (started 16:47) was in progress and before any of its answers were looked at: every model is tested only through `/v1/systemone` |
+| `NOTES.md` | the decisions taken after freezing: at 16:54 on 2026-09-29, while the `tev1:4b` run (started 16:47) was in progress and before any of its answers were looked at, that every model is tested only through `/v1/systemone`; at 16:02 on 2026-10-03, before Clef answered any item, that `clef:27b` is added with the same items, runner and scorer, and why Nimble and Tev1 could not be rerun under Ollama 0.35.1 |
 | `run_external.py` | the frozen runner: one request per item, answers appended to `answers/<model>/<format>-<tier>.jsonl` |
 | `score_external.py` | the frozen scorer |
-| `chain.sh`, `run.log` | the script that ran the three models one after the other, and its log |
-| `answers/<model>/<format>-<tier>.jsonl.gz` | the 52,446 raw responses (17,482 items for each of the three models), one JSON line per item: `id`, Ollama's `response` (or `null`), `error` (or `null`) and `seconds` (wall-clock time of the request) |
+| `chain.sh`, `run.log` | the script that ran the first three models one after the other, and its log |
+| `run-clef.sh`, `run-clef.log` | the script that ran Clef (the test items, then the control's training sample), and its log |
+| `answers/<model>/<format>-<tier>.jsonl.gz` | the 69,928 raw responses (17,482 items for each of the four models), one JSON line per item: `id`, Ollama's `response` (or `null`), `error` (or `null`) and `seconds` (wall-clock time of the request) |
 | `final/result-<model>.json`, `final/score-<model>.txt` | the scorer run with one model, on the items that model answered, with judgly on the same items |
-| `final/result-all.json`, `final/score-all.txt` | the scorer run with all three models, on the items every model answered |
+| `final/result-all.json`, `final/score-all.txt` | the scorer run with all four models, on the items every model answered (until 2026-10-04, with the first three; Clef answered every item, so the earlier systems' numbers in it did not change) |
 | `interim/result-external.json` | an interim scoring: the frozen scorer, run once at 20:56 while `nimble:9b` was still running, on Nimble 9B's answers then available (general and stance confirm, 7,424 of the 7,879 general final items); nothing was changed after it |
 | `time_single.py`, `final/timing.json` | single-request timings (below) |
 | `reproduce.py` | the wrapper behind `make compare-score` and `make compare-run` (below) |
@@ -91,7 +106,7 @@ counted (`items_over_context`).
 
 ## Coverage
 
-Nimble answered all 17,482 items. Both Tev1 models answered all but 36 items, the same 36 for
+Nimble and Clef answered all 17,482 items. Both Tev1 models answered all but 36 items, the same 36 for
 both: JevBench items whose prompt Ollama counted at 2,410 to 4,042 tokens, over Tev1's limit of
 2,050, which Ollama refused with HTTP 400 ("input is never truncated"). Those items are recorded
 in the answers with their error; the per-model Tev1 results and the all-model results score
@@ -109,7 +124,8 @@ Two kinds of timing are recorded, and neither compares like with like:
   request per system that is not counted (the warm-up item is the first of the 100 and is timed
   again). `p95_s` there is the 96th of the 100 sorted times, without interpolation; `latency_s`
   uses numpy's interpolated percentile. Medians: judgly Gemma 4 12B 0.960 s, judgly Qwen3-4B
-  0.321 s, `nimble:9b` 0.533 s, `tev1:4b` 0.289 s, `tev1:0.8b` 0.078 s. judgly ran in-process
+  0.321 s, `nimble:9b` 0.533 s, `tev1:4b` 0.289 s, `tev1:0.8b` 0.078 s, `clef:27b` 1.868 s
+  (measured on 2026-10-04 under Ollama 0.35.1 and macOS 27.0.1, on the same machine and items). judgly ran in-process
   through its Python API with the pack default calibration and asked each question in up to four
   option orders; the Ollama models were asked over HTTP and read each question once.
 
@@ -127,8 +143,12 @@ Two kinds of timing are recorded, and neither compares like with like:
   most test sets, not all.
 - **Option orders.** judgly averages each question over up to four option orders, which is known
   to improve accuracy and calibration; the external models read each question once.
-- **Model size.** judgly's Gemma 4 12B is larger than every external model; the like-for-like
-  comparison by size is Qwen3-4B against Tev1 4B.
+- **Model size.** judgly's Gemma 4 12B is larger than Nimble and Tev1 and smaller than Clef
+  (27B, at 4-bit against judgly's 8-bit); the like-for-like comparison by size is Qwen3-4B against
+  Tev1 4B.
+- **Two Ollama versions.** Clef was answered under Ollama 0.35.1 and the other models under
+  0.35.0; 0.35.1 refuses the other models' recorded tags, so the two versions could not be
+  compared on the same model ([ENVIRONMENT.md](ENVIRONMENT.md)).
 - **Tev1's prompt.** Ollama 0.35.0's `/v1/systemone` builds a `{"context", "schema"}` prompt
   (`decision/systemone.go`), while Tev1 was trained on `{"state", "question", "options"}`
   (Tev1 model card). Tev1 is therefore measured as Ollama serves it, which may understate what
@@ -136,7 +156,8 @@ Two kinds of timing are recorded, and neither compares like with like:
   declined at 16:54, while the `tev1:4b` run was in progress ([NOTES.md](NOTES.md)).
 - **Tev1's context.** 36 JevBench items were refused (above).
 - **Training-data overlap** is as documented by the providers (above); undocumented components
-  of Nimble's training data cannot be checked.
+  of Nimble's training data, and Clef's synthetic training data, cannot be checked. Clef was
+  evaluated by Cloudflare on the sources of two of judgly's test families (humour, relevance).
 - **Timing** was measured differently in kind (in-process against HTTP, up to four option orders
   against one; above).
 
@@ -153,7 +174,7 @@ versions, so another numpy may break the byte identity): it checks the frozen sc
 `PROTOCOL.sha256` and the tier files against `data/tiers.sha256` and
 `data/tiers-confirm.sha256`, builds a scratch workspace (the tier files, judgly's committed dumps
 gunzipped, and a copy of the scorer with the answers gunzipped next to it), runs the scorer once
-per model and once with all three, and checks that every `result-*.json` and `score-*.txt` it
+per model and once with all four, and checks that every `result-*.json` and `score-*.txt` it
 produces equals the committed one byte for byte. `tests/test_external_comparison.py` runs the
 same check. It then rescores the equal-calibration control in `calibrated/` the same way (see
 its README). The frozen files are never edited.
@@ -161,11 +182,14 @@ its README). The frozen files are never edited.
 ## Rerunning the models (Ollama, hours)
 
 ```bash
-ollama pull nimble:9b && ollama pull tev1:4b && ollama pull tev1:0.8b
+ollama pull nimble:9b && ollama pull tev1:4b && ollama pull tev1:0.8b && ollama pull clef:27b
 make compare-run                       # or COMPARE_OUT=DIR
 ```
 
-`make compare-run` runs `reproduce.py run`: it needs Ollama 0.35.0 or later and the three
+`make compare-run` runs `reproduce.py run`. As the record was made, it needs two Ollama versions:
+0.35.0 for `nimble:9b`, `tev1:4b` and `tev1:0.8b` (0.35.1 refuses their recorded tags with
+"does not support decision"), and 0.35.1 for `clef:27b` (which requires it); a single run with
+one version will record refusals for the models that version does not serve. It needs the four
 models pulled, compares their IDs with the recorded ones (Ollama tags can move, so a tag pulled
 later may name other weights; a differing ID is reported), copies the frozen runner into
 `COMPARE_OUT` (default `results-compare/`), asks every item (resumable; before each resume, answer
@@ -173,6 +197,7 @@ lines that record a failed request other than an HTTP 400 refusal are moved to
 `<format>-<tier>.transient.jsonl` so that those items are asked again, since the frozen runner
 skips every id it has written), scores the new answers
 the same way into `COMPARE_OUT/final/` and reports whether they equal the record. It refuses an
-output directory inside this one. The record's run took about five hours on the machine above.
+output directory inside this one. The record's runs took about five hours (the first three models) and eight and a half (Clef) on
+the machine above.
 No tolerance has been set for what counts as the same result on other hardware or Ollama
 versions.

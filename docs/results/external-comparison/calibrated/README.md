@@ -1,6 +1,6 @@
 # The same calibration for every system: an equal-calibration control
 
-In the comparison one directory up, the three Ollama decision models were scored as served,
+In the comparison one directory up, the Ollama decision models were scored as served,
 with no calibration step, while judgly was scored with the calibration step it ships, fitted
 by us on judgly's training split. This control asks how much of judgly's lower calibration
 error came from that step rather than from its models. Every system gets the same step:
@@ -30,6 +30,15 @@ criterion decides anything.
    of the record, and the frozen files still match `PROTOCOL.sha256`.
 4. **Scored, after the runs finished at 09:58.** `score_calibrated.py` was run once. It wrote
    `result.json`; its printed output is `result.txt`.
+5. **2026-10-04, Clef added.** `clef:27b` was added to the comparison
+   ([NOTES.md](../NOTES.md), 2026-10-03 16:02) and answered the same training sample with the
+   frozen runner from 05:03 to 05:52 (`../run-clef.log`). `score_calibrated.py`'s model list
+   was extended to `["nimble:9b", "tev1:4b", "tev1:0.8b", "clef:27b"]`, its only change, and its
+   new SHA-256 recorded in `PROTOCOL.sha256` with a dated line; it was then run once more and
+   `result.json` and `result.txt` replaced. The point values of the earlier systems are
+   unchanged; their intervals moved slightly (2,245 of them, in the third decimal): the scorer
+   draws every resample from one generator in order, and Clef's resamples, drawn first on general
+   confirm, shift the draws of everything after them.
 
 The external models' answers were then gzipped for the record (`gzip -n -9`, byte-reproducible;
 the frozen runner and scorer read them uncompressed), and judgly's train-split readout of the
@@ -52,11 +61,12 @@ choice). By source:
 Two of these sources are in the external models' documented training data (MultiNLI for both,
 Banking77 for both); those models may have seen these items in training.
 
-**Refusals.** All three external models refused the same 49 general items with HTTP 400
+**Refusals.** Nimble 9B and both Tev1 models refused the same 49 general items with HTTP 400
 (`{"error":"state must not be empty"}`): choice questions that have no text to read, only the
-question and its options (MMLU 19, QASC 16, CommonsenseQA 14). The external models' general
-temperatures were therefore fitted on 1,451 items (451 choice), and their stance temperatures on
-all 500. judgly answers questions without a text, and its refit below uses all 1,500.
+question and its options (MMLU 19, QASC 16, CommonsenseQA 14). Their general temperatures were
+therefore fitted on 1,451 items (451 choice), and their stance temperatures on all 500. Clef,
+under Ollama 0.35.1, answered all 2,000, and judgly answers questions without a text; their
+refits use all 1,500 general items.
 
 ## The calibration
 
@@ -86,6 +96,7 @@ which Ollama does not expose. It appears here only as part of Gemma 4 12B's gene
 | Nimble 9B (fitted on 1,451 / 500) | 2.116 | 1.487 | 12.905 | 2.650 |
 | Tev1 4B (1,451 / 500) | 1.884 | 1.075 | **54.598** | 1.559 |
 | Tev1 0.8B (1,451 / 500) | 1.359 | **54.598** | **54.598** | 1.606 |
+| Clef 27B (1,500 / 500) | 1.412 | 50.338 | 1.499 | 1.393 |
 | judgly Gemma 4 12B, refitted (1,500 / 500) | 4.368 | 8.296 | 6.487 | 7.849 |
 | judgly Qwen3-4B, refitted (1,500 / 500) | 8.535 | 10.239 | **54.598** | 13.237 |
 | judgly Gemma 4 12B, shipped (whole train split) | 3.461 | 7.491 | 6.538 | 7.151 |
@@ -96,7 +107,10 @@ the log loss would have fallen further with a larger T. At T = 54.6 the answers 
 almost flat: Tev1 0.8B's yes/no answers on the final tier have a mean top probability of 0.503,
 and its answers to the three-level politeness ratings 0.335 (`compare-control-by-type.json` in
 `docs/assets/results`). A low ECE for such answers says that they are uninformative, not that
-they are useful; their Brier score and log loss stay near those of a uniform answer. The large
+they are useful; their Brier score and log loss stay near those of a uniform answer. Clef's
+yes/no temperature, 50.338, is just below the bound and flattens its yes/no answers the same way
+(mean top probability 0.514 on the final tier's yes/no questions, against 0.886 as served): 485 of
+the sample's 500 yes/no items are Civil Comments toxicity questions. The large
 score temperatures of every system but judgly Gemma 4 12B mean that, on the sample's score
 questions (461 of 500 are Civil Comments toxicity ratings), the raw answers were far more
 confident than they were right.
@@ -119,15 +133,15 @@ ECE, as served and with the equal calibration, and judgly's defaults (95% interv
 with Brier, log loss and every paired difference). Accuracy is the same with and without the
 temperature.
 
-| test set | Nimble 9B | Tev1 4B | Tev1 0.8B | judgly Gemma 4 12B, default | judgly Qwen3-4B, default |
-|---|---|---|---|---|---|
-| confirm, general | 0.229 → 0.059 | 0.142 → 0.065 | 0.154 → 0.043 | 0.051 | 0.047 |
-| confirm, stance | 0.264 → 0.068 | 0.185 → 0.104 | 0.304 → 0.204 | 0.052 | 0.106 |
-| final, general | 0.129 → 0.043 | 0.052 → 0.070 | 0.086 → 0.040 | 0.020 | 0.034 |
-| final, stance | 0.113 → 0.061 | 0.041 → 0.048 | 0.111 → 0.027 | 0.087 | 0.093 |
-| bench (typed-decisions and JevBench) | 0.057 → 0.164 | 0.042 → 0.120 | 0.178 → 0.066 | 0.029 | 0.128 |
-| final-flagged, general | 0.327 → 0.042 | 0.183 → 0.082 | 0.105 → 0.004 | 0.106 | 0.037 |
-| final-flagged, stance | 0.404 → 0.215 | 0.138 → 0.062 | 0.076 → 0.039 | 0.069 | 0.052 |
+| test set | Nimble 9B | Tev1 4B | Tev1 0.8B | Clef 27B | judgly Gemma 4 12B, default | judgly Qwen3-4B, default |
+|---|---|---|---|---|---|---|
+| confirm, general | 0.229 → 0.059 | 0.142 → 0.065 | 0.154 → 0.043 | 0.114 → 0.047 | 0.051 | 0.047 |
+| confirm, stance | 0.264 → 0.068 | 0.185 → 0.104 | 0.304 → 0.204 | 0.150 → 0.076 | 0.052 | 0.106 |
+| final, general | 0.129 → 0.043 | 0.052 → 0.070 | 0.086 → 0.040 | 0.032 → 0.124 | 0.020 | 0.034 |
+| final, stance | 0.113 → 0.061 | 0.041 → 0.048 | 0.111 → 0.027 | 0.047 → 0.035 | 0.087 | 0.093 |
+| bench (typed-decisions and JevBench) | 0.057 → 0.164 | 0.042 → 0.120 | 0.178 → 0.066 | 0.029 → 0.156 | 0.029 | 0.128 |
+| final-flagged, general | 0.327 → 0.042 | 0.183 → 0.082 | 0.105 → 0.004 | 0.173 → 0.088 | 0.106 | 0.037 |
+| final-flagged, stance | 0.404 → 0.215 | 0.138 → 0.062 | 0.076 → 0.039 | 0.148 → 0.091 | 0.069 | 0.052 |
 
 (On bench, judgly's values are on all 2,231 items; on Tev1's 2,195 they are 0.029 and 0.130.)
 
@@ -173,6 +187,13 @@ What this shows, and does not:
   Gemma 4 12B's (0.280; paired -0.014 [-0.030, +0.002]). By the Brier score the temperature also
   made Tev1 4B slightly worse on the final tiers (0.431 to 0.442 and 0.264 to 0.265) and Nimble 9B
   and Tev1 4B worse on bench (0.402 to 0.479 and 0.470 to 0.529).
+- **Clef 27B.** As served, Clef was already well calibrated on the final tiers and bench (ECE
+  0.032 on general final, 0.047 on stance final, 0.029 on bench); the temperature lowered its ECE
+  on the confirm, stance final and flagged tiers but raised it on general final (0.032 to 0.124)
+  and bench (0.029 to 0.156). The cause is its yes/no temperature (50.3, above): on general final
+  its yes/no ECE went from 0.066 to 0.307 and on bench from 0.064 to 0.306, while it got 82% of
+  those questions right (`compare-control-by-type.json`). Its choice and score temperatures (1.41
+  and 1.50) changed little.
 - **Flat answers.** Some of the lowest ECE values (Tev1 0.8B on politeness, 0.004) are those of
   nearly uniform answers at the temperature bound (above).
 
@@ -183,7 +204,7 @@ What this shows, and does not:
 | `PROTOCOL.md`, `PROTOCOL.sha256` | the protocol and the SHA-256 of the five frozen files, with the freeze time |
 | `sample.py`, `sample.json` | the sample's ids (frozen) |
 | `run_calibration.py`, `run.sh`, `run.log` | the runner (frozen), the script that ran it, and its log |
-| `answers/<model>/<format>-train.jsonl.gz` | the 6,000 raw answers (2,000 per model): `id`, Ollama's `response` (or `null`), `error` (or `null`), `seconds` |
+| `answers/<model>/<format>-train.jsonl.gz` | the 8,000 raw answers (2,000 per model): `id`, Ollama's `response` (or `null`), `error` (or `null`), `seconds` |
 | `score_calibrated.py` | the scorer (frozen) |
 | `result.json`, `result.txt` | its output: temperatures, and for every test set and external model the point values, intervals and paired differences of every system; the printed summary |
 | `judgly-train/<pack>-<format>-train.tsv.gz` | judgly's raw readout of the 2,000 sampled training items: the rows of `s1-eval --features results/<pack>/<format>/fitdev/features.feat --split train --rotations --dump-items` for the sampled ids, from judgly's cached feature files (2.8 GB, not committed) |
@@ -210,5 +231,6 @@ dump. `reproduce.py score --part control` runs the control alone;
 `make compare-figures` fits the temperatures again from the same committed inputs, checks every
 number of `result.json`, and draws the calibrated models in `compare-tiers`.
 
-Rerunning the models (`run.sh`) needs Ollama 0.35.0 or later with the three models pulled; the
-models' tags can move (see the comparison's README).
+Rerunning the models (`run.sh`) needed Ollama 0.35.0 with the three first models pulled, and
+Clef (`../run-clef.sh`) Ollama 0.35.1, which refuses the first three (see the comparison's
+README); the models' tags can move.

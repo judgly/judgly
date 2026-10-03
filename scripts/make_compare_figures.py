@@ -64,12 +64,12 @@ CONTROL = REC / "calibrated"
 OUT = ROOT / "docs" / "assets" / "results"
 MARKER = "<!-- external comparison: written by scripts/make_compare_figures.py -->"
 
-MODELS = ("nimble:9b", "tev1:4b", "tev1:0.8b")                  # the order of the recorded "all" run
-FILES = {"nimble:9b": "nimble_9b", "tev1:4b": "tev1_4b", "tev1:0.8b": "tev1_0.8b", "all": "all"}
-RUNS = {"nimble:9b": ["nimble:9b"], "tev1:4b": ["tev1:4b"], "tev1:0.8b": ["tev1:0.8b"], "all": list(MODELS)}
+MODELS = ("nimble:9b", "tev1:4b", "tev1:0.8b", "clef:27b")      # the order of the recorded "all" run
+FILES = {"nimble:9b": "nimble_9b", "tev1:4b": "tev1_4b", "tev1:0.8b": "tev1_0.8b", "clef:27b": "clef_27b", "all": "all"}
+RUNS = {m: [m] for m in MODELS} | {"all": list(MODELS)}
 # As in score_external.py:
 EPS = 1e-12
-CTX = {"tev1:4b": 2050, "tev1:0.8b": 2050, "nimble:9b": 8194}
+CTX = {"tev1:4b": 2050, "tev1:0.8b": 2050, "nimble:9b": 8194}   # others: no limit (CTX.get)
 TIERS = [("general", "confirm"), ("stance", "confirm"), ("general", "final"), ("stance", "final"),
          ("general", "bench"), ("general", "final-flagged"), ("stance", "final-flagged")]
 JUDGLY = {"gemma": "gemma4-12b-q8", "qwen": "qwen3-4b-q8"}
@@ -85,29 +85,29 @@ SETS = [("confirm, general", "general/confirm", None),
         ("final, stance", "stance/final", None),
         ("typed-decisions", "general/bench", "typed_decisions"),
         ("JevBench, public items", "general/bench", "jevbench")]
-SHOWN = ("nimble:9b", "tev1:4b", "tev1:0.8b", "judgly-gemma-default", "judgly-qwen-default")
+SHOWN = (*MODELS, "judgly-gemma-default", "judgly-qwen-default")
 CALIBRATED = tuple(f"{m} calibrated" for m in MODELS)   # the equal-calibration control's rows
 FAINT = ("judgly-gemma-raw", "judgly-qwen-raw")
-LABEL = {"nimble:9b": "Nimble 9B", "tev1:4b": "Tev1 4B", "tev1:0.8b": "Tev1 0.8B",
+LABEL = {"nimble:9b": "Nimble 9B", "tev1:4b": "Tev1 4B", "tev1:0.8b": "Tev1 0.8B", "clef:27b": "Clef 27B",
          "judgly-gemma-default": "judgly Gemma 4 12B, default", "judgly-qwen-default": "judgly Qwen3-4B, default",
          "judgly-gemma-raw": "judgly Gemma 4 12B, raw", "judgly-qwen-raw": "judgly Qwen3-4B, raw"}
 LABEL |= {f"{m} calibrated": f"{LABEL[m]}, equal calibration" for m in MODELS}
 SERVED_LABEL = {m: f"{LABEL[m]}, as served" for m in MODELS}
-# judgly in blues (Gemma dark, Qwen light), the other models in greys told apart by shade and
-# marker: filled with the equal calibration, hollow and faint as served; judgly raw in its
-# pack's blue, hollow and faint.
-COLOUR = {"nimble:9b": "#3C3C3C", "tev1:4b": "#7A7A7A", "tev1:0.8b": "#ABABAB",
+# judgly in blues (Gemma dark, Qwen light), Nimble and Tev1 in greys told apart by shade and
+# marker, Clef in orange: filled with the equal calibration, hollow and faint as served; judgly
+# raw in its pack's blue, hollow and faint.
+COLOUR = {"nimble:9b": "#3C3C3C", "tev1:4b": "#7A7A7A", "tev1:0.8b": "#ABABAB", "clef:27b": "#D55E00",
           "judgly-gemma-default": "#0072B2", "judgly-qwen-default": "#56B4E9",
           "judgly-gemma-raw": "#0072B2", "judgly-qwen-raw": "#56B4E9"}
 COLOUR |= {f"{m} calibrated": COLOUR[m] for m in MODELS}
 HIGHLIGHT = ("judgly-gemma-default", "judgly-qwen-default")
-MARK = {"nimble:9b": "D", "tev1:4b": "^", "tev1:0.8b": "v", "judgly-gemma-default": "o",
+MARK = {"nimble:9b": "D", "tev1:4b": "^", "tev1:0.8b": "v", "clef:27b": "P", "judgly-gemma-default": "o",
         "judgly-qwen-default": "s", "judgly-gemma-raw": "o", "judgly-qwen-raw": "s"}
 MARK |= {f"{m} calibrated": MARK[m] for m in MODELS}
 # As in calibrated/score_calibrated.py:
 C_PACKS = {"gemma": "gemma4-12b-q8", "qwen": "qwen3-4b-q8"}
 C_TYPES = {0: "choice", 1: "bool", 2: "score"}
-RELIABILITY = ("nimble:9b", "tev1:4b", "judgly-gemma-default", "judgly-qwen-default")
+RELIABILITY = ("nimble:9b", "tev1:4b", "clef:27b", "judgly-gemma-default", "judgly-qwen-default")
 GREY = "#7F7F7F"
 BINS = 10
 TOL = 1e-9
@@ -272,7 +272,7 @@ def rescore(tiers: dict, judgly: dict, run: str, record: dict) -> tuple[dict, di
         xs, fits = {}, {}
         for m, a in systems.items():
             xs[m] = per_item([external_probs(byid[i], a[i]["response"]) for i in common], y)
-            fits[m] = np.array([a[i]["response"]["usage"]["input_tokens"] for i in common]) < CTX[m]
+            fits[m] = np.array([a[i]["response"]["usage"]["input_tokens"] for i in common]) < CTX.get(m, 10 ** 9)
         hs = [fnv(i) for i in common]
         for short, pack in JUDGLY.items():
             for cond in ("raw", "h2", "temperature"):
@@ -514,7 +514,7 @@ def point(results: dict, by_source: dict, key: str, source: str | None, system: 
 
 
 def fig_tiers(results: dict, by_source: dict) -> None:
-    fig, axes = plt.subplots(2, 3, figsize=(8.4, 6.9))
+    fig, axes = plt.subplots(2, 3, figsize=(8.4, 7.2))
     for ax, (label, key, source) in zip(axes.flat, SETS):
         for m in MODELS:   # as served (hollow, faint, no bars) joined to the same model calibrated
             a0, e0 = (lambda r: (r["accuracy"][0], r["ece"][0]))(point(results, by_source, key, source, m)[0])
@@ -551,15 +551,16 @@ def fig_tiers(results: dict, by_source: dict) -> None:
     judgly = tuple(LABEL[s] for s in HIGHLIGHT + FAINT)
     # columns of the legend (filled column by column): external with the equal calibration |
     # external as served | judgly default | judgly raw
-    keys = list(calibrated + served + judgly[:2] + (None,) + judgly[2:] + (None,))
+    pad = (None,) * (len(MODELS) - 2)
+    keys = list(calibrated + served + judgly[:2] + pad + judgly[2:] + pad)
     fig.legend([handles[labels.index(s)] if s else blank for s in keys], [s or "" for s in keys],
                loc="lower center", ncol=4, frameon=False, bbox_to_anchor=(0.5, 0), fontsize=8)
-    fig.tight_layout(rect=(0, 0.13, 1, 1))
+    fig.tight_layout(rect=(0, 0.15, 1, 1))
     save(fig, "compare-tiers")
 
 
 def fig_reliability(per_tier: dict, results: dict) -> None:
-    fig, axes = plt.subplots(2, 4, figsize=(8.4, 4.9), sharex=True, sharey=True)
+    fig, axes = plt.subplots(2, len(RELIABILITY), figsize=(9.6, 4.4), sharex=True, sharey=True)
     for r, fmt in enumerate(("general", "stance")):
         key = f"{fmt}/confirm"
         for c, system in enumerate(RELIABILITY):
@@ -591,7 +592,7 @@ def fig_reliability(per_tier: dict, results: dict) -> None:
 
 
 TIMING = {"tev1:0.8b": "tev1:0.8b", "tev1:4b": "tev1:4b", "judgly-qwen-default": "judgly qwen3-4b-q8",
-          "nimble:9b": "nimble:9b", "judgly-gemma-default": "judgly gemma4-12b-q8"}
+          "nimble:9b": "nimble:9b", "judgly-gemma-default": "judgly gemma4-12b-q8", "clef:27b": "clef:27b"}
 
 
 def fig_timing(timing: dict) -> None:
@@ -606,7 +607,7 @@ def fig_timing(timing: dict) -> None:
     if set(timing["systems"]) != set(TIMING.values()):
         raise Mismatch(f"make_compare_figures: timing.json systems {sorted(timing['systems'])}")
     rows.sort(key=lambda r: r[1])
-    fig, ax = plt.subplots(figsize=(6.4, 2.9))
+    fig, ax = plt.subplots(figsize=(6.4, 3.2))
     for y, (system, median, p95) in enumerate(rows):
         ax.barh(y, median, color=COLOUR[system], height=0.62, zorder=3)
         ax.errorbar([median], [y], xerr=[[0], [p95 - median]], color="#222222", capsize=3, elinewidth=0.9,
@@ -615,7 +616,7 @@ def fig_timing(timing: dict) -> None:
     ax.set_yticks(range(len(rows)))
     ax.set_yticklabels([LABEL[r[0]].replace(", default", "") for r in rows], fontsize=8.5)
     ax.set_xlabel("seconds per request (bar: median; whisker: 95th percentile)", fontsize=8.5)
-    ax.set_xlim(0, 2.0)
+    ax.set_xlim(0, 4.4)
     ax.grid(axis="y", visible=False)
     fig.tight_layout()
     save(fig, "compare-timing")
@@ -660,12 +661,13 @@ def captions(results: dict, by_source: dict, timing: dict) -> str:
         "docs/results/external-comparison (with its equal-calibration control in calibrated/) and judgly's",
         "committed per-item dumps; every item is rescored and every plotted number checked against the",
         "record's result files before anything is written. The external models were run as served by",
-        "Ollama 0.35.0 (`/v1/systemone`); judgly's calibration was fitted by us on similar question types",
+        "Ollama (`/v1/systemone`; 0.35.0 for Nimble and Tev1, 0.35.1 for Clef, which requires it); judgly's",
+        "calibration was fitted by us on similar question types",
         "(see the caveats in the README and in docs/methods.md).", "",
         "## compare-tiers.svg", "",
-        "*What it shows:* accuracy (y) against ECE (x) on six test sets. Each of Nimble 9B, Tev1 4B and",
-        "Tev1 0.8B appears twice: as served by Ollama (hollow, faint grey, without bars) and with the equal",
-        "calibration (filled grey, with bars), joined by a thin line. The equal calibration is temperature",
+        "*What it shows:* accuracy (y) against ECE (x) on six test sets. Each of Nimble 9B, Tev1 4B,",
+        "Tev1 0.8B (greys) and Clef 27B (orange) appears twice: as served by Ollama (hollow, faint, without",
+        "bars) and with the equal calibration (filled, with bars), joined by a thin line. The equal calibration is temperature",
         "scaling (Guo et al. 2017): one temperature per question type, fitted for each model by the same",
         "code on the same sample of judgly's training split (1,500 general and 500 stance items; the",
         "record in docs/results/external-comparison/calibrated). A temperature never changes which answer",
@@ -690,24 +692,29 @@ def captions(results: dict, by_source: dict, timing: dict) -> str:
         "to the left is better; points whose intervals overlap are not clearly different, and the paired",
         "differences in docs/methods.md are the sharper test. ECE is never negative, so its intervals lean",
         "upward near 0. *What it says:* accuracy comes from the models, and the temperature does not move",
-        "it; judgly Gemma 4 12B is the most accurate or level with the most accurate on every set. Given",
-        "the same temperature fitted on the same data, the external models come close to judgly's defaults",
-        "in ECE: level with them on general confirm; better calibrated than both judgly packs on stance",
-        "final; between judgly's two packs on stance confirm (Tev1 0.8B excepted, 0.204); on general final",
-        "above judgly Gemma 4 12B's default for all three and, against judgly Qwen3-4B's, Tev1 4B clearly",
-        "above, Nimble 9B marginally and Tev1 0.8B level. On general final judgly's own temperature gave",
+        "it; the two largest models, Clef 27B and judgly Gemma 4 12B, are the most accurate (Clef 27B ahead",
+        "of judgly Gemma 4 12B's H2 default on general final, level with it on general confirm,",
+        "typed-decisions, JevBench and stance). Given the same temperature fitted on the same data, the",
+        "external models come close to judgly's defaults in ECE: level with them on general confirm; better",
+        "calibrated than both judgly packs on stance final; between judgly's two packs on stance confirm",
+        "(Tev1 0.8B excepted, 0.204); on general final above judgly Gemma 4 12B's default for all four and,",
+        "against judgly Qwen3-4B's, Tev1 4B and Clef 27B clearly above, Nimble 9B marginally and Tev1 0.8B",
+        "level. On general final judgly's own temperature gave",
         "0.017 (Gemma 4 12B) and 0.034 (Qwen3-4B) as shipped and 0.038 and 0.044 refitted on the sample, so",
         "much of that remaining gap comes with the fitting sample, not with H2. Most of judgly's calibration",
         "lead over the models as served therefore came from its calibration step, not from its models. The",
         "temperature does not always carry over to new kinds of questions: it made",
         "Tev1 4B slightly worse calibrated on the final tiers, where it was already well calibrated as",
-        "served, and Nimble 9B and Tev1 4B clearly worse on typed-decisions, mostly on its score questions",
-        "(compare-control-by-type.json). Some fitted temperatures reached the search's upper bound,",
-        "exp(4) = 54.6 (" + ", ".join(bound) + "); at that temperature the answers of that type are almost",
-        "flat, so a low ECE there says little about their usefulness.",
+        "served, Nimble 9B and Tev1 4B clearly worse on typed-decisions, mostly on its score questions,",
+        "and Clef 27B clearly worse on general final, typed-decisions and JevBench, where it was well",
+        "calibrated as served, through its yes/no temperature (compare-control-by-type.json). Some fitted",
+        "temperatures reached the search's upper bound, exp(4) = 54.6 (" + ", ".join(bound) + "), and Clef",
+        "27B's yes/no temperature came close to it (" + f"{temps['clef:27b/general']['T']['bool']:.1f}" + "); at such a",
+        "temperature the answers of that type are almost flat, so a low ECE there says little about their",
+        "usefulness.",
         "The numbers: " + ". ".join(sets) + ".", "",
         "## compare-reliability.svg", "",
-        "*What it shows:* reliability diagrams on the two confirm tiers for Nimble 9B and Tev1 4B as served",
+        "*What it shows:* reliability diagrams on the two confirm tiers for Nimble 9B, Tev1 4B and Clef 27B as served",
         "and judgly's two packs with their default calibration: for ten equal-width bins of the top",
         "probability, the mean confidence (x) against the share of correct answers (y), with 95% Wilson",
         "intervals; empty bins are left out. *How to read it:* on the dotted diagonal, confidence equals",
@@ -716,7 +723,7 @@ def captions(results: dict, by_source: dict, timing: dict) -> str:
         "were selected by the pre-registered confirmation from its read of this same tier (H2, the 0.1.0",
         "default, stayed for Gemma 4 12B on general questions); nothing was fitted on it. With H2 instead,",
         "ECE was 0.076 (Qwen3-4B) on general and 0.078 (Gemma 4 12B) and 0.183 (Qwen3-4B) on stance.",
-        "*What it says:* Nimble 9B and Tev1 4B, as served, are overconfident on these tiers. judgly's",
+        "*What it says:* Nimble 9B, Tev1 4B and Clef 27B, as served, are overconfident on these tiers. judgly's",
         "defaults lie closer to the diagonal, but both are overconfident on stance above 0.5 (Gemma 4 12B",
         "by 0.03 to 0.13 per bin, Qwen3-4B by 0.09 to 0.14), and Gemma 4 12B on general questions in the",
         "0.5 to 0.6 bin (by 0.12, 796 items). ECE: " + "; ".join(rel) + ". With the equal calibration",
@@ -728,7 +735,8 @@ def captions(results: dict, by_source: dict, timing: dict) -> str:
         "system, on an Apple M3 Max (64 GB). *How to read it:* shorter is faster. The bars do not measure",
         "the same thing: judgly ran in-process through its Python API and asked each question in up to",
         "four option orders; the Ollama models were asked over HTTP and read each question once. The",
-        "timings were taken after the comparison run and were not part of its frozen protocol. *What it",
+        "timings were taken after the comparison run and were not part of its frozen protocol; Clef 27B's",
+        "on 2026-10-04 under Ollama 0.35.1, the others' on 2026-09-30 under 0.35.0. *What it",
         "says:* medians: " + "; ".join(f"{LABEL[s].replace(', default', '')} {timing['systems'][k]['median_s']:.3f} s"
                                   for s, k in TIMING.items()) + ".", "",
     ])

@@ -85,8 +85,8 @@ External comparison
 ------------------------------------------------------------------------------
 
 docs/results/external-comparison/ holds the answers (item ids, probabilities,
-token counts and timings) of three decision models run through Ollama 0.35.0
-(https://github.com/ollama/ollama, MIT License):
+token counts and timings) of four decision models run through Ollama 0.35.0
+and 0.35.1 (https://github.com/ollama/ollama, MIT License):
 
   Nimble 9B            Bespoke Labs and Maheswaran Sathiamoorthy,
                        https://huggingface.co/bespokelabs/Bespoke-Nimble-9B
@@ -95,6 +95,12 @@ token counts and timings) of three decision models run through Ollama 0.35.0
                        (code: MIT License, Copyright (c) 2026 open-jev
                        contributors; the model cards describe the weights'
                        licence as being finalized)
+  Clef 27B             Cloudflare, https://huggingface.co/Cloudflare/clef,
+                       post-trained from Qwen3.8-27B (Qwen team, Alibaba Cloud)
+                       (weights: Apache License 2.0, Copyright 2026 Alibaba
+                       Cloud, as in the repository's LICENSE and the licence
+                       layer of the Ollama manifest)
 
 No weights of these models are included in judgly or in this repository; judgly
-does not use them.
+does not use them. Their names are used only to identify the models compared
+and do not imply endorsement.

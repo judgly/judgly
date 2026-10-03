@@ -3,7 +3,9 @@ same 100 items (50 from each untouched confirm tier, the first by a hash of thei
 One warm-up request per system is sent first and not counted. Hardware and versions are
 recorded in the output.
 
-    JUDGLY_MODEL_DIR=... uv run python time_single.py JUDGLY_ROOT OUT.json
+    JUDGLY_MODEL_DIR=... uv run python time_single.py JUDGLY_ROOT OUT.json [--only MODEL ...]
+
+--only times just the named Ollama models (and not judgly), for a model added later.
 """
 
 import hashlib
@@ -17,6 +19,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT, OUT = Path(sys.argv[1]), Path(sys.argv[2])
+ONLY = sys.argv[sys.argv.index("--only") + 1:] if "--only" in sys.argv else None
 
 
 def pick(fmt, n=50):
@@ -79,10 +82,10 @@ def main():
            "ollama": subprocess.run(["ollama", "--version"], capture_output=True, text=True).stdout.strip(),
            "method": "one question per request, requests sent one at a time, one warm-up request per system not counted; judgly in-process through its Python API (pack default calibration), Ollama models through http://localhost:11434/v1/systemone",
            "systems": {}}
-    for pack in ("gemma4-12b-q8", "qwen3-4b-q8"):
+    for pack in ("gemma4-12b-q8", "qwen3-4b-q8") if ONLY is None else ():
         out["systems"][f"judgly {pack}"] = summary(time_judgly(pack))
         print(pack, out["systems"][f"judgly {pack}"], flush=True)
-    for model in ("nimble:9b", "tev1:4b", "tev1:0.8b"):
+    for model in ONLY or ("nimble:9b", "tev1:4b", "tev1:0.8b"):
         secs, errors = time_ollama(model)
         out["systems"][model] = {**summary(secs), "refused": errors}
         print(model, out["systems"][model], flush=True)

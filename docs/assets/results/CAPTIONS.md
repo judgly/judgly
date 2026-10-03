@@ -46,14 +46,15 @@ Made by `make compare-figures` (scripts/make_compare_figures.py) from the record
 docs/results/external-comparison (with its equal-calibration control in calibrated/) and judgly's
 committed per-item dumps; every item is rescored and every plotted number checked against the
 record's result files before anything is written. The external models were run as served by
-Ollama 0.35.0 (`/v1/systemone`); judgly's calibration was fitted by us on similar question types
+Ollama (`/v1/systemone`; 0.35.0 for Nimble and Tev1, 0.35.1 for Clef, which requires it); judgly's
+calibration was fitted by us on similar question types
 (see the caveats in the README and in docs/methods.md).
 
 ## compare-tiers.svg
 
-*What it shows:* accuracy (y) against ECE (x) on six test sets. Each of Nimble 9B, Tev1 4B and
-Tev1 0.8B appears twice: as served by Ollama (hollow, faint grey, without bars) and with the equal
-calibration (filled grey, with bars), joined by a thin line. The equal calibration is temperature
+*What it shows:* accuracy (y) against ECE (x) on six test sets. Each of Nimble 9B, Tev1 4B,
+Tev1 0.8B (greys) and Clef 27B (orange) appears twice: as served by Ollama (hollow, faint, without
+bars) and with the equal calibration (filled, with bars), joined by a thin line. The equal calibration is temperature
 scaling (Guo et al. 2017): one temperature per question type, fitted for each model by the same
 code on the same sample of judgly's training split (1,500 general and 500 stance items; the
 record in docs/results/external-comparison/calibrated). A temperature never changes which answer
@@ -78,26 +79,31 @@ confirmed; H2, the 0.1.0 default, for Gemma 4 12B on general questions). *How to
 to the left is better; points whose intervals overlap are not clearly different, and the paired
 differences in docs/methods.md are the sharper test. ECE is never negative, so its intervals lean
 upward near 0. *What it says:* accuracy comes from the models, and the temperature does not move
-it; judgly Gemma 4 12B is the most accurate or level with the most accurate on every set. Given
-the same temperature fitted on the same data, the external models come close to judgly's defaults
-in ECE: level with them on general confirm; better calibrated than both judgly packs on stance
-final; between judgly's two packs on stance confirm (Tev1 0.8B excepted, 0.204); on general final
-above judgly Gemma 4 12B's default for all three and, against judgly Qwen3-4B's, Tev1 4B clearly
-above, Nimble 9B marginally and Tev1 0.8B level. On general final judgly's own temperature gave
+it; the two largest models, Clef 27B and judgly Gemma 4 12B, are the most accurate (Clef 27B ahead
+of judgly Gemma 4 12B's H2 default on general final, level with it on general confirm,
+typed-decisions, JevBench and stance). Given the same temperature fitted on the same data, the
+external models come close to judgly's defaults in ECE: level with them on general confirm; better
+calibrated than both judgly packs on stance final; between judgly's two packs on stance confirm
+(Tev1 0.8B excepted, 0.204); on general final above judgly Gemma 4 12B's default for all four and,
+against judgly Qwen3-4B's, Tev1 4B and Clef 27B clearly above, Nimble 9B marginally and Tev1 0.8B
+level. On general final judgly's own temperature gave
 0.017 (Gemma 4 12B) and 0.034 (Qwen3-4B) as shipped and 0.038 and 0.044 refitted on the sample, so
 much of that remaining gap comes with the fitting sample, not with H2. Most of judgly's calibration
 lead over the models as served therefore came from its calibration step, not from its models. The
 temperature does not always carry over to new kinds of questions: it made
 Tev1 4B slightly worse calibrated on the final tiers, where it was already well calibrated as
-served, and Nimble 9B and Tev1 4B clearly worse on typed-decisions, mostly on its score questions
-(compare-control-by-type.json). Some fitted temperatures reached the search's upper bound,
-exp(4) = 54.6 (Tev1 0.8B score, Tev1 0.8B yes/no, Tev1 4B score); at that temperature the answers of that type are almost
-flat, so a low ECE there says little about their usefulness.
-The numbers: confirm, general: Nimble 9B accuracy 0.481 [0.461, 0.501], ECE as served 0.229 [0.210, 0.249], with the equal calibration 0.059 [0.045, 0.082]; Tev1 4B accuracy 0.479 [0.456, 0.501], ECE as served 0.142 [0.121, 0.165], with the equal calibration 0.065 [0.049, 0.086]; Tev1 0.8B accuracy 0.378 [0.356, 0.398], ECE as served 0.154 [0.136, 0.177], with the equal calibration 0.043 [0.034, 0.068]; judgly Gemma 4 12B, default accuracy 0.509 [0.488, 0.530], ECE 0.051 [0.041, 0.072]; judgly Qwen3-4B, default accuracy 0.484 [0.466, 0.506], ECE 0.047 [0.032, 0.068]. confirm, stance: Nimble 9B accuracy 0.595 [0.553, 0.640], ECE as served 0.264 [0.211, 0.296], with the equal calibration 0.068 [0.051, 0.104]; Tev1 4B accuracy 0.630 [0.603, 0.680], ECE as served 0.185 [0.152, 0.215], with the equal calibration 0.104 [0.079, 0.140]; Tev1 0.8B accuracy 0.451 [0.380, 0.481], ECE as served 0.304 [0.279, 0.364], with the equal calibration 0.204 [0.174, 0.255]; judgly Gemma 4 12B, default accuracy 0.655 [0.617, 0.698], ECE 0.052 [0.028, 0.079]; judgly Qwen3-4B, default accuracy 0.568 [0.526, 0.607], ECE 0.106 [0.078, 0.151]. final, general: Nimble 9B accuracy 0.674 [0.663, 0.684], ECE as served 0.129 [0.120, 0.139], with the equal calibration 0.043 [0.038, 0.054]; Tev1 4B accuracy 0.657 [0.647, 0.668], ECE as served 0.052 [0.044, 0.061], with the equal calibration 0.070 [0.061, 0.080]; Tev1 0.8B accuracy 0.504 [0.493, 0.516], ECE as served 0.086 [0.075, 0.096], with the equal calibration 0.040 [0.032, 0.051]; judgly Gemma 4 12B, default accuracy 0.737 [0.727, 0.746], ECE 0.020 [0.015, 0.030]; judgly Qwen3-4B, default accuracy 0.656 [0.645, 0.666], ECE 0.034 [0.025, 0.043]. final, stance: Nimble 9B accuracy 0.817 [0.796, 0.837], ECE as served 0.113 [0.096, 0.136], with the equal calibration 0.061 [0.041, 0.083]; Tev1 4B accuracy 0.826 [0.804, 0.845], ECE as served 0.041 [0.032, 0.066], with the equal calibration 0.048 [0.034, 0.069]; Tev1 0.8B accuracy 0.577 [0.557, 0.598], ECE as served 0.111 [0.090, 0.135], with the equal calibration 0.027 [0.017, 0.054]; judgly Gemma 4 12B, default accuracy 0.827 [0.807, 0.848], ECE 0.087 [0.068, 0.107]; judgly Qwen3-4B, default accuracy 0.778 [0.755, 0.799], ECE 0.093 [0.070, 0.115]. typed-decisions: Nimble 9B accuracy 0.702 [0.678, 0.726], ECE as served 0.052 [0.040, 0.077], with the equal calibration 0.181 [0.163, 0.205]; Tev1 4B accuracy 0.613 [0.588, 0.638], ECE as served 0.038 [0.026, 0.063], with the equal calibration 0.127 [0.110, 0.152]; Tev1 0.8B accuracy 0.434 [0.411, 0.456], ECE as served 0.186 [0.164, 0.209], with the equal calibration 0.074 [0.062, 0.098]; judgly Gemma 4 12B, default accuracy 0.700 [0.678, 0.720], ECE 0.028 [0.020, 0.049]; judgly Qwen3-4B, default accuracy 0.576 [0.549, 0.600], ECE 0.137 [0.122, 0.159]. JevBench, public items: Nimble 9B accuracy 0.779 [0.722, 0.836], ECE as served 0.118 [0.078, 0.163], with the equal calibration 0.072 [0.056, 0.134]; Tev1 4B accuracy 0.790 [0.729, 0.848], ECE as served 0.104 [0.068, 0.164], with the equal calibration 0.099 [0.070, 0.164]; Tev1 0.8B accuracy 0.672 [0.595, 0.740], ECE as served 0.093 [0.065, 0.169], with the equal calibration 0.079 [0.051, 0.163]; judgly Gemma 4 12B, default accuracy 0.844 [0.795, 0.887], ECE 0.067 [0.058, 0.117]; judgly Qwen3-4B, default accuracy 0.693 [0.617, 0.752], ECE 0.084 [0.054, 0.142].
+served, Nimble 9B and Tev1 4B clearly worse on typed-decisions, mostly on its score questions,
+and Clef 27B clearly worse on general final, typed-decisions and JevBench, where it was well
+calibrated as served, through its yes/no temperature (compare-control-by-type.json). Some fitted
+temperatures reached the search's upper bound, exp(4) = 54.6 (Tev1 0.8B score, Tev1 0.8B yes/no, Tev1 4B score), and Clef
+27B's yes/no temperature came close to it (50.3); at such a
+temperature the answers of that type are almost flat, so a low ECE there says little about their
+usefulness.
+The numbers: confirm, general: Nimble 9B accuracy 0.481 [0.461, 0.501], ECE as served 0.229 [0.210, 0.249], with the equal calibration 0.059 [0.045, 0.082]; Tev1 4B accuracy 0.479 [0.456, 0.501], ECE as served 0.142 [0.121, 0.165], with the equal calibration 0.065 [0.049, 0.086]; Tev1 0.8B accuracy 0.378 [0.356, 0.398], ECE as served 0.154 [0.136, 0.177], with the equal calibration 0.043 [0.034, 0.068]; Clef 27B accuracy 0.531 [0.509, 0.557], ECE as served 0.114 [0.096, 0.134], with the equal calibration 0.047 [0.032, 0.066]; judgly Gemma 4 12B, default accuracy 0.509 [0.488, 0.530], ECE 0.051 [0.041, 0.072]; judgly Qwen3-4B, default accuracy 0.484 [0.466, 0.506], ECE 0.047 [0.032, 0.068]. confirm, stance: Nimble 9B accuracy 0.595 [0.553, 0.640], ECE as served 0.264 [0.211, 0.296], with the equal calibration 0.068 [0.051, 0.104]; Tev1 4B accuracy 0.630 [0.603, 0.680], ECE as served 0.185 [0.152, 0.215], with the equal calibration 0.104 [0.080, 0.143]; Tev1 0.8B accuracy 0.451 [0.380, 0.481], ECE as served 0.304 [0.279, 0.364], with the equal calibration 0.204 [0.177, 0.259]; Clef 27B accuracy 0.645 [0.596, 0.681], ECE as served 0.150 [0.111, 0.187], with the equal calibration 0.076 [0.037, 0.106]; judgly Gemma 4 12B, default accuracy 0.655 [0.617, 0.698], ECE 0.052 [0.028, 0.079]; judgly Qwen3-4B, default accuracy 0.568 [0.526, 0.607], ECE 0.106 [0.078, 0.151]. final, general: Nimble 9B accuracy 0.674 [0.663, 0.684], ECE as served 0.129 [0.120, 0.139], with the equal calibration 0.043 [0.038, 0.054]; Tev1 4B accuracy 0.657 [0.647, 0.668], ECE as served 0.052 [0.044, 0.061], with the equal calibration 0.070 [0.061, 0.079]; Tev1 0.8B accuracy 0.504 [0.493, 0.516], ECE as served 0.086 [0.075, 0.096], with the equal calibration 0.040 [0.033, 0.051]; Clef 27B accuracy 0.760 [0.751, 0.769], ECE as served 0.032 [0.026, 0.041], with the equal calibration 0.124 [0.115, 0.133]; judgly Gemma 4 12B, default accuracy 0.737 [0.727, 0.746], ECE 0.020 [0.015, 0.030]; judgly Qwen3-4B, default accuracy 0.656 [0.645, 0.666], ECE 0.034 [0.025, 0.043]. final, stance: Nimble 9B accuracy 0.817 [0.796, 0.837], ECE as served 0.113 [0.096, 0.136], with the equal calibration 0.061 [0.042, 0.081]; Tev1 4B accuracy 0.826 [0.804, 0.845], ECE as served 0.041 [0.032, 0.066], with the equal calibration 0.048 [0.033, 0.069]; Tev1 0.8B accuracy 0.577 [0.557, 0.598], ECE as served 0.111 [0.090, 0.135], with the equal calibration 0.027 [0.018, 0.056]; Clef 27B accuracy 0.826 [0.807, 0.845], ECE as served 0.047 [0.034, 0.070], with the equal calibration 0.035 [0.024, 0.059]; judgly Gemma 4 12B, default accuracy 0.827 [0.807, 0.848], ECE 0.087 [0.068, 0.107]; judgly Qwen3-4B, default accuracy 0.778 [0.755, 0.799], ECE 0.093 [0.070, 0.115]. typed-decisions: Nimble 9B accuracy 0.702 [0.678, 0.726], ECE as served 0.052 [0.040, 0.077], with the equal calibration 0.181 [0.163, 0.205]; Tev1 4B accuracy 0.613 [0.588, 0.638], ECE as served 0.038 [0.026, 0.063], with the equal calibration 0.127 [0.110, 0.152]; Tev1 0.8B accuracy 0.434 [0.411, 0.456], ECE as served 0.186 [0.164, 0.209], with the equal calibration 0.074 [0.062, 0.098]; Clef 27B accuracy 0.715 [0.691, 0.737], ECE as served 0.032 [0.023, 0.055], with the equal calibration 0.155 [0.133, 0.176]; judgly Gemma 4 12B, default accuracy 0.700 [0.678, 0.720], ECE 0.028 [0.020, 0.049]; judgly Qwen3-4B, default accuracy 0.576 [0.549, 0.600], ECE 0.137 [0.122, 0.159]. JevBench, public items: Nimble 9B accuracy 0.779 [0.722, 0.836], ECE as served 0.118 [0.078, 0.163], with the equal calibration 0.072 [0.056, 0.134]; Tev1 4B accuracy 0.790 [0.729, 0.848], ECE as served 0.104 [0.068, 0.164], with the equal calibration 0.099 [0.070, 0.164]; Tev1 0.8B accuracy 0.672 [0.595, 0.740], ECE as served 0.093 [0.065, 0.169], with the equal calibration 0.079 [0.051, 0.163]; Clef 27B accuracy 0.883 [0.839, 0.928], ECE as served 0.035 [0.025, 0.074], with the equal calibration 0.181 [0.150, 0.227]; judgly Gemma 4 12B, default accuracy 0.844 [0.795, 0.887], ECE 0.067 [0.058, 0.117]; judgly Qwen3-4B, default accuracy 0.693 [0.617, 0.752], ECE 0.084 [0.054, 0.142].
 
 ## compare-reliability.svg
 
-*What it shows:* reliability diagrams on the two confirm tiers for Nimble 9B and Tev1 4B as served
+*What it shows:* reliability diagrams on the two confirm tiers for Nimble 9B, Tev1 4B and Clef 27B as served
 and judgly's two packs with their default calibration: for ten equal-width bins of the top
 probability, the mean confidence (x) against the share of correct answers (y), with 95% Wilson
 intervals; empty bins are left out. *How to read it:* on the dotted diagonal, confidence equals
@@ -106,11 +112,11 @@ which on stance (1,780 items in 70 linked groups) makes them too narrow. judgly'
 were selected by the pre-registered confirmation from its read of this same tier (H2, the 0.1.0
 default, stayed for Gemma 4 12B on general questions); nothing was fitted on it. With H2 instead,
 ECE was 0.076 (Qwen3-4B) on general and 0.078 (Gemma 4 12B) and 0.183 (Qwen3-4B) on stance.
-*What it says:* Nimble 9B and Tev1 4B, as served, are overconfident on these tiers. judgly's
+*What it says:* Nimble 9B, Tev1 4B and Clef 27B, as served, are overconfident on these tiers. judgly's
 defaults lie closer to the diagonal, but both are overconfident on stance above 0.5 (Gemma 4 12B
 by 0.03 to 0.13 per bin, Qwen3-4B by 0.09 to 0.14), and Gemma 4 12B on general questions in the
-0.5 to 0.6 bin (by 0.12, 796 items). ECE: general (n = 2,500): Nimble 9B 0.229, Tev1 4B 0.142, judgly Gemma 4 12B, default 0.051, judgly Qwen3-4B, default 0.047; stance (n = 1,780): Nimble 9B 0.264, Tev1 4B 0.185, judgly Gemma 4 12B, default 0.052, judgly Qwen3-4B, default 0.106. With the equal calibration
-(compare-tiers), the external models' ECE on these tiers was general: Nimble 9B 0.059, Tev1 4B 0.065; stance: Nimble 9B 0.068, Tev1 4B 0.104.
+0.5 to 0.6 bin (by 0.12, 796 items). ECE: general (n = 2,500): Nimble 9B 0.229, Tev1 4B 0.142, Clef 27B 0.114, judgly Gemma 4 12B, default 0.051, judgly Qwen3-4B, default 0.047; stance (n = 1,780): Nimble 9B 0.264, Tev1 4B 0.185, Clef 27B 0.150, judgly Gemma 4 12B, default 0.052, judgly Qwen3-4B, default 0.106. With the equal calibration
+(compare-tiers), the external models' ECE on these tiers was general: Nimble 9B 0.059, Tev1 4B 0.065, Clef 27B 0.047; stance: Nimble 9B 0.068, Tev1 4B 0.104, Clef 27B 0.076.
 
 ## compare-timing.svg
 
@@ -120,5 +126,6 @@ their id), one question per request, one request at a time, one uncounted warm-u
 system, on an Apple M3 Max (64 GB). *How to read it:* shorter is faster. The bars do not measure
 the same thing: judgly ran in-process through its Python API and asked each question in up to
 four option orders; the Ollama models were asked over HTTP and read each question once. The
-timings were taken after the comparison run and were not part of its frozen protocol. *What it
-says:* medians: Tev1 0.8B 0.078 s; Tev1 4B 0.289 s; judgly Qwen3-4B 0.321 s; Nimble 9B 0.533 s; judgly Gemma 4 12B 0.960 s.
+timings were taken after the comparison run and were not part of its frozen protocol; Clef 27B's
+on 2026-10-04 under Ollama 0.35.1, the others' on 2026-09-30 under 0.35.0. *What it
+says:* medians: Tev1 0.8B 0.078 s; Tev1 4B 0.289 s; judgly Qwen3-4B 0.321 s; Nimble 9B 0.533 s; judgly Gemma 4 12B 0.960 s; Clef 27B 1.868 s.

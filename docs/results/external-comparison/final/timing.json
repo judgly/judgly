@@ -141,6 +141,16 @@
    "p95_s": 0.1527,
    "mean_s": 0.0869,
    "refused": 0
+  },
+  "clef:27b": {
+   "n": 100,
+   "median_s": 1.8677,
+   "p95_s": 3.8849,
+   "mean_s": 2.165,
+   "refused": 0,
+   "ollama": "ollama version is 0.35.1",
+   "platform": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+   "measured": "2026-10-04, separately on the same Mac (Ollama 0.35.1 refuses the other Ollama models)"
   }
  }
 }
